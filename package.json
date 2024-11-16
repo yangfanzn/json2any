@@ -2,7 +2,7 @@
   "name": "json2any",
   "description": "json2any",
   "private": true,
-  "author": "yangfanzn@gmail.com",
+  "author": "yangfanzn <yangfanzn@gmail.com>",
   "license": "ISC",
   "workspaces": [
     "packages/*"
