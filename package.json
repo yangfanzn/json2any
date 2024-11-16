@@ -12,5 +12,9 @@
     "prettier": "2.3.0",
     "typescript": "^5.6.3"
   },
-  "scripts": {}
+  "scripts": {
+    "v": "lerna version --force-publish --no-git-tag-version --exact",
+    "g": "lerna publish from-package",
+    "n": "npm --registry https://registry.npmjs.org"
+  }
 }
