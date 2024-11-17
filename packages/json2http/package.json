@@ -14,5 +14,6 @@
     "lib",
     "types"
   ],
-  "main": "./lib/index.js"
+  "main": "./lib/index.js",
+  "types": "./types/"
 }
