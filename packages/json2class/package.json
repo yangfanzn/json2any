@@ -7,5 +7,12 @@
   ],
   "author": "yangfanzn <yangfanzn@gmail.com>",
   "license": "ISC",
-  "scripts": {}
+  "scripts": {
+    "build": "webpack"
+  },
+  "files": [
+    "lib",
+    "types"
+  ],
+  "main": "./lib/index.js"
 }
