@@ -34,7 +34,7 @@ export abstract class _C extends _K {
     super();
   }
 
-  abstract toClass(): string[];
+  abstract toClass(): { context: _C; code: string }[];
   abstract toCreate(): string;
 }
 

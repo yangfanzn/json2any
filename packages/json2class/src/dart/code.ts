@@ -29,13 +29,15 @@ export class C extends _C {
   }
 
   toClass() {
-    return this.child.reduce(
+    return this.child.reduce<{ context: C; code: string }[]>(
       (list, cur) => {
         list.push(...(cur instanceof C ? cur.toClass() : []));
         return list;
       },
       [
-        `
+        {
+          context: this,
+          code: `
 class ${this.nameClass} extends Cls {
   ${this.toCreate()}
   ${this.child.map(e => e.toProp()).join(`\n${' '.repeat(2)}`)}
@@ -45,6 +47,7 @@ class ${this.nameClass} extends Cls {
     return this;
   }
 }`,
+        },
       ],
     );
   }
