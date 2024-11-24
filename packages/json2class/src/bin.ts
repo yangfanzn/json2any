@@ -1,5 +1,7 @@
 import Fs from 'fs';
 import Path from 'path';
+import Shelljs from 'shelljs';
+import Json5 from 'json5';
 
 class Bin {
   readDir(
@@ -46,6 +48,26 @@ class Bin {
       }
     });
     return files;
+  }
+
+  exit(msg: string) {
+    console.log(msg);
+    Shelljs.exit(1);
+  }
+
+  searchJsons(dir: string) {
+    return bin.readDir(dir, { ext: ['.json5', '.json'], ignore: /\/\./ }).reduce((codes, file) => {
+      codes.push({
+        name:
+          file
+            .replace(/\.\w+$/, '')
+            .split(dir)
+            .pop()
+            ?.replace(/\//g, '') ?? '',
+        json: Json5.parse(Fs.readFileSync(file).toString()),
+      });
+      return codes;
+    }, [] as { name: string; json: any }[]);
   }
 }
 

@@ -2,6 +2,7 @@ import { program as Program } from 'commander';
 import Path from 'path';
 import Fs from 'fs';
 import Shelljs from 'shelljs';
+import Json2class, { bin } from 'json2class';
 
 // 设置多个公共配置
 Program.version('0.0.1', '-v --version', 'current version');
@@ -15,30 +16,18 @@ Program.description('Generate class entity type based on JSON configuration')
   .action(async (type, options) => {
     const support = ['dart', 'ts', 'oc'];
     if (!support.includes(type)) {
-      console.log(`The following languages are currently supported: ${support.join(' / ')}`);
-      Shelljs.exit(1);
+      bin.exit(`The following languages are currently supported: ${support.join(' / ')}`);
     }
-    const { default: json5 } = await import('json5');
-    const { default: json2class, bin } = await import('json2class');
-    const searchDir = Path.resolve('.');
-    const jsons = bin.readDir(searchDir, { ext: ['.json5', '.json'], ignore: /\/\./ });
-    const codes: string[] = [];
-    jsons.forEach(file => {
-      const name =
-        file
-          .replace(/\.\w+$/, '')
-          .split(searchDir)
-          .pop()
-          ?.replace(/\//g, '') ?? 'root';
-      const json = json5.parse(Fs.readFileSync(file).toString());
+    const codes = bin.searchJsons(Path.resolve('.')).reduce((codes, cur) => {
       codes.push(
-        ...json2class(name, json, 'dart')
+        ...Json2class(cur.name, cur.json, 'dart')
           .toClass()
           .map(e => e.code),
       );
-    });
-    const cache = Path.resolve(`./${type}/cache`);
-    Shelljs.rm('-rf', cache);
+      return codes;
+    }, [] as string[]);
+    const cache = Path.resolve('./json2class');
+    // Shelljs.rm('-rf', cache); // todo: 担心误删
     Shelljs.mkdir('-p', cache);
     Fs.writeFileSync(
       `${cache}/index.dart`,
