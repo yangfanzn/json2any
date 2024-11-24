@@ -6,8 +6,8 @@ export class _F {
     if (restore) {
       return str.replace(new RegExp(`${prefix}(\\d+)`, 'g'), (_, e) => String.fromCharCode(e));
     } else {
-      if (str.includes(prefix)) {
-        throw `字段名中禁止含有内部关键字 [${prefix}]`;
+      if (new RegExp(`${prefix}\d+`).test(str)) {
+        throw `${str} contains invalid field names`;
       }
       return str.replace(/[^a-zA-Z\d]/g, e => `${prefix}${e.charCodeAt(0)}`);
     }

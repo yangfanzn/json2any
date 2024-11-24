@@ -16,20 +16,33 @@ Program.description('Generate class entity type based on JSON configuration')
     const support = ['dart', 'ts', 'oc'];
     if (!support.includes(type)) {
       console.log(`The following languages are currently supported: ${support.join(' / ')}`);
-      return;
+      Shelljs.exit(1);
     }
-    const { default: json2class } = await import('json2class');
     const { default: json5 } = await import('json5');
-    const json = json5.parse(Fs.readFileSync(Path.resolve('./test.json5')).toString());
-    const x = json2class('root', json, 'dart');
+    const { default: json2class, bin } = await import('json2class');
+    const searchDir = Path.resolve('.');
+    const jsons = bin.readDir(searchDir, { ext: ['.json5', '.json'], ignore: /\/\./ });
+    const codes: string[] = [];
+    jsons.forEach(file => {
+      const name =
+        file
+          .replace(/\.\w+$/, '')
+          .split(searchDir)
+          .pop()
+          ?.replace(/\//g, '') ?? 'root';
+      const json = json5.parse(Fs.readFileSync(file).toString());
+      codes.push(
+        ...json2class(name, json, 'dart')
+          .toClass()
+          .map(e => e.code),
+      );
+    });
     const cache = Path.resolve(`./${type}/cache`);
     Shelljs.rm('-rf', cache);
     Shelljs.mkdir('-p', cache);
     Fs.writeFileSync(
       `${cache}/index.dart`,
-      [Fs.readFileSync(Path.resolve(__dirname, `../src/${type}/origin.${type}`)), ...x.toClass().map(e => e.code)].join(
-        '\n',
-      ),
+      [Fs.readFileSync(Path.resolve(__dirname, `../src/${type}/origin.${type}`)), ...codes].join('\n'),
     );
   });
 
