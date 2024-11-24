@@ -9,16 +9,21 @@
   ],
   "devDependencies": {
     "@types/node": "^22.9.0",
+    "@types/shelljs": "^0.8.15",
+    "commander": "7.2.0",
+    "json5": "^2.2.3",
     "prettier": "2.3.0",
+    "shelljs": "^0.8.5",
     "ts-loader": "^9.5.1",
     "typescript": "^5.6.3",
     "webpack": "^5.96.1",
     "webpack-cli": "^5.1.4"
   },
   "scripts": {
-    "p": "lerna run build",
-    "v": "lerna version --force-publish --no-git-tag-version --exact",
-    "g": "lerna publish from-package",
-    "n": "npm --registry https://registry.npmjs.org"
+    "build": "lerna run build",
+    "dev": "lerna run dev --scope json2class",
+    "version": "lerna version --force-publish --no-git-tag-version --exact",
+    "publish": "lerna publish from-package",
+    "registry": "npm --registry https://registry.npmjs.org"
   }
 }

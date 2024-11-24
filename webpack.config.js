@@ -1,12 +1,16 @@
 const path = require('path');
+const fs = require('fs');
 
 // todo: clean-webpack-plugin & *.d.ts
 
 module.exports = {
-  entry: './index.ts',
+  entry: {
+    index: './index.ts',
+    bin: './bin.ts',
+  },
   output: {
     path: path.resolve('./', 'lib'),
-    filename: './index.js',
+    filename: '[name].js',
     libraryTarget: 'commonjs2',
   },
   target: 'node',
@@ -22,7 +26,23 @@ module.exports = {
       },
     ],
   },
+  plugins: [
+    {
+      apply: compiler => {
+        compiler.hooks.afterEmit.tapAsync('AddShebangPlugin', (compilation, callback) => {
+          const bin = path.resolve('./lib/bin.js');
+          const content = fs.readFileSync(bin, 'utf8').toString();
+          if (!content.startsWith('#!')) {
+            fs.writeFileSync(bin, `#!/usr/bin/env node\n${content}`);
+          }
+          fs.chmodSync(bin, '755');
+          callback();
+        });
+      },
+    },
+  ],
+
   // devtool: 'source-map',
-  // mode: 'development',
-  mode: 'production',
+  mode: 'development',
+  // mode: 'production',
 };

@@ -8,12 +8,16 @@
   "author": "yangfanzn <yangfanzn@gmail.com>",
   "license": "ISC",
   "scripts": {
-    "build": "webpack"
+    "build": "webpack",
+    "dev": "webpack --watch"
   },
   "files": [
     "lib",
     "types"
   ],
   "main": "./lib/index.js",
-  "types": "./types/"
+  "types": "./types/",
+  "bin": {
+    "json2class": "./lib/bin.js"
+  }
 }
