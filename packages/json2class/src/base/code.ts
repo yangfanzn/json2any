@@ -62,4 +62,7 @@ export abstract class _S extends _K {
 
 export abstract class _I {
   abstract arrayType(array: boolean[], type: string): string;
+  abstract toFiles(jsons: Map<string, string>): Map<string, string>;
 }
+
+export const supported = ['dart', 'oc'] as ('dart' | 'oc')[];

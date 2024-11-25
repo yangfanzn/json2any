@@ -55,19 +55,24 @@ class Bin {
     Shelljs.exit(1);
   }
 
+  isSupported(type: string, supported: string[]) {
+    if (!supported.includes(type)) {
+      bin.exit(`The following languages are currently supported: ${supported.join(' / ')}`);
+    }
+  }
+
   searchJsons(dir: string) {
     return bin.readDir(dir, { ext: ['.json5', '.json'], ignore: /\/\./ }).reduce((codes, file) => {
-      codes.push({
-        name:
-          file
-            .replace(/\.\w+$/, '')
-            .split(dir)
-            .pop()
-            ?.replace(/\//g, '') ?? '',
-        json: Json5.parse(Fs.readFileSync(file).toString()),
-      });
+      codes.set(
+        file
+          .replace(/\.\w+$/, '')
+          .split(dir)
+          .pop()
+          ?.replace(/\//g, '') ?? '',
+        Json5.parse(Fs.readFileSync(file).toString()),
+      );
       return codes;
-    }, [] as { name: string; json: any }[]);
+    }, new Map<string, any>());
   }
 }
 

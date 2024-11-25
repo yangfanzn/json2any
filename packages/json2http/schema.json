@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "properties": {
+    "title": { "type": "string" },
+    "method": { "type": "string", "enum": ["get", "post", "put", "delete"] },
+    "params": { "type": "object", "additionalProperties": { "type": "string" } },
+    "data": { "type": "object", "additionalProperties": true },
+    "form": { "type": "object", "additionalProperties": true },
+    "res": { "type": "object", "additionalProperties": true }
+  },
+  "required": ["title", "method", "res"],
+  "additionalProperties": false
+}
