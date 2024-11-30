@@ -1,2 +1,2 @@
 export * from './code';
-export * from './fun';
+export * from './func';

@@ -1,11 +1,9 @@
 import { program } from 'commander';
 import Path from 'path';
 import Fs from 'fs';
-import Shelljs from 'shelljs';
-import Json2class, { bin } from 'json2class';
 import Ajv from 'ajv';
-import Schema from './schema.json';
-import { supported, tools } from './index';
+import { bin } from 'json2class';
+import { Supported, tools, schemaJson, SchemaTs } from './index';
 
 // 设置多个公共配置
 program.version('0.0.1', '-v --version', 'current version');
@@ -18,31 +16,35 @@ program
   .command('make <type>')
   // .option('', '')
   .action(async (type, options) => {
-    bin.isSupported(type, supported);
-    const cache = Path.resolve('./json2http');
-    // Shelljs.rm('-rf', cache);
-    Shelljs.mkdir('-p', cache);
+    bin.isSupported(type, Object.values(Supported));
 
-    const ajv = new Ajv();
+    // todo: 同 json2class
+    const cache = Path.resolve('.');
+    // Shelljs.rm('-rf', cache);
+    // Shelljs.mkdir('-p', cache);
+
+    function json2piece() {
+      const ajv = new Ajv();
+      return Array.from(bin.searchJsons(Path.resolve('.'))).reduce((codes, [_, jsons]) => {
+        Object.keys(jsons).forEach(key => {
+          const json = jsons[key];
+          const validate = ajv.compile(schemaJson);
+          if (!validate(json)) {
+            const [error] = validate.errors ?? [];
+            bin.exit([`${key}:${error.instancePath}`, ...(validate.errors?.map(e => e.message) ?? [])].join('\n'));
+          }
+          if (codes.has(key)) {
+            bin.exit(`${key} already exists`);
+          }
+          // schema 验证通过，这里的 http 就满足 SchemaTs
+          codes.set(key, json);
+        });
+        return codes;
+      }, new Map<string, SchemaTs>());
+    }
+
     tools(type)
-      .toFiles(
-        Array.from(bin.searchJsons(Path.resolve('.'))).reduce((codes, [_, json]) => {
-          Object.keys(json).forEach(key => {
-            const name = key.replace(/\//g, '');
-            const http = json[key];
-            const validate = ajv.compile(Schema);
-            if (!validate(http)) {
-              const [error] = validate.errors ?? [];
-              bin.exit(`${key}:${error.instancePath} ${error.message}`);
-            }
-            if (codes.has(name)) {
-              bin.exit(`${key} already exists`);
-            }
-            codes.set(name, http);
-          });
-          return codes;
-        }, new Map<string, string>()),
-      )
+      .toFiles(json2piece(), type)
       .forEach((code, file) => {
         Fs.writeFileSync(`${cache}/${file}`, code);
       });

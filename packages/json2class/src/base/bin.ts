@@ -2,6 +2,7 @@ import Fs from 'fs';
 import Path from 'path';
 import Shelljs from 'shelljs';
 import Json5 from 'json5';
+import { Supported } from './code';
 
 class Bin {
   readDir(
@@ -55,7 +56,15 @@ class Bin {
     Shelljs.exit(1);
   }
 
-  isSupported(type: string, supported: string[]) {
+  isSupported(type: string, supported?: string[]) {
+    const base = Object.values(Supported) as string[];
+    if (supported) {
+      if (supported.find(e => !base.includes(e))) {
+        throw '不应该发生的情况'; // todo: test
+      }
+    } else {
+      supported = base;
+    }
     if (!supported.includes(type)) {
       bin.exit(`The following languages are currently supported: ${supported.join(' / ')}`);
     }

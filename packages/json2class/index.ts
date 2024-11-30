@@ -3,18 +3,16 @@ import * as Dart from './src/dart';
 
 export * from './src/base';
 
-export default function json2class(type: typeof Base.supported[number], name: string, json: any) {
+export default function json2class(type: Base.Supported, key: string, json: any) {
   switch (type) {
-    case 'dart':
-      return Dart.fun.core(Dart.C, Dart.S, name, json);
+    case Base.Supported.Dart:
+      return Dart.func.core(Dart.Complex, Dart.Simple, key, json);
   }
-  throw '123';
 }
 
-export function tools(type: typeof Base.supported[number]) {
+export function tools(type: Base.Supported) {
   switch (type) {
-    case 'dart':
-      return Dart.fun;
+    case Base.Supported.Dart:
+      return Dart.func;
   }
-  throw '123';
 }

@@ -3,18 +3,16 @@ import * as Base from './src/base';
 
 export * from './src/base';
 
-export default function json2http(type: typeof Base.supported[number], json: any) {
+export default function json2http(type: Base.Supported, key: string, json: Base.SchemaTs) {
   switch (type) {
-    case 'dart':
-      return Dart.fun.core(Dart.C, json);
+    case Base.Supported.Dart:
+      return Dart.func.core(Dart.Http, Dart.Complex, Dart.Simple, key, json);
   }
-  throw '123';
 }
 
-export function tools(type: typeof Base.supported[number]) {
+export function tools(type: Base.Supported) {
   switch (type) {
-    case 'dart':
-      return Dart.fun;
+    case Base.Supported.Dart:
+      return Dart.func;
   }
-  throw '123';
 }

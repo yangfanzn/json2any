@@ -1,8 +1,8 @@
-import { _C, _S, _T } from '../base';
-import { fun } from './fun';
+import { Complex as _Complex, Simple as _Simple, BaseType } from '../base';
+import { func } from './func';
 
-export class C extends _C {
-  child: (C | S)[] = [];
+export class Complex extends _Complex {
+  child: (Complex | Simple)[] = [];
 
   toCreate() {
     return `create() => ${this.nameClass}();`;
@@ -11,9 +11,9 @@ export class C extends _C {
   toProp() {
     if (this.array.length) {
       if (this.optional) {
-        return `${fun.arrayType(this.array, this.nameClass)}? ${this.nameProp};`;
+        return `${func.arrayType(this.array, this.nameClass)}? ${this.nameProp};`;
       } else {
-        return `${fun.arrayType(this.array, this.nameClass)} ${this.nameProp} = [];`;
+        return `${func.arrayType(this.array, this.nameClass)} ${this.nameProp} = [];`;
       }
     } else {
       if (this.optional) {
@@ -28,10 +28,10 @@ export class C extends _C {
     return `${this.nameProp} = setVal<${this.nameClass}>(data, '${this.nameProp}', <bool>[${this.array}], ${this.optional}, ${this.nameProp}, ${this.nameClass}(), opt);`;
   }
 
-  toClass() {
-    return this.child.reduce<{ context: C; code: string }[]>(
+  toCode() {
+    return this.child.reduce<{ context: Complex; code: string }[]>(
       (list, cur) => {
-        list.push(...(cur instanceof C ? cur.toClass() : []));
+        list.push(...(cur instanceof Complex ? cur.toCode() : []));
         return list;
       },
       [
@@ -53,7 +53,7 @@ class ${this.nameClass} extends Cls {
   }
 }
 
-export class S extends _S {
+export class Simple extends _Simple {
   toSet() {
     const t = this.toDefVal(this.type);
     return `${this.nameProp} = setVal<${t.type}>(data, '${this.nameProp}', <bool>[${this.array}], ${this.optional}, ${this.nameProp}, ${t.value}, opt);`;
@@ -63,9 +63,9 @@ export class S extends _S {
     const t = this.toDefVal(this.type);
     if (this.array.length) {
       if (this.optional) {
-        return `${fun.arrayType(this.array, t.type)}? ${this.nameProp};`;
+        return `${func.arrayType(this.array, t.type)}? ${this.nameProp};`;
       } else {
-        return `${fun.arrayType(this.array, t.type)} ${this.nameProp} = [];`;
+        return `${func.arrayType(this.array, t.type)} ${this.nameProp} = [];`;
       }
     } else {
       if (this.optional) {
@@ -76,11 +76,11 @@ export class S extends _S {
     }
   }
 
-  toDefVal(x: _T) {
+  toDefVal(x: BaseType) {
     return {
-      [_T.String]: { type: 'String', value: "''" },
-      [_T.Number]: { type: 'num', value: '0' },
-      [_T.Boolean]: { type: 'bool', value: 'false' },
+      [BaseType.String]: { type: 'String', value: "''" },
+      [BaseType.Number]: { type: 'num', value: '0' },
+      [BaseType.Boolean]: { type: 'bool', value: 'false' },
     }[x];
   }
 }

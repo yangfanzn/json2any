@@ -1,17 +1,21 @@
-import { _C as _Complex, _S as _Simple } from 'json2class';
+import { Complex as _Complex, Simple as _Simple } from 'json2class';
+import { SchemaTs } from './schema';
 
-export abstract class _C {
-  constructor(
-    public key: string,
-    public method: string,
-    public params?: _Complex,
-    public form?: _Complex,
-    public res?: _Complex,
-    public data?: _Complex | _Simple,
-  ) {}
+export abstract class Complex extends _Complex {}
+export abstract class Simple extends _Simple {}
+
+export abstract class Http {
+  protected constructor(public key: string, public config: Complex) {}
+  abstract toCode(): { context: Http; code: string };
+
+  get nameMethod() {
+    return this.key.replace(/\//g, '');
+  }
 }
-export abstract class _I {
-  abstract toFiles(jsons: Map<string, string>): Map<string, string>;
+export interface InterHttp {
+  toFiles(jsons: Map<string, SchemaTs>, type?: Supported): Map<string, string>;
 }
 
-export const supported = ['dart', 'oc'] as ('dart' | 'oc')[];
+export enum Supported {
+  Dart = 'dart',
+}
