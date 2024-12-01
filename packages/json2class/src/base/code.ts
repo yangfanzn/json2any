@@ -1,6 +1,6 @@
 import { func } from './func';
 
-abstract class Key {
+export abstract class Key {
   abstract key: string;
   abstract array: boolean[];
   abstract origin: string;

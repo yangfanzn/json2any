@@ -1,7 +1,4 @@
-import Fs from 'fs';
-import Path from 'path';
-import { InterKey, Supported, Func as _Func } from '../base';
-import json2class from '../../index';
+import { InterKey, Func as _Func } from '../base';
 
 class Func extends _Func implements InterKey {
   arrayType(array: boolean[], type: string): string {

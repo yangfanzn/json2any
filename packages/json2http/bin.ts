@@ -2,7 +2,7 @@ import { program } from 'commander';
 import Path from 'path';
 import Fs from 'fs';
 import Ajv from 'ajv';
-import { bin } from 'json2class';
+import { Base } from 'json2class';
 import { Supported, tools, schemaJson, SchemaTs } from './index';
 
 // 设置多个公共配置
@@ -16,7 +16,7 @@ program
   .command('make <type>')
   // .option('', '')
   .action(async (type, options) => {
-    bin.isSupported(type, Object.values(Supported));
+    Base.bin.isSupported(type, Object.values(Supported));
 
     // todo: 同 json2class
     const cache = Path.resolve('.');
@@ -25,16 +25,16 @@ program
 
     function json2piece() {
       const ajv = new Ajv();
-      return Array.from(bin.searchJsons(Path.resolve('.'))).reduce((codes, [_, jsons]) => {
+      return Array.from(Base.bin.searchJsons(Path.resolve('.'))).reduce((codes, [_, jsons]) => {
         Object.keys(jsons).forEach(key => {
           const json = jsons[key];
           const validate = ajv.compile(schemaJson);
           if (!validate(json)) {
             const [error] = validate.errors ?? [];
-            bin.exit([`${key}:${error.instancePath}`, ...(validate.errors?.map(e => e.message) ?? [])].join('\n'));
+            Base.bin.exit([`${key}:${error.instancePath}`, ...(validate.errors?.map(e => e.message) ?? [])].join('\n'));
           }
           if (codes.has(key)) {
-            bin.exit(`${key} already exists`);
+            Base.bin.exit(`${key} already exists`);
           }
           // schema 验证通过，这里的 http 就满足 SchemaTs
           codes.set(key, json);

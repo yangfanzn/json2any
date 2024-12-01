@@ -43,7 +43,7 @@ export class Func {
       case 'null':
         break;
       default:
-        throw '不可能出现的错误';
+        throw `不可能出现的错误 ${type}`;
     }
   }
 
