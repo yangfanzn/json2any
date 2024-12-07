@@ -1,9 +1,7 @@
-import { Complex as _Complex, Simple as _Simple, BaseType } from '../base';
+import { Complex as _Complex, Simple as _Simple, BaseType, Key } from '../base';
 import { func } from './func';
 
-export class Complex extends _Complex {
-  child: (Complex | Simple)[] = [];
-
+export class Complex<S extends Key = Simple<Key>> extends _Complex<S> {
   toCreate() {
     return `create() => ${this.nameClass}();`;
   }
@@ -29,15 +27,17 @@ export class Complex extends _Complex {
   }
 
   toCode() {
-    return this.child.reduce<{ context: Complex; code: string }[]>(
-      (list, cur) => {
-        list.push(...(cur instanceof Complex ? cur.toCode() : []));
-        return list;
-      },
-      [
-        {
-          context: this,
-          code: `
+    return this.child
+      .filter(e => e instanceof Complex)
+      .reduce(
+        (codes, cur) => {
+          codes.push(...cur.toCode());
+          return codes;
+        },
+        [
+          {
+            context: this as this,
+            code: `
 class ${this.nameClass} extends Cls {
   ${this.toCreate()}
   ${this.child.map(e => e.toProp()).join(`\n${' '.repeat(2)}`)}
@@ -47,13 +47,13 @@ class ${this.nameClass} extends Cls {
     return this;
   }
 }`,
-        },
-      ],
-    );
+          },
+        ],
+      );
   }
 }
 
-export class Simple extends _Simple {
+export class Simple<C extends Key = Complex<Key>> extends _Simple<C> {
   toSet() {
     const t = this.toDefVal(this.type);
     return `${this.nameProp} = setVal<${t.type}>(data, '${this.nameProp}', <bool>[${this.array}], ${this.optional}, ${this.nameProp}, ${t.value}, opt);`;

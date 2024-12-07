@@ -1,43 +1,48 @@
 import { Dart } from 'json2class';
-import { Http as _Http, InterKey } from '../base';
+import { Http as _Http, Complex as _Complex, Simple as _Simple } from '../base';
 
-export class Complex extends Dart.Complex implements InterKey {}
+export class Complex extends Dart.Complex<Simple> implements _Complex {
+  toArgs() {
+    return { type: this.nameClass, value: `${this.nameClass}()` };
+  }
+}
 
-export class Simple extends Dart.Simple implements InterKey {}
+export class Simple extends Dart.Simple<Complex> implements _Simple {
+  toArgs() {
+    return this.toDefVal(this.type);
+  }
+}
 
-export class Http extends _Http {
-  toCode(): { context: Http; code: string } {
+export class Http extends _Http<Complex, Simple> {
+  toCode() {
     const { plan } = this;
+
     plan.title.parent.key = this.nameMethod;
+
     const types = [
-      plan.params ? plan.params.nameClass : 'Null',
-      plan.data ? plan.data.nameClass : 'Null',
-      this.plan.form ? this.plan.form.nameClass : 'Null',
+      plan.params ? plan.params.toArgs().type : 'Null',
+      plan.data ? plan.data.toArgs().type : 'Null',
+      plan.form ? plan.form.toArgs().type : 'Null',
     ].join(', ');
 
     const args = [
       `title: '${plan.title.origin}'`,
-      `method: Method.Post`,
-      `params: ${plan.params ? `${plan.params.nameClass}()` : 'null'}`,
-      `data: ${plan.data ? `${plan.data.nameClass}()` : 'null'}`,
-      `form: ${plan.form ? `${plan.form.nameClass}()` : 'null'}`,
+      `method: '${plan.method.origin}'`,
+      `params: ${plan.params ? plan.params.toArgs().value : 'null'}`,
+      `data: ${plan.data ? plan.data.toArgs().value : 'null'}`,
+      `form: ${plan.form ? plan.form.toArgs().value : 'null'}`,
     ].join(', ');
 
+    // todo: types 和 args 循环逻辑可以放到基类
     return {
-      context: this,
-      code: this.plan.args
-        .reduce(
-          (codes, cur) => {
-            codes.push(...cur.toCode().map(e => e.code));
-            return codes;
-          },
-          [
-            `${this.nameMethod}(void Function(Plan<${types}> plan) _) {
-  _(Plan(${args}));
-}`,
-          ],
-        )
-        .join('\n'),
+      context: this as Http,
+      code: `${this.nameMethod}(void Function(Plan<${types}> plan) _) { _(Plan(${args})); }`,
+      dep: plan.args
+        .filter(e => e instanceof Complex)
+        .reduce((codes, cur) => {
+          codes.push(...cur.toCode());
+          return codes;
+        }, [] as { context: Complex; code: string }[]),
     };
   }
 }

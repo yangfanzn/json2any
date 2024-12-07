@@ -1,19 +1,25 @@
 import Fs from 'fs';
 import Path from 'path';
 import { Base } from 'json2class';
-import { Http, Supported } from './code';
+import { Http, Supported, Complex, Simple } from './code';
 import { SchemaTs } from './schema';
 import json2http from '../../index';
 
 export class Func {
-  core(http: typeof Http, complex: typeof Base.Complex, simple: typeof Base.Simple, key: string, json: SchemaTs): Http {
+  core(
+    http: typeof Http<Complex, Simple>,
+    complex: typeof Complex,
+    simple: typeof Simple,
+    key: string,
+    json: SchemaTs,
+  ): Http {
     // @ts-ignore
     return new http(
       key,
-      Base.func.core(complex, simple, '', {
+      Base.func.core(complex as typeof Base.Complex, simple as typeof Base.Simple, '', {
         ...json,
         [`params${json.params ? '' : '?'}`]: json.params ?? {},
-        [`data${json.data ? '' : '?'}`]: json.data ? { ref: json.data } : {},
+        [`data${json.data ? '' : '?'}`]: json.data ?? {},
         [`form${json.form ? '' : '?'}`]: json.form ?? {},
       }),
     );
@@ -21,6 +27,13 @@ export class Func {
 
   toFiles(jsons: Map<string, SchemaTs>, type: Supported): Map<string, string> {
     const files = new Map<string, string>();
+    const codes = [] as string[];
+    const deps = [] as string[];
+    Array.from(jsons).forEach(([key, json]) => {
+      const { code, dep } = json2http(type, key, json).toCode();
+      codes.push(code);
+      deps.push(...dep.map(e => e.code));
+    });
     files.set(
       `json2http.${type}`,
       [
@@ -28,10 +41,8 @@ export class Func {
           /\/\/ start-cls[\s\S]+\/\/ end-cls/,
           `${Fs.readFileSync(Path.resolve(__dirname, `../../json2class/src/${type}/temp.${type}`))}`,
         ),
-        ...Array.from(jsons).reduce((codes, [key, json]) => {
-          codes.push(json2http(type, key, json).toCode().code);
-          return codes;
-        }, [] as string[]),
+        ...deps,
+        ...codes,
       ].join('\n'),
     );
     return files;

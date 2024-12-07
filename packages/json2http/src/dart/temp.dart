@@ -2,22 +2,11 @@
 class Cls {}
 // end-cls
 
-class Method {
-  final String method;
-
-  const Method(this.method);
-
-  static const Post = const Method('post');
-  static const Get = const Method('get');
-  static const Put = const Method('put');
-  static const Delete = const Method('delete');
-}
-
 typedef _ = void Function(Plan plan);
 
 class Plan<P, D, F> {
-  String title;
-  Method method;
+  final title;
+  final method;
 
   P params;
   D data;
