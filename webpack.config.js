@@ -5,8 +5,9 @@ const fs = require('fs');
 
 module.exports = {
   entry: {
-    index: './index.ts',
     bin: './bin.ts',
+    cmd: './cmd.ts',
+    index: './index.ts',
   },
   output: {
     path: path.resolve('./', 'lib'),
@@ -30,7 +31,7 @@ module.exports = {
     {
       apply: compiler => {
         compiler.hooks.afterEmit.tapAsync('AddShebangPlugin', (compilation, callback) => {
-          const bin = path.resolve('./lib/bin.js');
+          const bin = path.resolve('./lib/cmd.js');
           const content = fs.readFileSync(bin, 'utf8').toString();
           if (!content.startsWith('#!')) {
             fs.writeFileSync(bin, `#!/usr/bin/env node\n${content}`);

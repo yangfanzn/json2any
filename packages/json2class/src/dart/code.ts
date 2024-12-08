@@ -40,10 +40,10 @@ export class Complex<S extends Key = Simple<Key>> extends _Complex<S> {
             code: `
 class ${this.nameClass} extends Cls {
   ${this.toCreate()}
-  ${this.child.map(e => e.toProp()).join(`\n${' '.repeat(2)}`)}
+  ${this.child.map(e => e.toProp()).join('')}
   ${this.nameClass} fromJson(dynamic data, {Option Function(Option option)? setOption, Option? option}) {
     Option opt = option ?? (setOption == null ? null : setOption(Cls.option.create())) ?? Cls.option;
-    ${this.child.map(e => e.toSet()).join(`\n${' '.repeat(4)}`)}
+    ${this.child.map(e => e.toSet()).join('')}
     return this;
   }
 }`,

@@ -63,7 +63,7 @@ export abstract class Simple<C extends Key = Complex<Key>> extends Key {
 
 export interface InterKey {
   arrayType(array: boolean[], type: string): string;
-  toFiles(jsons: Map<string, string>, type?: Supported): Map<string, string>;
+  // 基类有实现的可以不必定义，如 toFiles
 }
 
 export enum BaseType {

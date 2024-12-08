@@ -1,5 +1,4 @@
 import { Base } from 'json2class';
-import { SchemaTs } from './schema';
 
 export abstract class Key extends Base.Key {
   abstract toArgs(): { type: string; value: string };
@@ -84,9 +83,7 @@ export abstract class Http<C extends Complex = Complex, S extends Simple = Simpl
     return this.key.replace(/\//g, '');
   }
 }
-export interface InterHttp {
-  toFiles(jsons: Map<string, SchemaTs>, type?: Supported): Map<string, string>;
-}
+export interface InterHttp {}
 
 export enum Supported {
   Dart = 'dart',

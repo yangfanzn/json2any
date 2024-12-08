@@ -1,12 +1,9 @@
-import Fs from 'fs';
-import Path from 'path';
-import { Complex, Simple, Supported } from './code';
-import json2class from '../../index';
+import { Complex, Simple } from './code';
 
 export class Func {
-  core(complex: typeof Complex, simple: typeof Simple, key: string, json: any): Complex;
-  core(complex: typeof Complex, simple: typeof Simple, key: string, json: any, parent: Complex): Complex | Simple;
-  core(
+  core2class(complex: typeof Complex, simple: typeof Simple, key: string, json: any): Complex;
+  core2class(complex: typeof Complex, simple: typeof Simple, key: string, json: any, parent: Complex): Complex | Simple;
+  core2class(
     complex: typeof Complex,
     simple: typeof Simple,
     key: string,
@@ -37,7 +34,7 @@ export class Func {
         // @ts-ignore
         const self = new complex(key, array, optional, json, parent);
         self.child = Object.keys(json)
-          .map(k => this.core(complex, simple, k, json[k], self))
+          .map(k => this.core2class(complex, simple, k, json[k], self))
           .filter(e => e);
         return self;
       case 'null':
@@ -57,25 +54,6 @@ export class Func {
       }
       return str.replace(/[^a-zA-Z\d]/g, e => `${prefix}${e.charCodeAt(0)}`);
     }
-  }
-
-  toFiles(jsons: Map<string, string>, type: Supported) {
-    const files = new Map<string, string>();
-    files.set(
-      `json2class.${type}`,
-      [
-        Fs.readFileSync(Path.resolve(__dirname, `../src/${type}/temp.${type}`)),
-        ...Array.from(jsons).reduce((codes, [key, json]) => {
-          codes.push(
-            ...json2class(Supported.Dart, key, json)
-              .toCode()
-              .map(e => e.code),
-          );
-          return codes;
-        }, [] as string[]),
-      ].join('\n'),
-    );
-    return files;
   }
 }
 

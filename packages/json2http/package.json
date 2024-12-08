@@ -18,6 +18,6 @@
   "main": "./lib/index.js",
   "types": "./types/",
   "bin": {
-    "json2http": "./lib/bin.js"
+    "json2http": "./lib/cmd.js"
   }
 }

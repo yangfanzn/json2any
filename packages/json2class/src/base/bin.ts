@@ -1,10 +1,11 @@
 import Fs from 'fs';
 import Path from 'path';
-import Shelljs from 'shelljs';
 import Json5 from 'json5';
-import { Supported } from './code';
+import Shelljs from 'shelljs';
+import { Supported } from '.';
+import json2class from '../..';
 
-class Bin {
+export class Bin {
   readDir(
     path: string,
     {
@@ -66,12 +67,12 @@ class Bin {
       supported = base;
     }
     if (!supported.includes(type)) {
-      bin.exit(`The following languages are currently supported: ${supported.join(' / ')}`);
+      this.exit(`The following languages are currently supported: ${supported.join(' / ')}`);
     }
   }
 
   searchJsons(dir: string) {
-    return bin.readDir(dir, { ext: ['.json5', '.json'], ignore: /\/\./ }).reduce((codes, file) => {
+    return this.readDir(dir, { ext: ['.json5', '.json'], ignore: /\/\./ }).reduce((codes, file) => {
       codes.set(
         file
           .replace(/\.\w+$/, '')
@@ -82,6 +83,28 @@ class Bin {
       );
       return codes;
     }, new Map<string, any>());
+  }
+
+  type = Supported.Dart;
+  format = 'dart format . --line-length 120';
+
+  class2file(jsons: Map<string, string>) {
+    const files = new Map<string, string>();
+    files.set(
+      `json2class.${this.type}`,
+      [
+        Fs.readFileSync(Path.resolve(__dirname, `../src/${this.type}/temp.${this.type}`)),
+        ...Array.from(jsons).reduce((codes, [key, json]) => {
+          codes.push(
+            ...json2class(this.type, key, json)
+              .toCode()
+              .map(e => e.code),
+          );
+          return codes;
+        }, [] as string[]),
+      ].join(''),
+    );
+    return files;
   }
 }
 

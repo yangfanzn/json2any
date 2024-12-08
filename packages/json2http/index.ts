@@ -1,18 +1,14 @@
-import * as Dart from './src/dart';
+import { Supported, SchemaTs } from './src/base';
+
 import * as Base from './src/base';
+import * as Dart from './src/dart';
 
-export * from './src/base';
+export * as Base from './src/base';
+export * as Dart from './src/dart';
 
-export default function json2http(type: Base.Supported, key: string, json: Base.SchemaTs) {
+export default function json2http(type: Supported, key: string, json: SchemaTs) {
   switch (type) {
-    case Base.Supported.Dart:
-      return Dart.func.core(Dart.Http, Dart.Complex, Dart.Simple, key, json);
-  }
-}
-
-export function tools(type: Base.Supported) {
-  switch (type) {
-    case Base.Supported.Dart:
-      return Dart.func;
+    case Supported.Dart:
+      return Dart.func.core2http(Dart.Http, Dart.Complex, Dart.Simple, key, json);
   }
 }
