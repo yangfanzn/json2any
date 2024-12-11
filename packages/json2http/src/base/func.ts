@@ -14,6 +14,7 @@ export class Func extends Base.Func {
       key,
       Base.func.core2class(complex as typeof Base.Complex, simple as typeof Base.Simple, '', {
         ...json,
+        path: json.path ?? key,
         res: json.res,
         [`params${json.params ? '' : '?'}`]: json.params ?? {},
         [`data${json.data ? '' : '?'}`]: json.data ?? {},

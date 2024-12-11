@@ -27,7 +27,7 @@ export class Http extends _Http<Complex, Simple> {
     ].join(', ');
 
     const args = [
-      `path: ''`,
+      `path: '${plan.path.origin}'`,
       `title: '${plan.title.origin}'`,
       `method: '${plan.method.origin}'`,
       `res: ${plan.res.toArgs().value}`,

@@ -1,4 +1,5 @@
 import { Base } from 'json2class';
+import { SchemaPlan } from './schema';
 
 export abstract class Key extends Base.Key {
   abstract toArgs(): { type: string; value: string };
@@ -20,25 +21,31 @@ export abstract class Http<C extends Complex = Complex, S extends Simple = Simpl
           return x;
         }
 
-        if (cur.key === 'title') {
+        if (cur.key === 'path') {
           if (cur instanceof plan.constructor) {
             throw '不可能 json2plan1';
+          } else {
+            x.path = cur as S;
+            return x;
+          }
+        } else if (cur.key === 'title') {
+          if (cur instanceof plan.constructor) {
+            throw '不可能 json2plan2';
           } else {
             x.title = cur as S;
             return x;
           }
         } else if (cur.key === 'method') {
           if (cur instanceof plan.constructor) {
-            throw '不可能 json2plan2';
+            throw '不可能 json2plan3';
           } else {
             x.method = cur as S;
             return x;
           }
         } else if (cur instanceof plan.constructor) {
-          //
           cur = cur as C;
         } else {
-          throw '不可能 json2plan3';
+          throw '不可能 json2plan4';
         }
 
         switch (cur.key) {
@@ -65,15 +72,7 @@ export abstract class Http<C extends Complex = Complex, S extends Simple = Simpl
     );
   }
 
-  plan: {
-    title: S;
-    method: S;
-    res: C;
-    params?: C;
-    data?: C;
-    form?: C;
-    args: C[];
-  };
+  plan: SchemaPlan<C, S>;
 
   protected constructor(public key: string, plan: C) {
     this.plan = this.json2plan(plan);
