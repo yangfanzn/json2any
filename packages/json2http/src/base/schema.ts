@@ -5,10 +5,8 @@ export const schemaJson = {
     method: { type: 'string', enum: ['get', 'post', 'put', 'delete'] },
     res: { type: 'object' },
     params: { type: 'object', additionalProperties: { type: 'string' } },
+    data: { type: 'object' }, // todo: 定义 data 与 form 互斥
     form: { type: 'object' },
-    data: {
-      oneOf: [{ type: 'object' }, { type: 'array' }, { type: 'string' }, { type: 'number' }, { type: 'boolean' }],
-    },
   },
   required: ['title', 'method', 'res'],
   additionalProperties: false,
@@ -19,6 +17,6 @@ export interface SchemaTs {
   method: string;
   res: Record<string, any>;
   params?: Record<string, string>;
+  data?: Record<string, any>;
   form?: Record<string, any>;
-  data?: Record<string, any> | any[] | string | number | boolean;
 }

@@ -20,14 +20,17 @@ export class Http extends _Http<Complex, Simple> {
     plan.title.parent.key = this.nameMethod;
 
     const types = [
+      plan.res.toArgs().type,
       plan.params ? plan.params.toArgs().type : 'Null',
       plan.data ? plan.data.toArgs().type : 'Null',
       plan.form ? plan.form.toArgs().type : 'Null',
     ].join(', ');
 
     const args = [
+      `path: ''`,
       `title: '${plan.title.origin}'`,
       `method: '${plan.method.origin}'`,
+      `res: ${plan.res.toArgs().value}`,
       `params: ${plan.params ? plan.params.toArgs().value : 'null'}`,
       `data: ${plan.data ? plan.data.toArgs().value : 'null'}`,
       `form: ${plan.form ? plan.form.toArgs().value : 'null'}`,
@@ -36,13 +39,16 @@ export class Http extends _Http<Complex, Simple> {
     // todo: types 和 args 循环逻辑可以放到基类
     return {
       context: this as Http,
-      code: `${this.nameMethod}(void Function(Plan<${types}> plan) _) { _(Plan(${args})); }`,
-      dep: plan.args
-        .filter(e => e instanceof Complex)
-        .reduce((codes, cur) => {
-          codes.push(...cur.toCode());
-          return codes;
-        }, [] as { context: Complex; code: string }[]),
+      code: `
+Future<Plan<${types}>> ${this.nameMethod}(Future<void> Function(Plan<${types}> plan) _) async {
+  var plan = Plan(${args});
+  await _(plan);
+  return plan.request(plan) as Future<Plan<${types}>>;
+}`,
+      dep: plan.args.reduce((codes, cur) => {
+        codes.push(...cur.toCode());
+        return codes;
+      }, [] as { context: Complex; code: string }[]),
     };
   }
 }

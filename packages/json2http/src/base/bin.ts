@@ -38,10 +38,12 @@ export class Bin extends Base.Bin {
     files.set(
       `json2http.${this.type}`,
       [
-        `${Fs.readFileSync(Path.resolve(__dirname, `../src/${this.type}/temp.${this.type}`))}`.replace(
-          /\/\/ start-cls[\s\S]+\/\/ end-cls/,
-          `${Fs.readFileSync(Path.resolve(__dirname, `../../json2class/src/${this.type}/temp.${this.type}`))}`,
-        ),
+        `${Fs.readFileSync(Path.resolve(__dirname, `../src/${this.type}/temp.${this.type}`))}`
+          .replace(
+            /\/\/ start-cls[\s\S]+\/\/ end-cls/,
+            `${Fs.readFileSync(Path.resolve(__dirname, `../../json2class/src/${this.type}/temp.${this.type}`))}`,
+          )
+          .replace(/\/\/ code |\/\* code|code \*\//g, ''),
         ...deps,
         ...codes,
       ].join(''),

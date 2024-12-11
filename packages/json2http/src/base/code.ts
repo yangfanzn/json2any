@@ -34,43 +34,45 @@ export abstract class Http<C extends Complex = Complex, S extends Simple = Simpl
             x.method = cur as S;
             return x;
           }
+        } else if (cur instanceof plan.constructor) {
+          //
+          cur = cur as C;
+        } else {
+          throw '不可能 json2plan3';
         }
 
         switch (cur.key) {
+          case 'res':
+            x.res = cur;
+            x.args.push(cur);
+            break;
           case 'params':
-            if (cur instanceof plan.constructor) {
-              x.params = cur as C;
-              x.args.push(cur as C);
-            } else {
-              throw '不可能 json2plan3';
-            }
+            x.params = cur;
+            x.args.push(cur);
             break;
           case 'data':
-            x.data = cur as S;
-            x.args.push(cur as S);
+            x.data = cur;
+            x.args.push(cur);
             break;
           case 'form':
-            if (cur instanceof plan.constructor) {
-              x.form = cur as C;
-              x.args.push(cur as C);
-            } else {
-              throw '不可能 json2plan4';
-            }
+            x.form = cur;
+            x.args.push(cur);
             break;
         }
         return x;
       },
-      { args: [] as (C | S)[] } as typeof this.plan,
+      { args: [] as C[] } as typeof this.plan,
     );
   }
 
   plan: {
-    params?: C;
-    data?: C | S;
-    form?: C;
-    args: (C | S)[];
     title: S;
     method: S;
+    res: C;
+    params?: C;
+    data?: C;
+    form?: C;
+    args: C[];
   };
 
   protected constructor(public key: string, plan: C) {
