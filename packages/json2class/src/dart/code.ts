@@ -23,7 +23,7 @@ export class Complex<S extends Key = Simple<Key>> extends _Complex<S> {
   }
 
   toSet() {
-    return `${this.nameProp} = setVal<${this.nameClass}>(data, '${this.nameProp}', <bool>[${this.array}], ${this.optional}, ${this.nameProp}, ${this.nameClass}(), opt);`;
+    return `${this.nameProp} = setVal<${this.nameClass}>(_, '${this.nameProp}', <bool>[${this.array}], ${this.optional}, ${this.nameProp}, ${this.nameClass}(), opt);`;
   }
 
   toCode() {
@@ -37,11 +37,12 @@ export class Complex<S extends Key = Simple<Key>> extends _Complex<S> {
         [
           {
             context: this as this,
+            // todo: dynamic _, 用转换关键字变量替换(或用 this 明确指向，因为内部方法如 fromJson 也可能会冲突)
             code: `
 class ${this.nameClass} extends Cls {
   ${this.toCreate()}
   ${this.child.map(e => e.toProp()).join('')}
-  ${this.nameClass} fromJson(dynamic data, {Option Function(Option option)? setOption, Option? option}) {
+  ${this.nameClass} fromJson(dynamic _, {Option Function(Option option)? setOption, Option? option}) {
     Option opt = option ?? (setOption == null ? null : setOption(Cls.option.create())) ?? Cls.option;
     ${this.child.map(e => e.toSet()).join('')}
     return this;
@@ -56,7 +57,7 @@ class ${this.nameClass} extends Cls {
 export class Simple<C extends Key = Complex<Key>> extends _Simple<C> {
   toSet() {
     const t = this.toDefVal(this.type);
-    return `${this.nameProp} = setVal<${t.type}>(data, '${this.nameProp}', <bool>[${this.array}], ${this.optional}, ${this.nameProp}, ${t.value}, opt);`;
+    return `${this.nameProp} = setVal<${t.type}>(_, '${this.nameProp}', <bool>[${this.array}], ${this.optional}, ${this.nameProp}, ${t.value}, opt);`;
   }
 
   toProp() {

@@ -65,6 +65,10 @@ export abstract class Http<C extends Complex = Complex, S extends Simple = Simpl
             x.form = cur;
             x.args.push(cur);
             break;
+          case 'url':
+            x.url = cur;
+            x.args.push(cur);
+            break;
         }
         return x;
       },
@@ -81,7 +85,7 @@ export abstract class Http<C extends Complex = Complex, S extends Simple = Simpl
   abstract toCode(): { context: Http; code: string; dep: Array<{ context: Complex; code: string }> };
 
   get nameMethod() {
-    return this.key.replace(/\//g, '');
+    return this.key.replace(/[\/{}]/g, '');
   }
 }
 export interface InterHttp {}

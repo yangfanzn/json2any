@@ -1,3 +1,5 @@
+import 'dart:convert' as Convert;
+
 enum DiffType { Keep, Default, Null }
 
 enum MissKey { Keep, Default, Null }
@@ -40,14 +42,14 @@ class Option {
 abstract class Cls {
   static final Option option = Option();
 
-  Cls fromJson(dynamic data,
-      {Option Function(Option option)? setOption, Option? option});
+  Cls fromString(String _) => fromJson(Convert.jsonDecode(_));
+
+  Cls fromJson(dynamic data, {Option Function(Option option)? setOption, Option? option});
 
   Cls create();
 
   _isSameSimple(dynamic source, dynamic target) {
-    return source.runtimeType == target.runtimeType ||
-        (source is num && target is num);
+    return source.runtimeType == target.runtimeType || (source is num && target is num);
   }
 
   _nList<T>(List<bool> array, int n) {
@@ -140,8 +142,7 @@ abstract class Cls {
     throw '最大支持三维数组';
   }
 
-  _nArray<T>(List data, String key, List<bool> array, bool optional, List cur,
-      dynamic def, int level, Option option) {
+  _nArray<T>(List data, String key, List<bool> array, bool optional, List cur, dynamic def, int level, Option option) {
     dynamic t = _nList<T>(array, array.length - level + 1);
     for (int i = 0; i < data.length; i++) {
       bool isExist = cur.length > i; // 当前输入数据是否有空位落
@@ -239,9 +240,7 @@ abstract class Cls {
               ));
             } else {
               // 剩下的 Fill 在坑位不存在的情况下，根据是否可选决定填充内容
-              t.add(array[level - 1]
-                  ? null
-                  : _nList<T>(array, array.length - level));
+              t.add(array[level - 1] ? null : _nList<T>(array, array.length - level));
             }
           }
         } else if (_data is List) {
@@ -267,8 +266,7 @@ abstract class Cls {
                 _cur != null &&
                 (option.missIndex == MissIndex.Fill ||
                     // 非可选的Null 同 Fill, 小时 Fill 就是默认值
-                    (option.missIndex == MissIndex.Null &&
-                        !array[level - 1]))) {
+                    (option.missIndex == MissIndex.Null && !array[level - 1]))) {
               // 弥补下面[小时]循环的不足
               // 当类型不一致时，数组默认值需要递归
               t.add(_nArray<T>(
@@ -339,8 +337,7 @@ abstract class Cls {
     return t;
   }
 
-  setVal<T>(dynamic data, String key, List<bool> array, bool optional,
-      dynamic cur, dynamic def, Option option) {
+  setVal<T>(dynamic data, String key, List<bool> array, bool optional, dynamic cur, dynamic def, Option option) {
     bool isExist = true;
     if (data is! Map) {
       data = {};
@@ -352,22 +349,18 @@ abstract class Cls {
         if (option.missKey == MissKey.Null && optional) {
           return null;
         } else {
-          return option.missKey == MissKey.Keep
-              ? cur
-              : _nList<T>(array, array.length);
+          return option.missKey == MissKey.Keep ? cur : _nList<T>(array, array.length);
         }
       } else if (data is List) {
-        return _nArray<T>(data, key, array, optional,
-            cur == null ? _nList<T>(array, array.length) : cur, def, 1, option);
+        return _nArray<T>(
+            data, key, array, optional, cur == null ? _nList<T>(array, array.length) : cur, def, 1, option);
       } else if (optional && data == null) {
         return null;
       } else {
         if (option.diffType == DiffType.Null && optional) {
           return null;
         } else {
-          return option.diffType == DiffType.Keep
-              ? cur
-              : _nList<T>(array, array.length);
+          return option.diffType == DiffType.Keep ? cur : _nList<T>(array, array.length);
         }
       }
     } else {

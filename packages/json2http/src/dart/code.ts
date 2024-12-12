@@ -24,6 +24,7 @@ export class Http extends _Http<Complex, Simple> {
       plan.params ? plan.params.toArgs().type : 'Null',
       plan.data ? plan.data.toArgs().type : 'Null',
       plan.form ? plan.form.toArgs().type : 'Null',
+      plan.url ? plan.url.toArgs().type : 'Null',
     ].join(', ');
 
     const args = [
@@ -34,6 +35,7 @@ export class Http extends _Http<Complex, Simple> {
       `params: ${plan.params ? plan.params.toArgs().value : 'null'}`,
       `data: ${plan.data ? plan.data.toArgs().value : 'null'}`,
       `form: ${plan.form ? plan.form.toArgs().value : 'null'}`,
+      `url: ${plan.url ? plan.url.toArgs().value : 'null'}`,
     ].join(', ');
 
     // todo: types 和 args 循环逻辑可以放到基类
@@ -43,7 +45,7 @@ export class Http extends _Http<Complex, Simple> {
 Future<Plan<${types}>> ${this.nameMethod}(Future<void> Function(Plan<${types}> plan) _) async {
   var plan = Plan(${args});
   await _(plan);
-  return plan.request(plan) as Future<Plan<${types}>>;
+  return plan.request(plan);
 }`,
       dep: plan.args.reduce((codes, cur) => {
         codes.push(...cur.toCode());

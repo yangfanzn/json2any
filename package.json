@@ -21,6 +21,7 @@
     "webpack-cli": "^5.1.4"
   },
   "scripts": {
+    "deps": "lerna bootstrap",
     "build": "lerna run build",
     "dev": "lerna run dev",
     "version": "lerna version --force-publish --no-git-tag-version --exact",

@@ -30,6 +30,9 @@ export interface SchemaPlan<C, S> {
   // 所以，虽然 path 在 schemaJson 上不是必选的，但是最后一定有值
   path: S;
 
+  // 从 path 中分析提取
+  url?: C;
+
   title: S;
   method: S;
   res: C;
