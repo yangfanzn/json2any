@@ -3,7 +3,7 @@ export const schemaJson = {
   properties: {
     path: { type: 'string' },
     title: { type: 'string' },
-    method: { type: 'string', enum: ['get', 'post', 'put', 'delete'] },
+    method: { type: 'string', enum: ['GET', 'POST', 'PUT', 'DELETE'] },
     res: { type: 'object' },
     params: { type: 'object', additionalProperties: { type: 'string' } },
     data: { type: 'object' }, // todo: 定义 data 与 form 互斥
@@ -31,13 +31,16 @@ export interface SchemaPlan<C, S> {
   path: S;
 
   // 从 path 中分析提取
-  url?: C;
+  seg?: C;
 
   title: S;
   method: S;
+
   res: C;
+
   params?: C;
   data?: C;
   form?: C;
+
   args: C[];
 }

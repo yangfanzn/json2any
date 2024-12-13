@@ -14,7 +14,14 @@ export class Bin extends Base.Bin {
         const validate = ajv.compile(schemaJson);
         if (!validate(json)) {
           const [error] = validate.errors ?? [];
-          this.exit([`${key}:${error.instancePath}`, ...(validate.errors?.map(e => e.message) ?? [])].join('\n'));
+          this.exit(
+            [
+              `${key}:${error.instancePath}`,
+              ...(validate.errors?.map(e => {
+                return `${e.message} ${e.params?.allowedValues?.join(', ') ?? ''}`;
+              }) ?? []),
+            ].join('\n'),
+          );
         }
         if (codes.has(key)) {
           this.exit(`${key} already exists`);

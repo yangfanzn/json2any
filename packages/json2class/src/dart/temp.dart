@@ -46,6 +46,8 @@ abstract class Cls {
 
   Cls fromJson(dynamic data, {Option Function(Option option)? setOption, Option? option});
 
+  Map<String, dynamic> toJson();
+
   Cls create();
 
   _isSameSimple(dynamic source, dynamic target) {
@@ -337,7 +339,7 @@ abstract class Cls {
     return t;
   }
 
-  setVal<T>(dynamic data, String key, List<bool> array, bool optional, dynamic cur, dynamic def, Option option) {
+  _fromJson<T>(dynamic data, String key, List<bool> array, bool optional, dynamic cur, dynamic def, Option option) {
     bool isExist = true;
     if (data is! Map) {
       data = {};
@@ -401,6 +403,16 @@ abstract class Cls {
           }
         }
       }
+    }
+  }
+
+  dynamic _toJson(dynamic data) {
+    if (data is List) {
+      return null;
+    } else if (data is Cls) {
+      return data.toJson();
+    } else {
+      return data;
     }
   }
 }

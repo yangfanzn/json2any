@@ -49,6 +49,10 @@ export abstract class Http<C extends Complex = Complex, S extends Simple = Simpl
         }
 
         switch (cur.key) {
+          case 'seg':
+            x.seg = cur;
+            x.args.push(cur);
+            break;
           case 'res':
             x.res = cur;
             x.args.push(cur);
@@ -63,10 +67,6 @@ export abstract class Http<C extends Complex = Complex, S extends Simple = Simpl
             break;
           case 'form':
             x.form = cur;
-            x.args.push(cur);
-            break;
-          case 'url':
-            x.url = cur;
             x.args.push(cur);
             break;
         }

@@ -9,8 +9,9 @@ export abstract class Key {
   child?: Key[];
   parent?: Key;
 
+  // todo: 导出的 class 不能在 import 时 as，否则这里就没有继承标记
   abstract toProp(): string;
-  abstract toSet(): string;
+  abstract toFromJson(): string;
 
   get nameProp() {
     return func.convertKeyword(this.key, '_', false);

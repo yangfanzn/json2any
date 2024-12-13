@@ -24,18 +24,18 @@ export class Http extends _Http<Complex, Simple> {
       plan.params ? plan.params.toArgs().type : 'Null',
       plan.data ? plan.data.toArgs().type : 'Null',
       plan.form ? plan.form.toArgs().type : 'Null',
-      plan.url ? plan.url.toArgs().type : 'Null',
+      plan.seg ? plan.seg.toArgs().type : 'Null',
     ].join(', ');
 
     const args = [
       `path: '${plan.path.origin}'`,
+      `seg: ${plan.seg ? plan.seg.toArgs().value : 'null'}`,
       `title: '${plan.title.origin}'`,
       `method: '${plan.method.origin}'`,
       `res: ${plan.res.toArgs().value}`,
       `params: ${plan.params ? plan.params.toArgs().value : 'null'}`,
       `data: ${plan.data ? plan.data.toArgs().value : 'null'}`,
       `form: ${plan.form ? plan.form.toArgs().value : 'null'}`,
-      `url: ${plan.url ? plan.url.toArgs().value : 'null'}`,
     ].join(', ');
 
     // todo: types 和 args 循环逻辑可以放到基类

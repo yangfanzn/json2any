@@ -18,10 +18,13 @@ class Answer {
   dynamic origin;
 }
 
-class Plan<R extends Cls, P extends Cls?, D extends Cls?, F extends Cls?, U extends Cls?> {
+class Plan<R extends Cls, P extends Cls?, D extends Cls?, F extends Cls?, S extends Cls?> {
   String baseURL = '';
 
   String path;
+
+  S seg;
+
   String title;
   String method;
 
@@ -30,7 +33,6 @@ class Plan<R extends Cls, P extends Cls?, D extends Cls?, F extends Cls?, U exte
   P params;
   D data;
   F form;
-  U url;
 
   Plan({
     required this.path,
@@ -40,7 +42,7 @@ class Plan<R extends Cls, P extends Cls?, D extends Cls?, F extends Cls?, U exte
     required this.params,
     required this.data,
     required this.form,
-    required this.url,
+    required this.seg,
   });
 
   Answer answer = Answer();
@@ -57,7 +59,13 @@ class Plan<R extends Cls, P extends Cls?, D extends Cls?, F extends Cls?, U exte
 
   Future<Answer> Function(Plan) http = (Plan plan) async {
     var client = await plan.client(plan);
-    var request = Http.Request(plan.method, Uri.parse('${plan.baseURL}${plan.path}'));
+    var path = plan.path;
+    if (plan.seg != null) {
+      var seg = plan.seg?.toJson();
+      path = path.replaceAllMapped(new RegExp('{(.*?)}'), (match) => seg?[match.group(1)] ?? '');
+    }
+    var params = plan.params == null ? '' : '?${Uri(queryParameters: plan.params?.toJson()).query}';
+    var request = Http.Request(plan.method, Uri.parse('${plan.baseURL}${path}${params}'));
     if (plan.data != null) {
       request.body = Convert.jsonEncode(plan.data);
     }
@@ -66,10 +74,11 @@ class Plan<R extends Cls, P extends Cls?, D extends Cls?, F extends Cls?, U exte
     plan.answer.code = origin.statusCode;
     // plan.answer.message = origin.statusCode;
     plan.answer.data = origin.body;
+    plan.answer.message = origin.body;
     return plan.answer;
   };
 code */
-  Future<Plan<R, P, D, F, U>> Function(Plan<R, P, D, F, U> plan) request = (Plan<R, P, D, F, U> plan) async {
+  Future<Plan<R, P, D, F, S>> Function(Plan<R, P, D, F, S> plan) request = (Plan<R, P, D, F, S> plan) async {
     // code plan.answer = await plan.http(plan);
     if (plan.answer.code != 200) {
       throw plan.answer.message;

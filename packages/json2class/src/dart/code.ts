@@ -6,6 +6,10 @@ export class Complex<S extends Key = Simple<Key>> extends _Complex<S> {
     return `create() => ${this.nameClass}();`;
   }
 
+  toFromJson() {
+    return `${this.nameProp} = _fromJson<${this.nameClass}>(_, '${this.nameProp}', <bool>[${this.array}], ${this.optional}, ${this.nameProp}, ${this.nameClass}(), opt);`;
+  }
+
   toProp() {
     if (this.array.length) {
       if (this.optional) {
@@ -20,10 +24,6 @@ export class Complex<S extends Key = Simple<Key>> extends _Complex<S> {
         return `${this.nameClass} ${this.nameProp} = ${this.nameClass}();`;
       }
     }
-  }
-
-  toSet() {
-    return `${this.nameProp} = setVal<${this.nameClass}>(_, '${this.nameProp}', <bool>[${this.array}], ${this.optional}, ${this.nameProp}, ${this.nameClass}(), opt);`;
   }
 
   toCode() {
@@ -44,8 +44,11 @@ class ${this.nameClass} extends Cls {
   ${this.child.map(e => e.toProp()).join('')}
   ${this.nameClass} fromJson(dynamic _, {Option Function(Option option)? setOption, Option? option}) {
     Option opt = option ?? (setOption == null ? null : setOption(Cls.option.create())) ?? Cls.option;
-    ${this.child.map(e => e.toSet()).join('')}
+    ${this.child.map(e => e.toFromJson()).join('')}
     return this;
+  }
+  Map<String, dynamic> toJson() {
+    return {${this.child.map(e => `r'${e.key}':_toJson(${e.nameProp})`)}};
   }
 }`,
           },
@@ -55,9 +58,9 @@ class ${this.nameClass} extends Cls {
 }
 
 export class Simple<C extends Key = Complex<Key>> extends _Simple<C> {
-  toSet() {
+  toFromJson() {
     const t = this.toDefVal(this.type);
-    return `${this.nameProp} = setVal<${t.type}>(_, '${this.nameProp}', <bool>[${this.array}], ${this.optional}, ${this.nameProp}, ${t.value}, opt);`;
+    return `${this.nameProp} = _fromJson<${t.type}>(_, '${this.nameProp}', <bool>[${this.array}], ${this.optional}, ${this.nameProp}, ${t.value}, opt);`;
   }
 
   toProp() {
