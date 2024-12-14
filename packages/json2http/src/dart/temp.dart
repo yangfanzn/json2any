@@ -1,6 +1,6 @@
-// code import 'package:http/http.dart' as Http;
+// open import 'package:http/http.dart' as Http;
 
-// start-cls
+// replace-start-cls
 class Cls {
   Cls fromString(String _) => fromJson('{}');
 
@@ -8,7 +8,7 @@ class Cls {
 
   Map<String, dynamic> toJson() => {};
 }
-// end-cls
+// replace-end-cls
 
 class Answer {
   int code = 0;
@@ -51,7 +51,7 @@ class Plan<R extends Cls, P extends Cls?, D extends Cls?, F extends Cls?, S exte
     return plan.answer;
   };
 
-/* code
+/* open
   static Http.Client _client = Http.Client();
   Future<Http.Client> Function(Plan) client = (Plan plan) async {
     return Plan._client;
@@ -68,18 +68,19 @@ class Plan<R extends Cls, P extends Cls?, D extends Cls?, F extends Cls?, S exte
     var request = Http.Request(plan.method, Uri.parse('${plan.baseURL}${path}${params}'));
     if (plan.data != null) {
       request.body = Convert.jsonEncode(plan.data);
+    } else if (plan.form != null) {
+      request.bodyFields = plan.form?.toJson().map((k, v) => MapEntry(k, v)) ?? {};
     }
     var origin = await Http.Response.fromStream(await client.send(request));
     plan.answer.origin = origin;
     plan.answer.code = origin.statusCode;
-    // plan.answer.message = origin.statusCode;
+    plan.answer.message = origin.body; // ?? origin.reasonPhrase;
     plan.answer.data = origin.body;
-    plan.answer.message = origin.body;
     return plan.answer;
   };
-code */
+open */
   Future<Plan<R, P, D, F, S>> Function(Plan<R, P, D, F, S> plan) request = (Plan<R, P, D, F, S> plan) async {
-    // code plan.answer = await plan.http(plan);
+    // open plan.answer = await plan.http(plan);
     if (plan.answer.code != 200) {
       throw plan.answer.message;
     }
@@ -90,4 +91,12 @@ code */
     plan.res.fromString(plan.answer.data);
     return plan;
   };
+}
+
+// replace-deps
+class Json2http {
+  Json2http._();
+
+  static Json2http single = Json2http._();
+// replace-request
 }
