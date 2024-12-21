@@ -1,5 +1,5 @@
 import { Base } from 'json2class';
-import { SchemaMeta } from './schema';
+import { SchemaPlan, SchemaBody } from './schema';
 
 export abstract class Key extends Base.Key {}
 
@@ -53,16 +53,41 @@ export abstract class Http<C extends Complex = Complex, S extends Simple = Simpl
     }, {} as typeof this.plan);
   }
 
-  plan: SchemaMeta<C, S>;
+  plan: SchemaPlan<C, S>;
 
   launch: string;
 
   protected constructor(public key: string, plan: C) {
     this.plan = this.json2plan(plan);
     this.launch = this.key.replace(/[\/{}]/g, '');
+    this.plan.title.parent.key = this.launch;
   }
 
-  abstract toCode(): { context: Http; code: string; dep: Array<{ context: Complex; code: string }> };
+  abstract toLaunch(body?: SchemaBody): string;
+
+  toCode() {
+    const { plan } = this;
+    let body: SchemaBody | undefined;
+    if (plan.body) {
+      const type = plan.body.getChildByKey('type')?.origin;
+      const data = plan.body.getChildByKey('data');
+      if (!type) {
+        throw '不可能发生';
+      }
+      body = { type, data };
+    }
+    return {
+      context: this as typeof this,
+      code: this.toLaunch(body),
+      dep: [plan.res, plan.seg, plan.params, body?.data].reduce((codes, cur) => {
+        if (!(cur instanceof Base.Complex)) {
+          return codes;
+        }
+        codes.push(...cur.toCode());
+        return codes;
+      }, [] as { context: Complex; code: string }[]),
+    };
+  }
 }
 
 export enum Supported {

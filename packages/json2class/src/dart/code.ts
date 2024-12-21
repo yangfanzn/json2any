@@ -2,19 +2,9 @@ import { Complex as _Complex, Simple as _Simple, BaseType, Key } from '../base';
 import { func } from './func';
 
 export class Complex<S extends Key = Simple<Key>> extends _Complex<S> {
-  toCode() {
-    return this.child
-      .filter(e => e instanceof Complex)
-      .reduce(
-        (codes, cur) => {
-          codes.push(...cur.toCode());
-          return codes;
-        },
-        [
-          {
-            context: this as this,
-            // todo: dynamic _, 用转换关键字变量替换(或用 this 明确指向，因为内部方法如 fromJson 也可能会冲突)
-            code: `
+  toClass() {
+    // todo: dynamic _, 用转换关键字变量替换(或用 this 明确指向，因为内部方法如 fromJson 也可能会冲突)
+    return `
 class ${this.decl} extends Cls {
   create() => ${this.def};
   ${this.child.map(e => func.toProp(e)).join('')}
@@ -26,10 +16,7 @@ class ${this.decl} extends Cls {
   Map<String, dynamic> toJson() {
     return {${this.child.map(e => `r'${e.key}':_toJson(${e.prop})`)}};
   }
-}`,
-          },
-        ],
-      );
+}`;
   }
 }
 

@@ -1,3 +1,5 @@
+import { Complex, Simple } from './code';
+
 type JSONValue = string | number | boolean | null | JSONArray | JSONObject;
 type JSONArray = JSONValue[];
 type JSONObject = { [key: string]: JSONValue };
@@ -94,7 +96,7 @@ export interface SchemaTs {
   body?: BodyTs;
 }
 
-export interface SchemaMeta<C, S> {
+export interface SchemaPlan<C, S> {
   res: C;
 
   // 接口外层的配置 key，总是用于生成代码的名称
@@ -111,4 +113,9 @@ export interface SchemaMeta<C, S> {
 
   params?: C;
   body?: C;
+}
+
+export interface SchemaBody {
+  type: string;
+  data?: Complex | Simple;
 }

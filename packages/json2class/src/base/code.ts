@@ -37,6 +37,8 @@ export abstract class Complex<S extends Key = Simple<Key>> extends Key {
   child: (typeof this | S)[] = [];
   parent: typeof this;
 
+  abstract toClass(): string;
+
   get decl() {
     return this.toDecl2Def().decl;
   }
@@ -50,8 +52,15 @@ export abstract class Complex<S extends Key = Simple<Key>> extends Key {
   }
 
   toCode() {
-    const x = this as typeof this;
-    return [] as { context: typeof x; code: string }[];
+    return this.child
+      .filter(e => e instanceof Complex)
+      .reduce(
+        (codes, cur) => {
+          codes.push(...cur.toCode());
+          return codes;
+        },
+        [{ context: this as typeof this, code: this.toClass() }],
+      );
   }
 
   getChildByKey(key: string) {
