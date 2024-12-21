@@ -2,7 +2,7 @@ import Fs from 'fs';
 import Path from 'path';
 import Json5 from 'json5';
 import Shelljs from 'shelljs';
-import { Supported } from '.';
+import { Supported } from './code';
 import json2class from '../..';
 
 export class Bin {

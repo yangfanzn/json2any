@@ -3,6 +3,7 @@ import Path from 'path';
 import Fs from 'fs';
 import { tools, Base } from './bin';
 import { Supported } from './src/base';
+import { test } from './src/base/test';
 
 // 设置多个公共配置
 program.version('0.0.1', '-v --version', 'current version');
@@ -29,6 +30,13 @@ program
 
     // format: Shelljs.exec 会报错
     // ChildProcess.exec(bin.format);
+  });
+
+program
+  .description('test')
+  .command('test', { hidden: true })
+  .action(async (type, options) => {
+    test();
   });
 
 program.parse();

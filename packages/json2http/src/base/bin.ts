@@ -2,7 +2,7 @@ import Fs from 'fs';
 import Path from 'path';
 import Ajv from 'ajv';
 import { Base } from 'json2class/bin';
-import { schemaJson, SchemaTs } from '.';
+import { schemaJson, SchemaTs } from './schema';
 import json2http from '../..';
 
 export class Bin extends Base.Bin {

@@ -1,9 +1,15 @@
-import { Complex, Simple } from './code';
+import { Complex, Key, Simple } from './code';
 
-export class Func {
-  core2class(complex: typeof Complex, simple: typeof Simple, key: string, json: any): Complex;
-  core2class(complex: typeof Complex, simple: typeof Simple, key: string, json: any, parent: Complex): Complex | Simple;
-  core2class(
+export abstract class Func {
+  static core2class(complex: typeof Complex, simple: typeof Simple, key: string, json: any): Complex;
+  static core2class(
+    complex: typeof Complex,
+    simple: typeof Simple,
+    key: string,
+    json: any,
+    parent: Complex,
+  ): Complex | Simple;
+  static core2class(
     complex: typeof Complex,
     simple: typeof Simple,
     key: string,
@@ -44,7 +50,7 @@ export class Func {
     }
   }
 
-  convertKeyword(str: string, prefix: string, restore: boolean) {
+  static convertKeyword(str: string, prefix: string, restore: boolean) {
     // todo: keywords 清洗
     if (restore) {
       return str.replace(new RegExp(`${prefix}(\\d+)`, 'g'), (_, e) => String.fromCharCode(e));
@@ -55,6 +61,22 @@ export class Func {
       return str.replace(/[^a-zA-Z\d]/g, e => `${prefix}${e.charCodeAt(0)}`);
     }
   }
-}
 
-export const func = new Func();
+  abstract arrayType(array: boolean[], type: string): string;
+
+  toProp(key: Key) {
+    if (key.array.length) {
+      if (key.optional) {
+        return `${this.arrayType(key.array, key.decl)}? ${key.prop};`;
+      } else {
+        return `${this.arrayType(key.array, key.decl)} ${key.prop} = [];`;
+      }
+    } else {
+      if (key.optional) {
+        return `${key.decl}? ${key.prop};`;
+      } else {
+        return `${key.decl} ${key.prop} = ${key.def};`;
+      }
+    }
+  }
+}

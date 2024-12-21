@@ -1,6 +1,6 @@
-import { InterKey, Func as _Func } from '../base';
+import { Func as _Func } from '../base';
 
-class Func extends _Func implements InterKey {
+class Func extends _Func {
   arrayType(array: boolean[], type: string): string {
     return array.reduce((v, e) => {
       return `List<${v}${e ? '?' : ''}>`;

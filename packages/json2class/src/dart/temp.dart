@@ -408,7 +408,7 @@ abstract class Cls {
 
   dynamic _toJson(dynamic data) {
     if (data is List) {
-      return null;
+      return data.map((e) => e is Cls ? e.toJson() : e).toList();
     } else if (data is Cls) {
       return data.toJson();
     } else {

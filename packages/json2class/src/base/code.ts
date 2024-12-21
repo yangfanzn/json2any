@@ -1,27 +1,28 @@
-import { func } from './func';
+import { Func } from './func';
 
 export abstract class Key {
   abstract key: string;
   abstract array: boolean[];
-  abstract origin: string;
   abstract optional: boolean;
+  abstract origin: string;
+  abstract decl: string;
+  abstract def: string;
 
   child?: Key[];
   parent?: Key;
 
-  // todo: 导出的 class 不能在 import 时 as，否则这里就没有继承标记
-  abstract toProp(): string;
-  abstract toFromJson(): string;
-
-  get nameProp() {
-    return func.convertKeyword(this.key, '_', false);
+  get prop() {
+    return Func.convertKeyword(this.key, '_', false);
   }
+
+  // todo: 导出的 class 不能在 import 时 as，否则这里就没有继承标记
+  toFromJson() {
+    return `${this.prop} = _fromJson<${this.decl}>(_, '${this.prop}', <bool>[${this.array}], ${this.optional}, ${this.prop}, ${this.def}, opt);`;
+  }
+  abstract toDecl2Def(type?: string): { decl: string; def: string };
 }
 
 export abstract class Complex<S extends Key = Simple<Key>> extends Key {
-  child: (typeof this | S)[] = [];
-  parent: typeof this;
-
   protected constructor(
     public key: string,
     public array: boolean[],
@@ -33,21 +34,32 @@ export abstract class Complex<S extends Key = Simple<Key>> extends Key {
     this.parent = parent as typeof this;
   }
 
-  get nameClass(): string {
-    // todo: 不同语言，这个前缀可以不一样，单独可配置
-    return `${this.parent?.nameClass ?? ''}${func.convertKeyword(this.key, '_', false)}`;
+  child: (typeof this | S)[] = [];
+  parent: typeof this;
+
+  get decl() {
+    return this.toDecl2Def().decl;
+  }
+  get def() {
+    return this.toDecl2Def().def;
+  }
+
+  toDecl2Def() {
+    const decl = `${this.parent?.decl ?? ''}${this.prop}` as string;
+    return { decl, def: `new ${decl}()` };
   }
 
   toCode() {
     const x = this as typeof this;
     return [] as { context: typeof x; code: string }[];
   }
-  abstract toCreate(): string;
+
+  getChildByKey(key: string) {
+    return this.child.find(e => e.key === key);
+  }
 }
 
 export abstract class Simple<C extends Key = Complex<Key>> extends Key {
-  child = undefined;
-
   protected constructor(
     public key: string,
     public array: boolean[],
@@ -59,12 +71,16 @@ export abstract class Simple<C extends Key = Complex<Key>> extends Key {
     super();
   }
 
-  abstract toDefVal(x: BaseType): { type: string; value: string };
-}
+  child = undefined;
 
-export interface InterKey {
-  arrayType(array: boolean[], type: string): string;
-  // 基类有实现的可以不必定义，如 toFiles
+  get decl() {
+    return this.toDecl2Def(this.type).decl;
+  }
+  get def() {
+    return this.toDecl2Def(this.type).def;
+  }
+
+  abstract toDecl2Def(type: BaseType): { decl: string; def: string };
 }
 
 export enum BaseType {
