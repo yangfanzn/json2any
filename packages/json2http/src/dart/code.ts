@@ -20,6 +20,9 @@ export class Http extends _Http<Complex, Simple> {
       } else if (body.data) {
         bodyDecl = `Body<${body.data.decl}>`;
         bodyDef = `Body(type: '${body.type}', data: ${body.data.def})`;
+      } else if (body.type === 'binary') {
+        bodyDecl = 'Body<TypedData.Uint8List>';
+        bodyDef = `Body(type: '${body.type}', data: TypedData.Uint8List(0))`;
       } else {
         bodyDef = `Body(type: '${body.type}', data: null)`;
       }

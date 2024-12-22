@@ -1,4 +1,5 @@
 // open import 'package:dio/dio.dart' as Dio;
+// open import 'dart:typed_data' as TypedData;
 
 // replace-start-cls
 import 'dart:convert' as Convert;

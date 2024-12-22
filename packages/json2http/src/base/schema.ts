@@ -116,6 +116,6 @@ export interface SchemaPlan<C, S> {
 }
 
 export interface SchemaBody {
-  type: string;
+  type: BodyTs['type'];
   data?: Complex | Simple;
 }
