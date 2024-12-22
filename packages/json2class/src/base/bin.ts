@@ -57,6 +57,12 @@ export class Bin {
     Shelljs.exit(1);
   }
 
+  dirIsExist(dir: string) {
+    if (!Fs.existsSync(dir) || !Fs.statSync(dir).isDirectory()) {
+      this.exit(`"${dir}" is not a valid directory`);
+    }
+  }
+
   isSupported(type: string, supported?: string[]) {
     const base = Object.values(Supported) as string[];
     if (supported) {
@@ -72,7 +78,11 @@ export class Bin {
   }
 
   searchJsons(dir: string) {
-    return this.readDir(dir, { ext: ['.json5', '.json'], ignore: /\/\./ }).reduce((codes, file) => {
+    return this.readDir(dir, {
+      recursion: 3, // 最多搜索 3 层
+      ext: ['.json5', '.json'],
+      ignore: /\/\./,
+    }).reduce((codes, file) => {
       codes.set(
         file
           .replace(/\.\w+$/, '')

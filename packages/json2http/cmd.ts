@@ -14,18 +14,32 @@ program.option('-d, --debug', 'output extra debugging');
 program
   .description('generate http request function based on JSON configuration')
   .command('make <type>')
-  // .option('', '')
+  .option(
+    '-w, --workspace <workspace>',
+    'specifies the workspace directory (default is current directory) for json config search.',
+    '.',
+  )
+  .option(
+    '-o, --output <output>',
+    'specify the output directory for build artifacts (defaults to the workspace directory if not provided)',
+    '.',
+  )
   .action(async (type, options) => {
     Base.bin.isSupported(type, Object.values(Supported));
     const bin = tools(type);
 
+    const workspace = Path.resolve(options.workspace);
+    bin.dirIsExist(workspace);
+
+    const output = Path.resolve(options.output || workspace);
+    bin.dirIsExist(output);
+
     // todo: 同 json2class
-    const workspace = Path.resolve('.');
     // Shelljs.rm('-rf', cache);
     // Shelljs.mkdir('-p', cache);
 
     bin.http2file(bin.json2piece(workspace)).forEach((code, file) => {
-      Fs.writeFileSync(`${workspace}/${file}`, code);
+      Fs.writeFileSync(`${output}/${file}`, code);
     });
 
     // format: Shelljs.exec 会报错
