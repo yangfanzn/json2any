@@ -3,7 +3,7 @@ import { Func as _Func } from '../base';
 class Func extends _Func {
   arrayType(array: boolean[], type: string): string {
     return array.reduce((v, e) => {
-      return `List<${v}${e ? '?' : ''}>`;
+      return `List${Func.addX(`${v}${e ? '?' : ''}`)}`;
     }, type);
   }
 }

@@ -1,4 +1,4 @@
-import { Dart } from 'json2class';
+import { Dart, Base } from 'json2class';
 import { Http as _Http, Complex as _Complex, Simple as _Simple, SchemaBody } from '../base';
 
 export class Complex extends Dart.Complex<Simple> implements _Complex {}
@@ -45,11 +45,17 @@ export class Http extends _Http<Complex, Simple> {
       `body: ${bodyDef}`,
     ].join(', ');
 
-    return `
-Future<Plan<${types}>> ${this.launch}(Future<void> Function(Plan<${types}> plan) _) async {
+    return {
+      code: `
+Future${Base.Func.addX(this.declPlan)} ${this.launch}(Future${Base.Func.addX('void')} Function(${
+        this.declPlan
+      } plan) _) async {
   var plan = Plan(${args});
+  await option(plan);
   await _(plan);
   return plan.request(plan);
-}`;
+}`,
+      type: `typedef ${this.declPlan} = Plan${Base.Func.addX(types)};`,
+    };
   }
 }

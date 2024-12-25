@@ -6,6 +6,16 @@ import { schemaJson, SchemaTs } from './schema';
 import json2http from '../..';
 
 export class Bin extends Base.Bin {
+  envHttp = {
+    innerExecutor: 'dio',
+    extend: '',
+    output: '',
+  };
+
+  toEntry() {
+    return '';
+  }
+
   json2piece(dir: string) {
     const ajv = new Ajv();
     return Array.from(this.searchJsons(dir)).reduce((codes, [_, jsons]) => {
@@ -37,22 +47,23 @@ export class Bin extends Base.Bin {
     const files = new Map<string, string>();
     const request = [] as string[];
     const deps = [] as string[];
+    const types = [] as string[];
     Array.from(jsons).forEach(([key, json]) => {
-      const { code, dep } = json2http(this.type, key, json).toCode();
+      const { code, dep, type } = json2http(this.type, key, json).toCode();
       request.push(code);
       deps.push(...dep.map(e => e.code));
+      types.push(type);
     });
     files.set(
       `json2http.${this.type}`,
-      `${Fs.readFileSync(Path.resolve(__dirname, `../src/${this.type}/temp.${this.type}`))}`
+      this.toEntry()
         .replace(
-          /\/\/ replace-start-cls[\s\S]+\/\/ replace-end-cls/,
+          /@cls@/,
           `${Fs.readFileSync(Path.resolve(__dirname, `../../json2class/src/${this.type}/temp.${this.type}`))}`,
         )
-        .replace(/\/\/ open |\/\* open|open \*\//g, '')
-        .replace(/\/\/ replace-deps/, deps.join(''))
-        .replace(/\/\/ replace-request/, request.join('')),
-      // .replace(/\/\/.*|\/\*[\s\S]*?\*\//g, ''), // 简单的删除注释
+        .replace(/@types@/, types.join(''))
+        .replace(/@deps@/, deps.join(''))
+        .replace(/@request@/, request.join('')),
     );
     return files;
   }

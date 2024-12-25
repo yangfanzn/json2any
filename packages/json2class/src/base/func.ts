@@ -62,6 +62,18 @@ export abstract class Func {
     }
   }
 
+  static addX(child: string) {
+    return `${String.fromCharCode(60)}${child}${String.fromCharCode(62)}`;
+  }
+
+  static toUpperCaseFirst(str: string) {
+    if (str.length) {
+      return `${str.substring(0, 1).toUpperCase()}${str.substring(1)}`;
+    } else {
+      return str;
+    }
+  }
+
   abstract arrayType(array: boolean[], type: string): string;
 
   toProp(key: Key) {

@@ -1,4 +1,4 @@
-import { program } from 'commander';
+import { program, Option } from 'commander';
 import Path from 'path';
 import Fs from 'fs';
 import { tools, Base } from './bin';
@@ -13,10 +13,10 @@ program.option('-d, --debug', 'output extra debugging');
 // action(command1, command2, ..., options对象)
 program
   .description('generate http request function based on JSON configuration')
-  .command('make <type>')
+  .command('make <type>') // todo: type 设置可选值
   .option(
     '-w, --workspace <workspace>',
-    'specifies the workspace directory (default is current directory) for json config search.',
+    'specify the workspace directory (default is current directory) for json config search.',
     '.',
   )
   .option(
@@ -24,6 +24,19 @@ program
     'specify the output directory for build artifacts (defaults to the workspace directory if not provided)',
     '.',
   )
+  .option(
+    '-x, --extend <extend>',
+    'specify a path for the extension file (default is the file named `extend` in the output directory)',
+  )
+  .addOption(
+    new Option(
+      '--executor [executor]',
+      'specify a built-in tool for making network requests. defaults to Dio. If set to null, developers must implement their own',
+    )
+      .default('dio')
+      .choices(['dio', 'null']),
+  )
+
   .action(async (type, options) => {
     Base.bin.isSupported(type, Object.values(Supported));
     const bin = tools(type);
@@ -33,6 +46,19 @@ program
 
     const output = Path.resolve(options.output || workspace);
     bin.dirIsExist(output);
+
+    const extend =
+      options.extend === 'null' ? '' : Path.resolve(options.extend === undefined ? `extend.${type}` : options.extend);
+    if (options.extend === undefined) {
+      // todo: 默认情况，如果文件不存在，则主动创建
+    }
+    if (extend) {
+      bin.fileIsExit(extend);
+    }
+
+    bin.envHttp.output = output;
+    bin.envHttp.extend = extend;
+    bin.envHttp.innerExecutor = options.executor === 'null' ? '' : options.executor;
 
     // todo: 同 json2class
     // Shelljs.rm('-rf', cache);

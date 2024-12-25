@@ -1,4 +1,4 @@
-import { Complex as _Complex, Simple as _Simple, BaseType, Key } from '../base';
+import { Complex as _Complex, Simple as _Simple, BaseType, Key, Func } from '../base';
 import { func } from './func';
 
 export class Complex<S extends Key = Simple<Key>> extends _Complex<S> {
@@ -13,7 +13,7 @@ class ${this.decl} extends Cls {
     ${this.child.map(e => e.toFromJson()).join('')}
     return this;
   }
-  Map<String, dynamic> toJson() {
+  Map${Func.addX('String, dynamic')} toJson() {
     return {${this.child.map(e => `r'${e.key}':_toJson(${e.prop})`)}};
   }
 }`;

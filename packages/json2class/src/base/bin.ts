@@ -6,6 +6,8 @@ import { Supported } from './code';
 import json2class from '../..';
 
 export class Bin {
+  envClass = {};
+
   readDir(
     path: string,
     {
@@ -60,6 +62,12 @@ export class Bin {
   dirIsExist(dir: string) {
     if (!Fs.existsSync(dir) || !Fs.statSync(dir).isDirectory()) {
       this.exit(`"${dir}" is not a valid directory`);
+    }
+  }
+
+  fileIsExit(file: string) {
+    if (!Fs.existsSync(file) || !Fs.statSync(file).isFile()) {
+      this.exit(`"${file}" is not a valid file`);
     }
   }
 

@@ -57,13 +57,17 @@ export abstract class Http<C extends Complex = Complex, S extends Simple = Simpl
 
   launch: string;
 
+  get declPlan() {
+    return `plan${this.launch}`;
+  }
+
   protected constructor(public key: string, plan: C) {
     this.plan = this.json2plan(plan);
     this.launch = this.key.replace(/[\/{}]/g, '');
     this.plan.title.parent.key = this.launch;
   }
 
-  abstract toLaunch(body?: SchemaBody): string;
+  abstract toLaunch(body?: SchemaBody): { code: string; type: string };
 
   toCode() {
     const { plan } = this;
@@ -76,9 +80,11 @@ export abstract class Http<C extends Complex = Complex, S extends Simple = Simpl
       }
       body = { type, data };
     }
+    const { code, type } = this.toLaunch(body);
     return {
       context: this as typeof this,
-      code: this.toLaunch(body),
+      code,
+      type,
       dep: [plan.res, plan.seg, plan.params, body?.data].reduce((codes, cur) => {
         if (!(cur instanceof Base.Complex)) {
           return codes;
