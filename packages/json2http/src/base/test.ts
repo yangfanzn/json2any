@@ -9,16 +9,18 @@ export function test() {
 
   (() => {
     const x: SchemaTs[] = [{ path: '' }, { path: '', title: '' }, { path: '', title: '', method: 'POST' }];
-    if (x.filter(e => validate(e)).length) {
-      bin.exit('title method res 必须');
+    const n = x.findIndex(e => validate(e));
+    if (n >= 0) {
+      bin.exit(`[{n}]: title method res 必须`);
       return;
     }
   })();
 
   (() => {
     const x: SchemaTs[] = [{ path: '', title: '', method: 'XXX', res: {} }];
-    if (x.filter(e => validate(e)).length) {
-      bin.exit('method 不是枚举范围');
+    const n = x.findIndex(e => validate(e));
+    if (n >= 0) {
+      bin.exit(`[${n}]: method 不是枚举范围`);
       return;
     }
   })();
@@ -27,9 +29,14 @@ export function test() {
     const x: SchemaTs[] = [
       { path: '', title: '', method: 'POST', res: null },
       { path: '', title: '', method: 'POST', res: 1 },
+      { path: '', title: '', method: 'POST', res: 'a' },
+      { path: '', title: '', method: 'POST', res: false },
+      { path: '', title: '', method: 'POST', res: [] },
+      { path: '', title: '', method: 'POST', res: [{}] },
     ];
-    if (x.filter(e => validate(e)).length) {
-      bin.exit('res 必须是对象');
+    const n = x.findIndex(e => validate(e));
+    if (n >= 0) {
+      bin.exit(`[${n}]: res 必须是对象`);
       return;
     }
   })();
@@ -39,13 +46,15 @@ export function test() {
       { path: '', title: 'title', method: 'POST', res: {}, params: null },
       { path: '', title: 'title', method: 'POST', res: {}, params: 1 },
       { path: '', title: 'title', method: 'POST', res: {}, params: false },
+      { path: '', title: 'title', method: 'POST', res: {}, params: [] },
       { path: '', title: 'title', method: 'POST', res: {}, params: { a: 1 } },
       { path: '', title: 'title', method: 'POST', res: {}, params: { a: { a: 'a' } } },
       // 虽然静态检查不报错，但是通不过 Schema 检查，这不是问题。
       // { path: '', title: 'title', method: 'POST', res: {}, params: { 1: 'a' } },
     ];
-    if (x.filter(e => validate(e)).length) {
-      bin.exit('params 必须是 Record<string, string>');
+    const n = x.findIndex(e => validate(e));
+    if (n >= 0) {
+      bin.exit(`[${n}]: params 必须是 Record<string, string>`);
       return;
     }
   })();
@@ -57,8 +66,23 @@ export function test() {
       { path: '', title: 'title', method: 'POST', res: {}, body: {} },
       { path: '', title: 'title', method: 'POST', res: {}, body: { type: '1' } },
     ];
-    if (x.filter(e => validate(e)).length) {
-      bin.exit('body 必须是对象, 必须含有 type 或 data, type 必须是枚举值');
+    const n = x.findIndex(e => validate(e));
+    if (n >= 0) {
+      bin.exit(`[${n}]: body 必须是对象, 必须含有 type 或 data, type 必须是枚举值`);
+      return;
+    }
+  })();
+
+  (() => {
+    const x: SchemaTs[] = [
+      { path: '', title: '', method: 'POST', res: {}, body: { type: 'json', byte: {} } },
+      { path: '', title: '', method: 'POST', res: {}, body: { type: 'map', byte: {} } },
+      { path: '', title: '', method: 'POST', res: {}, body: { type: 'plain', byte: {} } },
+      { path: '', title: '', method: 'POST', res: {}, body: { type: 'byte', data: 1 } },
+    ];
+    const n = x.findIndex(e => validate(e));
+    if (n >= 0) {
+      bin.exit(`[${n}]: byte 只能用在 body.form 中`);
       return;
     }
   })();
@@ -69,8 +93,9 @@ export function test() {
       { path: '', title: 'title', method: 'POST', res: {}, body: { data: null } },
       { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'json', data: null } },
     ];
-    if (x.filter(e => validate(e)).length) {
-      bin.exit('body.json 必须是对象, 必须含有 type 或 data，data 是合法的 json，但本身不能是 null');
+    const n = x.findIndex(e => validate(e));
+    if (n >= 0) {
+      bin.exit(`[${n}]: body.json 必须是对象, 必须含有 type 或 data，data 是合法的 json，但本身不能是 null`);
       return;
     }
   })();
@@ -80,11 +105,13 @@ export function test() {
       { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'map' } },
       { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'map', data: null } },
       { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'map', data: 1 } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'map', data: [] } },
       { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'map', data: { a: 1 } } },
       { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'map', data: { a: {} } } },
     ];
-    if (x.filter(e => validate(e)).length) {
-      bin.exit('body.map, 必须含有 type 和 data, data 必须是 Record<string, string>');
+    const n = x.findIndex(e => validate(e));
+    if (n >= 0) {
+      bin.exit(`[${n}]: body.map, 必须含有 type 和 data, data 必须是 Record<string, string>`);
       return;
     }
   })();
@@ -92,13 +119,66 @@ export function test() {
   (() => {
     const x: SchemaTs[] = [
       { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form' } },
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: null } },
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: 1 } },
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { a: 1 } } },
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { a: {} } } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: {} } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', byte: {} } },
     ];
-    if (x.filter(e => validate(e)).length) {
-      bin.exit('body.form, 必须含有 type 和 data, data 必须是 Record<string, string>');
+    const n = x.findIndex(e => validate(e));
+    if (n >= 0) {
+      bin.exit(`[${n}]: body.form, 必须含有 type, data, byte`);
+      return;
+    }
+  })();
+
+  (() => {
+    const x: SchemaTs[] = [
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: null, byte: {} } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: 1, byte: {} } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: [], byte: {} } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { a: 1 }, byte: {} } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { a: [] }, byte: {} } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { a: {} }, byte: {} } },
+    ];
+    const n = x.findIndex(e => validate(e));
+    if (n >= 0) {
+      bin.exit(`[${n}]: body.form.data, 必须是 Record<string, string> 类型`);
+      return;
+    }
+  })();
+
+  (() => {
+    const x: SchemaTs[] = [
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: null } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: {} } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { fields: 1, bytes: 1 } } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { fields: {} } } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { bytes: {} } } },
+      {
+        path: '',
+        title: 'title',
+        method: 'POST',
+        res: {},
+        body: { type: 'form', data: { fields: { a: 1 }, bytes: {} } },
+      },
+      {
+        path: '',
+        title: 'title',
+        method: 'POST',
+        res: {},
+        body: { type: 'form', data: { fields: { a: 'a' }, bytes: { a: 1 } } },
+      },
+      {
+        path: '',
+        title: 'title',
+        method: 'POST',
+        res: {},
+        body: { type: 'form', data: { fields: { a: 'a' }, bytes: { a: [1] } } },
+      },
+    ];
+    const n = x.findIndex(e => validate(e));
+    if (n >= 0) {
+      bin.exit(
+        `[${n}]: body.form, 必须是 { fields: Record<string, string>， bytes: Record<string, string | string[]> } 类型`,
+      );
       return;
     }
   })();
@@ -110,27 +190,35 @@ export function test() {
       { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'plain', data: 1 } },
       { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'plain', data: {} } },
     ];
-    if (x.filter(e => validate(e)).length) {
-      bin.exit('body.plain, 必须含有 type 和 data, data 必须是 string');
+    const n = x.findIndex(e => validate(e));
+    if (n >= 0) {
+      bin.exit(`[${n}]: body.plain, 必须含有 type 和 data, data 必须是 string`);
       return;
     }
   })();
 
   (() => {
     const x: SchemaTs[] = [
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'binary', data: null } },
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'binary', data: 1 } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'byte', data: null } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'byte', data: 1 } },
     ];
-    if (x.filter(e => validate(e)).length) {
-      bin.exit('body.binary, 只能含有 type，不能有 data');
+    const n = x.findIndex(e => validate(e));
+    if (n >= 0) {
+      bin.exit(`[${n}]: body.byte, 只能含有 type，不能有 data`);
       return;
     }
   })();
 
+  /**
+   * 上面是不合法的
+   * 下面是合法的
+   */
+
   (() => {
     const x: SchemaTs[] = [{ path: '', title: 'title', method: 'POST', res: {} }];
-    if (x.filter(e => validate(e)).length !== x.length) {
-      bin.exit('最基础配置');
+    const n = x.findIndex(e => !validate(e));
+    if (n >= 0) {
+      bin.exit(`[${n}]: 最基础配置`);
       return;
     }
   })();
@@ -140,8 +228,9 @@ export function test() {
       { path: '', title: 'title', method: 'POST', res: {}, params: {} },
       { path: '', title: 'title', method: 'POST', res: {}, params: { x: '' } },
     ];
-    if (x.filter(e => validate(e)).length !== x.length) {
-      bin.exit('params');
+    const n = x.findIndex(e => !validate(e));
+    if (n >= 0) {
+      bin.exit(`[${n}]: params`);
       return;
     }
   })();
@@ -152,13 +241,17 @@ export function test() {
       { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'json', data: '' } },
       { path: '', title: 'title', method: 'POST', res: {}, body: { data: 1 } },
       { path: '', title: 'title', method: 'POST', res: {}, body: { data: {} } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { data: [] } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { data: [1] } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { data: [null] } },
       { path: '', title: 'title', method: 'POST', res: {}, body: { data: { x: 1 } } },
       { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'json', data: { x: 1 } } },
       { path: '', title: 'title', method: 'POST', res: {}, body: { data: { x: 1, y: null } } },
       { path: '', title: 'title', method: 'POST', res: {}, body: { data: { x: 'a', y: { a: 1, b: null } } } },
     ];
-    if (x.filter(e => validate(e)).length !== x.length) {
-      bin.exit('body.json');
+    const n = x.findIndex(e => !validate(e));
+    if (n >= 0) {
+      bin.exit(`[${n}]: body.json`);
       return;
     }
   })();
@@ -171,38 +264,59 @@ export function test() {
       // 这个 {1:a} 也是 Record<string, string> 不是错误
       { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'map', data: { 1: 'a' } } },
     ];
-    if (x.filter(e => validate(e)).length !== x.length) {
-      bin.exit('body.map');
+    const n = x.findIndex(e => !validate(e));
+    if (n >= 0) {
+      bin.exit(`[${n}]: body.map`);
       return;
     }
   })();
 
   (() => {
     const x: SchemaTs[] = [
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: {} } },
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { a: 'a' } } },
-      // JSON standard allows only double quoted string as property key 在 json 文件中就语法报错了，问题不大
-      // 这个 {1:a} 也是 Record<string, string> 不是错误
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { 1: 'a' } } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { fields: {}, bytes: {} } } },
+      {
+        path: '',
+        title: 'title',
+        method: 'POST',
+        res: {},
+        body: { type: 'form', data: { fields: { a: 'a' }, bytes: {} } },
+      },
+      {
+        path: '',
+        title: 'title',
+        method: 'POST',
+        res: {},
+        body: { type: 'form', data: { fields: { a: 'a' }, bytes: { a: '' } } },
+      },
+      {
+        path: '',
+        title: 'title',
+        method: 'POST',
+        res: {},
+        body: { type: 'form', data: { fields: { a: 'a' }, bytes: { a: '', b: [], c: [''] } } },
+      },
     ];
-    if (x.filter(e => validate(e)).length !== x.length) {
-      bin.exit('body.form');
+    const n = x.findIndex(e => !validate(e));
+    if (n >= 0) {
+      bin.exit(`[${n}]: body.form`);
       return;
     }
   })();
 
   (() => {
     const x: SchemaTs[] = [{ path: '', title: 'title', method: 'POST', res: {}, body: { type: 'plain', data: '' } }];
-    if (x.filter(e => validate(e)).length !== x.length) {
-      bin.exit('body.plain');
+    const n = x.findIndex(e => !validate(e));
+    if (n >= 0) {
+      bin.exit(`[${n}]: body.plain`);
       return;
     }
   })();
 
   (() => {
-    const x: SchemaTs[] = [{ path: '', title: 'title', method: 'POST', res: {}, body: { type: 'binary' } }];
-    if (x.filter(e => validate(e)).length !== x.length) {
-      bin.exit('body.binary');
+    const x: SchemaTs[] = [{ path: '', title: 'title', method: 'POST', res: {}, body: { type: 'byte' } }];
+    const n = x.findIndex(e => !validate(e));
+    if (n >= 0) {
+      bin.exit(`[${n}]: body.byte`);
       return;
     }
   })();

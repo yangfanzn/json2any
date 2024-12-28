@@ -1,7 +1,8 @@
 import Fs from 'fs';
+import Path from 'path';
 import { Base } from 'json2class';
 import { Bin as _Bin } from '../base/bin';
-import Path from 'path';
+import { contentTypes } from '../base';
 
 class Bin extends _Bin {
   static innerExecutorConfigs: Record<
@@ -78,14 +79,18 @@ class Executor {
 
 ${executorConfig.code}
 
+
+class BodyForm${Base.Func.addX('T')} {
+  T fields;
+  BodyForm({
+    required this.fields,
+  });
+}
+
 class Body${Base.Func.addX('T')} {
-  static Map${Base.Func.addX('String, String')} _types = {
-    'json': 'application/json',
-    'map': 'application/x-www-form-urlencoded',
-    'form': 'multipart/form-data',
-    'binary': 'application/octet-stream',
-    'plain': 'text/plain',
-  };
+  static Map${Base.Func.addX('String, String')} _types = {${Object.keys(contentTypes)
+      .map(k => `'${k}': '${(contentTypes as Record<string, { header: string }>)[k].header}'`)
+      .join(',')}};
 
   final String type;
   T data;

@@ -6,7 +6,7 @@ type JSONObject = { [key: string]: JSONValue };
 type JSONData = Exclude<JSONValue, null>;
 
 const methodTypes = ['GET', 'POST', 'PUT', 'DELETE'] as const;
-const contentTypes = {
+export const contentTypes = {
   json: {
     header: 'application/json',
     schema: {
@@ -35,22 +35,34 @@ const contentTypes = {
       required: ['type', 'data'],
       properties: {
         type: { const: 'form' },
-        data: { type: 'object', propertyNames: { type: 'string' }, additionalProperties: { type: 'string' } },
+        data: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['fields', 'bytes'],
+          properties: {
+            fields: { type: 'object', propertyNames: { type: 'string' }, additionalProperties: { type: 'string' } },
+            bytes: {
+              type: 'object',
+              propertyNames: { type: 'string' },
+              additionalProperties: { anyOf: [{ type: 'string' }, { type: 'array', items: { type: 'string' } }] },
+            },
+          },
+        },
       },
     },
-    type: {} as { type: 'form'; data: Record<string, string> },
+    type: {} as { type: 'form'; data: { fields: Record<string, string>; bytes: Record<string, string | string[]> } },
   },
-  binary: {
+  byte: {
     header: 'application/octet-stream',
     schema: {
       required: ['type'],
-      properties: { type: { const: 'binary' } },
-      not: { required: ['data'] },
+      properties: { type: { const: 'byte' } },
+      not: { anyOf: [{ required: ['data'] }, { required: ['byte'] }] },
     },
-    type: {} as { type: 'binary' },
+    type: {} as { type: 'byte' },
   },
   plain: {
-    header: 'application/octet-stream',
+    header: 'text/plain',
     schema: {
       required: ['type', 'data'],
       properties: { type: { const: 'plain' }, data: { type: 'string' } },
@@ -88,7 +100,7 @@ export const schemaJson = {
 };
 
 export interface SchemaTs {
-  res: Record<string, any>;
+  res: Record<string, JSONValue>;
   path: string;
   title: string;
   method: Method;
@@ -115,7 +127,16 @@ export interface SchemaPlan<C, S> {
   body?: C;
 }
 
-export interface SchemaBody {
+interface SchemaBodyBase {
   type: BodyTs['type'];
+}
+interface SchemaBodyForm extends SchemaBodyBase {
+  type: 'form';
+  data: Complex | Simple;
+  byte: Complex;
+}
+interface SchemaBodyOther extends SchemaBodyBase {
+  type: Exclude<BodyTs['type'], 'form'>;
   data?: Complex | Simple;
 }
+export type SchemaBody = SchemaBodyForm | SchemaBodyOther;

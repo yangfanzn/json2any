@@ -44,6 +44,8 @@ export abstract class Func {
           .filter(e => e);
         return self;
       case 'null':
+      // 配置的空数组，没有给数组元素
+      case 'undefined':
         break;
       default:
         throw `不可能出现的错误 ${type}`;

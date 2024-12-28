@@ -73,7 +73,7 @@ export abstract class Http<C extends Complex = Complex, S extends Simple = Simpl
     const { plan } = this;
     let body: SchemaBody | undefined;
     if (plan.body) {
-      const type = plan.body.getChildByKey('type')?.origin as SchemaBody['type'];
+      const type = plan.body.getChildByKey('type')?.origin as 'json'; // todo: as SchemaBody['type']; body.form.byte
       const data = plan.body.getChildByKey('data');
       if (!type) {
         throw '不可能发生';

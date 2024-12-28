@@ -1,5 +1,6 @@
 import { Base } from 'json2class';
-import { Http, Complex, Simple, SchemaTs } from '.';
+import { Http, Complex, Simple } from './code';
+import { SchemaTs } from './schema';
 
 export abstract class Func {
   core2http(

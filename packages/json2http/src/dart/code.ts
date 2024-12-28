@@ -16,13 +16,26 @@ export class Http extends _Http<Complex, Simple> {
       if (body.data?.array.length) {
         bodyDecl = Dart.func.arrayType(body.data.array, body.data.decl);
         bodyDef = `Body(type: '${body.type}', data: ${bodyDecl}.empty())`;
-        bodyDecl = `Body<${bodyDecl}>`;
-      } else if (body.data) {
-        bodyDecl = `Body<${body.data.decl}>`;
-        bodyDef = `Body(type: '${body.type}', data: ${body.data.def})`;
-      } else if (body.type === 'binary') {
-        bodyDecl = 'Body<TypedData.Uint8List>';
+        bodyDecl = `Body${Base.Func.addX(bodyDecl)}`;
+      } else if (body.type === 'form') {
+        // let fields: Complex | Simple | undefined;
+        // if (body.data instanceof Complex) {
+        //   fields = body.data.getChildByKey('fields');
+        //   if (!(fields instanceof Complex)) {
+        //     fields = undefined;
+        //   }
+        // }
+        // if (!fields) {
+        //   throw '不可能发生';
+        // }
+        bodyDecl = `Body${Base.Func.addX(`BodyForm${Base.Func.addX(body.data.decl)}`)}`;
+        bodyDef = `Body(type: '${body.type}', data: BodyForm(fields: ${body.data.def}))`;
+      } else if (body.type === 'byte') {
+        bodyDecl = `Body${Base.Func.addX('TypedData.Uint8List')}`;
         bodyDef = `Body(type: '${body.type}', data: TypedData.Uint8List(0))`;
+      } else if (body.data) {
+        bodyDecl = `Body${Base.Func.addX(body.data.decl)}`;
+        bodyDef = `Body(type: '${body.type}', data: ${body.data.def})`;
       } else {
         bodyDef = `Body(type: '${body.type}', data: null)`;
       }
