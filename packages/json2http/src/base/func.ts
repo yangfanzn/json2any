@@ -1,15 +1,15 @@
-import { Base } from 'json2class';
-import { Http, Complex, Simple } from './code';
+import { Json2classBase } from 'json2class';
+import { Http } from './code';
 import { SchemaTs } from './schema';
 
-export abstract class Func {
+export class Func extends Json2classBase.Func {
   core2http(
-    http: typeof Http<Complex, Simple>,
-    complex: typeof Complex,
-    simple: typeof Simple,
+    http: typeof Http<Json2classBase.Complex, Json2classBase.Simple<Json2classBase.Complex>>,
+    complex: typeof Json2classBase.Complex,
+    simple: typeof Json2classBase.Simple<Json2classBase.Complex>,
     key: string,
     json: SchemaTs,
-  ): Http {
+  ): Http<Json2classBase.Complex, Json2classBase.Simple<Json2classBase.Complex>> {
     // 默认取 key 设置 path
     const path = json.path ?? key;
 
@@ -27,7 +27,7 @@ export abstract class Func {
     // @ts-ignore
     return new http(
       key,
-      Base.Func.core2class(complex as typeof Base.Complex, simple as typeof Base.Simple, '', {
+      this.core2class(complex as typeof Json2classBase.Complex, simple as typeof Json2classBase.Simple, '', {
         ...json,
         res: json.res,
         path,
@@ -38,3 +38,5 @@ export abstract class Func {
     );
   }
 }
+
+export const func = new Func();

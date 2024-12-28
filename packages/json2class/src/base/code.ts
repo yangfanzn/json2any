@@ -1,4 +1,15 @@
-import { Func } from './func';
+import { func } from './func';
+import { BaseType } from './type';
+
+export class Lang {
+  arrayType(array: boolean[], type: string) {
+    return '';
+  }
+
+  toProp(key: Key) {
+    return '';
+  }
+}
 
 export abstract class Key {
   abstract key: string;
@@ -8,34 +19,35 @@ export abstract class Key {
   abstract decl: string;
   abstract def: string;
 
+  lang = new Lang();
+
   child?: Key[];
   parent?: Key;
 
   get prop() {
-    return Func.convertKeyword(this.key, '_', false);
+    return func.convertKeyword(this.key, '_', false);
   }
 
-  // todo: 导出的 class 不能在 import 时 as，否则这里就没有继承标记
   toFromJson() {
     return `${this.prop} = _fromJson<${this.decl}>(_, '${this.prop}', <bool>[${this.array}], ${this.optional}, ${this.prop}, ${this.def}, opt);`;
   }
   abstract toDecl2Def(type?: string): { decl: string; def: string };
 }
 
-export abstract class Complex<S extends Key = Simple<Key>> extends Key {
+export abstract class Complex extends Key {
   protected constructor(
     public key: string,
     public array: boolean[],
     public optional: boolean,
     public origin: string,
-    parent?: Complex<S>,
+    parent?: Complex,
   ) {
     super();
     this.parent = parent as typeof this;
   }
 
-  child: (typeof this | S)[] = [];
-  parent: typeof this;
+  child: (typeof this | Simple<typeof this>)[] = [];
+  parent?: typeof this;
 
   abstract toClass(): string;
 
@@ -68,7 +80,7 @@ export abstract class Complex<S extends Key = Simple<Key>> extends Key {
   }
 }
 
-export abstract class Simple<C extends Key = Complex<Key>> extends Key {
+export abstract class Simple<C extends Complex> extends Key {
   protected constructor(
     public key: string,
     public array: boolean[],
@@ -90,14 +102,4 @@ export abstract class Simple<C extends Key = Complex<Key>> extends Key {
   }
 
   abstract toDecl2Def(type: BaseType): { decl: string; def: string };
-}
-
-export enum BaseType {
-  String = 'string',
-  Number = 'number',
-  Boolean = 'boolean',
-}
-
-export enum Supported {
-  Dart = 'dart',
 }

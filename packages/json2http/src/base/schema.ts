@@ -1,4 +1,4 @@
-import { Complex, Simple } from './code';
+import { Json2classBase } from 'json2class';
 
 type JSONValue = string | number | boolean | null | JSONArray | JSONObject;
 type JSONArray = JSONValue[];
@@ -132,11 +132,11 @@ interface SchemaBodyBase {
 }
 interface SchemaBodyForm extends SchemaBodyBase {
   type: 'form';
-  data: Complex | Simple;
-  byte: Complex;
+  data: Json2classBase.Complex | Json2classBase.Simple<Json2classBase.Complex>;
+  byte: Json2classBase.Complex;
 }
 interface SchemaBodyOther extends SchemaBodyBase {
   type: Exclude<BodyTs['type'], 'form'>;
-  data?: Complex | Simple;
+  data?: Json2classBase.Complex | Json2classBase.Simple<Json2classBase.Complex>;
 }
 export type SchemaBody = SchemaBodyForm | SchemaBodyOther;

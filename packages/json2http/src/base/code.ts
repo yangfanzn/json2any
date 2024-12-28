@@ -1,21 +1,20 @@
-import { Base } from 'json2class';
+import { Json2classBase } from 'json2class';
 import { SchemaPlan, SchemaBody } from './schema';
 
-export abstract class Key extends Base.Key {}
+// export abstract class Key extends Base.Key {}
+//
+// export abstract class Complex extends Base.Complex<Simple> implements Key {}
+//
+// export abstract class Simple extends Base.Simple<Complex> implements Key {}
 
-export abstract class Complex extends Base.Complex<Simple> implements Key {}
-
-export abstract class Simple extends Base.Simple<Complex> implements Key {}
-
-export abstract class Http<C extends Complex = Complex, S extends Simple = Simple> {
+export abstract class Http<C extends Json2classBase.Complex, S extends Json2classBase.Simple<Json2classBase.Complex>> {
   json2plan(plan: C) {
-    return plan.child.reduce((x, cur) => {
+    return (plan.child as (C | S)[]).reduce((x, cur) => {
       if (cur.optional) {
         return x;
       }
 
-      if (cur instanceof plan.constructor) {
-        cur = cur as C;
+      if (cur instanceof Json2classBase.Complex) {
         switch (cur.key) {
           case 'seg':
             x.seg = cur;
@@ -33,16 +32,15 @@ export abstract class Http<C extends Complex = Complex, S extends Simple = Simpl
             throw '不可能 json2plan1';
         }
       } else {
-        cur = cur as S;
         switch (cur.key) {
           case 'path':
-            x.path = cur as S;
+            x.path = cur;
             break;
           case 'title':
-            x.title = cur as S;
+            x.title = cur;
             break;
           case 'method':
-            x.method = cur as S;
+            x.method = cur;
             break;
           default:
             throw '不可能 json2plan2';
@@ -67,7 +65,7 @@ export abstract class Http<C extends Complex = Complex, S extends Simple = Simpl
     this.plan.title.parent.key = this.launch;
   }
 
-  abstract toLaunch(body?: SchemaBody): { code: string; type: string };
+  abstract toLaunch(body?: SchemaBody): { code: string; alias: string };
 
   toCode() {
     const { plan } = this;
@@ -80,22 +78,22 @@ export abstract class Http<C extends Complex = Complex, S extends Simple = Simpl
       }
       body = { type, data };
     }
-    const { code, type } = this.toLaunch(body);
+    const { code, alias } = this.toLaunch(body);
     return {
       context: this as typeof this,
       code,
-      type,
+      alias,
       dep: [plan.res, plan.seg, plan.params, body?.data].reduce((codes, cur) => {
-        if (!(cur instanceof Base.Complex)) {
+        if (!(cur instanceof Json2classBase.Complex)) {
           return codes;
         }
         codes.push(...cur.toCode());
         return codes;
-      }, [] as { context: Complex; code: string }[]),
+      }, [] as { context: Json2classBase.Complex; code: string }[]),
     };
   }
-}
 
-export enum Supported {
-  Dart = 'dart',
+  static toEntry(extend?: { path: string; executor: string }) {
+    return '';
+  }
 }

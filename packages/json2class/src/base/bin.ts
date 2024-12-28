@@ -2,7 +2,7 @@ import Fs from 'fs';
 import Path from 'path';
 import Json5 from 'json5';
 import Shelljs from 'shelljs';
-import { Supported } from './code';
+import { Supported } from './type';
 import json2class from '../..';
 
 export class Bin {
@@ -103,18 +103,15 @@ export class Bin {
     }, new Map<string, any>());
   }
 
-  type = Supported.Dart;
-  format = 'dart format . --line-length 120';
-
-  class2file(jsons: Map<string, string>) {
+  class2file(jsons: Map<string, string>, type: Supported) {
     const files = new Map<string, string>();
     files.set(
-      `json2class.${this.type}`,
+      `json2class.${type}`,
       [
-        Fs.readFileSync(Path.resolve(__dirname, `../src/${this.type}/temp.${this.type}`)),
+        Fs.readFileSync(Path.resolve(__dirname, `../src/${type}/temp.${type}`)),
         ...Array.from(jsons).reduce((codes, [key, json]) => {
           codes.push(
-            ...json2class(this.type, key, json)
+            ...json2class(type, key, json)
               .toCode()
               .map(e => e.code),
           );

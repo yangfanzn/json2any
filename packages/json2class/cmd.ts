@@ -1,7 +1,7 @@
 import { program } from 'commander';
 import Path from 'path';
 import Fs from 'fs';
-import { tools, Base } from './bin';
+import { bin } from './src/base/bin';
 
 // 设置多个公共配置
 program.version('0.0.1', '-v --version', 'current version');
@@ -23,8 +23,7 @@ program
     '.',
   )
   .action(async (type, options) => {
-    Base.bin.isSupported(type);
-    const bin = tools(type);
+    bin.isSupported(type);
 
     const workspace = Path.resolve(options.workspace);
     bin.dirIsExist(workspace);
@@ -38,7 +37,7 @@ program
     // Shelljs.rm('-rf', cache);
     // Shelljs.mkdir('-p', cache);
 
-    bin.class2file(bin.searchJsons(workspace)).forEach((code, file) => {
+    bin.class2file(bin.searchJsons(workspace), type).forEach((code, file) => {
       Fs.writeFileSync(`${output}/${file}`, code);
     });
 

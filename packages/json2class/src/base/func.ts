@@ -1,21 +1,21 @@
-import { Complex, Key, Simple } from './code';
+import { Complex, Simple } from './code';
 
-export abstract class Func {
-  static core2class(complex: typeof Complex, simple: typeof Simple, key: string, json: any): Complex;
-  static core2class(
+export class Func {
+  core2class(complex: typeof Complex, simple: typeof Simple<Complex>, key: string, json: any): Complex;
+  core2class(
     complex: typeof Complex,
-    simple: typeof Simple,
+    simple: typeof Simple<Complex>,
     key: string,
     json: any,
     parent: Complex,
-  ): Complex | Simple;
-  static core2class(
+  ): Complex | Simple<Complex>;
+  core2class(
     complex: typeof Complex,
-    simple: typeof Simple,
+    simple: typeof Simple<Complex>,
     key: string,
     json: any,
     parent?: Complex,
-  ): Complex | Simple | undefined {
+  ): Complex | Simple<Complex> | undefined {
     const array: boolean[] = [];
     while (Array.isArray(json)) {
       // 先取 1，再用 0 复写，注意反过来会有问题
@@ -52,7 +52,7 @@ export abstract class Func {
     }
   }
 
-  static convertKeyword(str: string, prefix: string, restore: boolean) {
+  convertKeyword(str: string, prefix: string, restore: boolean) {
     // todo: keywords 清洗
     if (restore) {
       return str.replace(new RegExp(`${prefix}(\\d+)`, 'g'), (_, e) => String.fromCharCode(e));
@@ -64,33 +64,17 @@ export abstract class Func {
     }
   }
 
-  static addX(child: string) {
+  addX(child: string) {
     return `${String.fromCharCode(60)}${child}${String.fromCharCode(62)}`;
   }
 
-  static toUpperCaseFirst(str: string) {
+  toUpperCaseFirst(str: string) {
     if (str.length) {
       return `${str.substring(0, 1).toUpperCase()}${str.substring(1)}`;
     } else {
       return str;
     }
   }
-
-  abstract arrayType(array: boolean[], type: string): string;
-
-  toProp(key: Key) {
-    if (key.array.length) {
-      if (key.optional) {
-        return `${this.arrayType(key.array, key.decl)}? ${key.prop};`;
-      } else {
-        return `${this.arrayType(key.array, key.decl)} ${key.prop} = [];`;
-      }
-    } else {
-      if (key.optional) {
-        return `${key.decl}? ${key.prop};`;
-      } else {
-        return `${key.decl} ${key.prop} = ${key.def};`;
-      }
-    }
-  }
 }
+
+export const func = new Func();

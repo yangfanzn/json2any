@@ -1,20 +1,16 @@
 import Fs from 'fs';
 import Path from 'path';
 import Ajv from 'ajv';
-import { Base } from 'json2class/bin';
+import { Json2classBin } from 'json2class/bin';
 import { schemaJson, SchemaTs } from './schema';
+import { Supported } from './type';
 import json2http from '../..';
 
-export class Bin extends Base.Bin {
+export class Bin extends Json2classBin.Bin {
   envHttp = {
-    innerExecutor: 'dio',
     extend: '',
     output: '',
   };
-
-  toEntry() {
-    return '';
-  }
 
   json2piece(dir: string) {
     const ajv = new Ajv();
@@ -43,29 +39,47 @@ export class Bin extends Base.Bin {
     }, new Map<string, SchemaTs>());
   }
 
-  http2file(jsons: Map<string, SchemaTs>): Map<string, string> {
-    const files = new Map<string, string>();
+  http2file(jsons: Map<string, SchemaTs>, type: Supported): Map<string, string> {
+    let toEntry = '';
+
     const request = [] as string[];
     const deps = [] as string[];
-    const types = [] as string[];
+    const aliases = [] as string[];
+
     Array.from(jsons).forEach(([key, json]) => {
-      const { code, dep, type } = json2http(this.type, key, json).toCode();
+      const { http, Http } = json2http(type, key, json);
+      toEntry ||= Http.toEntry(this.parseExtend());
+      const { code, dep, alias } = http.toCode();
       request.push(code);
       deps.push(...dep.map(e => e.code));
-      types.push(type);
+      aliases.push(alias);
     });
+
+    const files = new Map<string, string>();
     files.set(
-      `json2http.${this.type}`,
-      this.toEntry()
-        .replace(
-          /@cls@/,
-          `${Fs.readFileSync(Path.resolve(__dirname, `../../json2class/src/${this.type}/temp.${this.type}`))}`,
-        )
-        .replace(/@types@/, types.join(''))
+      `json2http.${type}`,
+      toEntry
+        .replace(/@cls@/, `${Fs.readFileSync(Path.resolve(__dirname, `../../json2class/src/${type}/temp.${type}`))}`)
+        .replace(/@aliases@/, aliases.join(''))
         .replace(/@deps@/, deps.join(''))
         .replace(/@request@/, request.join('')),
     );
     return files;
+  }
+
+  parseExtend() {
+    let extend: { path: string; executor: string } | undefined;
+    if (this.envHttp.extend) {
+      const [, disabled, , name] =
+        `${Fs.readFileSync(this.envHttp.extend)}`.match(
+          /(\/\/\s+@json2http-disabled(\s+))?class\s+(\w+)\s+extends\s+Executor\s+/,
+        ) ?? [];
+      extend = {
+        path: Path.relative(this.envHttp.output, this.envHttp.extend),
+        executor: disabled ? '' : name ?? '',
+      };
+    }
+    return extend;
   }
 }
 

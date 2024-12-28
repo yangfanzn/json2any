@@ -1,9 +1,8 @@
-import { program, Option } from 'commander';
+import { program } from 'commander';
 import Path from 'path';
 import Fs from 'fs';
-import { tools, Base } from './bin';
+import { bin } from './src/base/bin';
 import { Supported } from './src/base';
-import { test } from './src/base/test';
 
 // 设置多个公共配置
 program.version('0.0.1', '-v --version', 'current version');
@@ -28,18 +27,8 @@ program
     '-x, --extend <extend>',
     'specify a path for the extension file (default is the file named `extend` in the output directory)',
   )
-  .addOption(
-    new Option(
-      '--executor [executor]',
-      'specify a built-in tool for making network requests. defaults to Dio. If set to null, developers must implement their own',
-    )
-      .default('dio')
-      .choices(['dio', 'null']),
-  )
-
   .action(async (type, options) => {
-    Base.bin.isSupported(type, Object.values(Supported));
-    const bin = tools(type);
+    bin.isSupported(type, Object.values(Supported)); // todo: 支持逻辑要在看看
 
     const workspace = Path.resolve(options.workspace);
     bin.dirIsExist(workspace);
@@ -48,7 +37,9 @@ program
     bin.dirIsExist(output);
 
     const extend =
-      options.extend === 'null' ? '' : Path.resolve(options.extend === undefined ? `extend.${type}` : options.extend);
+      options.extend === ''
+        ? ''
+        : Path.resolve(options.extend === undefined ? `${output}/extend.${type}` : options.extend);
     if (options.extend === undefined) {
       // todo: 默认情况，如果文件不存在，则主动创建
     }
@@ -58,13 +49,12 @@ program
 
     bin.envHttp.output = output;
     bin.envHttp.extend = extend;
-    bin.envHttp.innerExecutor = options.executor === 'null' ? '' : options.executor;
 
     // todo: 同 json2class
     // Shelljs.rm('-rf', cache);
     // Shelljs.mkdir('-p', cache);
 
-    bin.http2file(bin.json2piece(workspace)).forEach((code, file) => {
+    bin.http2file(bin.json2piece(workspace), type).forEach((code, file) => {
       Fs.writeFileSync(`${output}/${file}`, code);
     });
 
@@ -76,6 +66,7 @@ program
   .description('test')
   .command('test', { hidden: true })
   .action(async (type, options) => {
+    const { test } = require('./src/base/test');
     test();
   });
 
