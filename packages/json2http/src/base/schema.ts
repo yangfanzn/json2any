@@ -38,10 +38,14 @@ export const contentTypes = {
         data: {
           type: 'object',
           additionalProperties: false,
-          required: ['fields', 'bytes'],
+          required: ['fields', 'files'],
           properties: {
-            fields: { type: 'object', propertyNames: { type: 'string' }, additionalProperties: { type: 'string' } },
-            bytes: {
+            fields: {
+              type: 'object',
+              propertyNames: { type: 'string' },
+              additionalProperties: { anyOf: [{ type: 'string' }, { type: 'array', items: { type: 'string' } }] },
+            },
+            files: {
               type: 'object',
               propertyNames: { type: 'string' },
               additionalProperties: { anyOf: [{ type: 'string' }, { type: 'array', items: { type: 'string' } }] },
@@ -50,7 +54,10 @@ export const contentTypes = {
         },
       },
     },
-    type: {} as { type: 'form'; data: { fields: Record<string, string>; bytes: Record<string, string | string[]> } },
+    type: {} as {
+      type: 'form';
+      data: { fields: Record<string, string | string[]>; files: Record<string, string | string[]> };
+    },
   },
   byte: {
     header: 'application/octet-stream',
@@ -132,8 +139,10 @@ interface SchemaBodyBase {
 }
 interface SchemaBodyForm extends SchemaBodyBase {
   type: 'form';
-  data: Json2classBase.Complex | Json2classBase.Simple<Json2classBase.Complex>;
-  byte: Json2classBase.Complex;
+  data: {
+    fields: Json2classBase.Complex;
+    files: Json2classBase.Complex;
+  };
 }
 interface SchemaBodyOther extends SchemaBodyBase {
   type: Exclude<BodyTs['type'], 'form'>;

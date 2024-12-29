@@ -71,25 +71,37 @@ export abstract class Http<C extends Json2classBase.Complex, S extends Json2clas
     const { plan } = this;
     let body: SchemaBody | undefined;
     if (plan.body) {
-      const type = plan.body.getChildByKey('type')?.origin as 'json'; // todo: as SchemaBody['type']; body.form.byte
-      const data = plan.body.getChildByKey('data');
+      const type = plan.body.getChildByKey('type', false)?.origin as SchemaBody['type'];
       if (!type) {
         throw '不可能发生';
       }
-      body = { type, data };
+      if (type === 'form') {
+        const data = plan.body.getChildByKey('data');
+        const fields = data?.getChildByKey('fields');
+        const files = data?.getChildByKey('files');
+        if (!fields || !files) {
+          throw '不可能发生';
+        }
+        body = { type, data: { fields, files } };
+      } else {
+        body = { type, data: plan.body.getChildByKey('data', null) };
+      }
     }
     const { code, alias } = this.toLaunch(body);
     return {
       context: this as typeof this,
       code,
       alias,
-      dep: [plan.res, plan.seg, plan.params, body?.data].reduce((codes, cur) => {
-        if (!(cur instanceof Json2classBase.Complex)) {
+      dep: [plan.res, plan.seg, plan.params, body?.type === 'form' ? body.data.fields : body?.data].reduce(
+        (codes, cur) => {
+          if (!(cur instanceof Json2classBase.Complex)) {
+            return codes;
+          }
+          codes.push(...cur.toCode());
           return codes;
-        }
-        codes.push(...cur.toCode());
-        return codes;
-      }, [] as { context: Json2classBase.Complex; code: string }[]),
+        },
+        [] as { context: Json2classBase.Complex; code: string }[],
+      ),
     };
   }
 

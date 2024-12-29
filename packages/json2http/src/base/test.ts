@@ -118,66 +118,37 @@ export function test() {
 
   (() => {
     const x: SchemaTs[] = [
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form' } },
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: {} } },
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', byte: {} } },
-    ];
-    const n = x.findIndex(e => validate(e));
-    if (n >= 0) {
-      bin.exit(`[${n}]: body.form, 必须含有 type, data, byte`);
-      return;
-    }
-  })();
-
-  (() => {
-    const x: SchemaTs[] = [
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: null, byte: {} } },
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: 1, byte: {} } },
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: [], byte: {} } },
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { a: 1 }, byte: {} } },
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { a: [] }, byte: {} } },
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { a: {} }, byte: {} } },
-    ];
-    const n = x.findIndex(e => validate(e));
-    if (n >= 0) {
-      bin.exit(`[${n}]: body.form.data, 必须是 Record<string, string> 类型`);
-      return;
-    }
-  })();
-
-  (() => {
-    const x: SchemaTs[] = [
       { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: null } },
       { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: {} } },
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { fields: 1, bytes: 1 } } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { fields: 1, files: 1 } } },
       { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { fields: {} } } },
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { bytes: {} } } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { files: {} } } },
       {
         path: '',
         title: 'title',
         method: 'POST',
         res: {},
-        body: { type: 'form', data: { fields: { a: 1 }, bytes: {} } },
+        body: { type: 'form', data: { fields: { a: 1 }, files: {} } },
       },
       {
         path: '',
         title: 'title',
         method: 'POST',
         res: {},
-        body: { type: 'form', data: { fields: { a: 'a' }, bytes: { a: 1 } } },
+        body: { type: 'form', data: { fields: { a: 'a' }, files: { a: 1 } } },
       },
       {
         path: '',
         title: 'title',
         method: 'POST',
         res: {},
-        body: { type: 'form', data: { fields: { a: 'a' }, bytes: { a: [1] } } },
+        body: { type: 'form', data: { fields: { a: 'a' }, files: { a: [1] } } },
       },
     ];
     const n = x.findIndex(e => validate(e));
     if (n >= 0) {
       bin.exit(
-        `[${n}]: body.form, 必须是 { fields: Record<string, string>， bytes: Record<string, string | string[]> } 类型`,
+        `[${n}]: body.form.data, 必须是 { fields: Record<string, string | string[]>， files: Record<string, string | string[]> } 类型`,
       );
       return;
     }
@@ -273,27 +244,34 @@ export function test() {
 
   (() => {
     const x: SchemaTs[] = [
-      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { fields: {}, bytes: {} } } },
+      { path: '', title: 'title', method: 'POST', res: {}, body: { type: 'form', data: { fields: {}, files: {} } } },
       {
         path: '',
         title: 'title',
         method: 'POST',
         res: {},
-        body: { type: 'form', data: { fields: { a: 'a' }, bytes: {} } },
+        body: { type: 'form', data: { fields: { a: 'a' }, files: {} } },
       },
       {
         path: '',
         title: 'title',
         method: 'POST',
         res: {},
-        body: { type: 'form', data: { fields: { a: 'a' }, bytes: { a: '' } } },
+        body: { type: 'form', data: { fields: { a: 'a', b: ['b'], c: [] }, files: {} } },
       },
       {
         path: '',
         title: 'title',
         method: 'POST',
         res: {},
-        body: { type: 'form', data: { fields: { a: 'a' }, bytes: { a: '', b: [], c: [''] } } },
+        body: { type: 'form', data: { fields: { a: 'a' }, files: { a: '' } } },
+      },
+      {
+        path: '',
+        title: 'title',
+        method: 'POST',
+        res: {},
+        body: { type: 'form', data: { fields: { a: 'a' }, files: { a: '', b: [], c: [''] } } },
       },
     ];
     const n = x.findIndex(e => !validate(e));

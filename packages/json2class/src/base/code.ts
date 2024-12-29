@@ -75,8 +75,11 @@ export abstract class Complex extends Key {
       );
   }
 
-  getChildByKey(key: string) {
-    return this.child.find(e => e.key === key);
+  getChildByKey(key: string, C: false): Simple<typeof this> | undefined;
+  getChildByKey(key: string, C: null): typeof this | Simple<typeof this> | undefined;
+  getChildByKey(key: string, C?: true): typeof this | undefined;
+  getChildByKey(key: string, C: boolean | null = true): typeof this | Simple<typeof this> | undefined {
+    return this.child.find(e => e.key === key && (C === null || e instanceof (C ? Complex : Simple)));
   }
 }
 

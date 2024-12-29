@@ -15,23 +15,13 @@ export class Http extends Base.Http<Complex, Simple> {
     let bodyDef = 'null';
 
     if (body) {
-      if (body.data?.array.length) {
+      if (body.type === 'form') {
+        bodyDecl = `Body${addX(`BodyForm${addX(body.data.fields.decl)}`)}`;
+        bodyDef = `Body(type: '${body.type}', data: BodyForm(fields: ${body.data.fields.def}))`;
+      } else if (body.data?.array.length) {
         bodyDecl = lang.arrayType(body.data.array, body.data.decl);
         bodyDef = `Body(type: '${body.type}', data: ${bodyDecl}.empty())`;
         bodyDecl = `Body${addX(bodyDecl)}`;
-      } else if (body.type === 'form') {
-        // let fields: Complex | Simple | undefined;
-        // if (body.data instanceof Complex) {
-        //   fields = body.data.getChildByKey('fields');
-        //   if (!(fields instanceof Complex)) {
-        //     fields = undefined;
-        //   }
-        // }
-        // if (!fields) {
-        //   throw '不可能发生';
-        // }
-        bodyDecl = `Body${addX(`BodyForm${addX(body.data.decl)}`)}`;
-        bodyDef = `Body(type: '${body.type}', data: BodyForm(fields: ${body.data.def}))`;
       } else if (body.type === 'byte') {
         bodyDecl = `Body${addX('TypedData.Uint8List')}`;
         bodyDef = `Body(type: '${body.type}', data: TypedData.Uint8List(0))`;
@@ -155,6 +145,8 @@ class Body${addX('T')} {
       return Convert.jsonEncode(data);
     } else if (type == 'map') {
       return (data as Cls).toJson();
+    } else if (type == 'form') {
+      return Dio.FormData.fromMap(((data as dynamic).fields as Cls).toJson());
     } else {
       return data;
     }
