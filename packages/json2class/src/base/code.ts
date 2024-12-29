@@ -104,5 +104,8 @@ export abstract class Simple<C extends Complex> extends Key {
     return this.toDecl2Def(this.type).def;
   }
 
-  abstract toDecl2Def(type: BaseType): { decl: string; def: string };
+  abstract get baseDef(): Record<BaseType, { decl: string; def: string }>;
+  toDecl2Def(type: BaseType) {
+    return this.baseDef[type];
+  }
 }

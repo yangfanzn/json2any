@@ -46,11 +46,9 @@ class ${this.decl} extends Cls {
 }
 
 export class Simple extends Base.Simple<Complex> {
-  toDecl2Def(x: Base.BaseType) {
-    return {
-      [Base.BaseType.String]: { decl: 'String', def: "''" },
-      [Base.BaseType.Number]: { decl: 'num', def: '0' },
-      [Base.BaseType.Boolean]: { decl: 'bool', def: 'false' },
-    }[x];
-  }
+  baseDef = {
+    [Base.BaseType.String]: { decl: 'String', def: "''" },
+    [Base.BaseType.Number]: { decl: 'num', def: '0' },
+    [Base.BaseType.Boolean]: { decl: 'bool', def: 'false' },
+  };
 }

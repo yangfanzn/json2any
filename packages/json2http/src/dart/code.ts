@@ -16,8 +16,8 @@ export class Http extends Base.Http<Complex, Simple> {
 
     if (body) {
       if (body.type === 'form') {
-        bodyDecl = `Body${addX(`BodyForm${addX(body.data.fields.decl)}`)}`;
-        bodyDef = `Body(type: '${body.type}', data: BodyForm(fields: ${body.data.fields.def}))`;
+        bodyDecl = `Body${addX(`BodyForm${addX(`${body.data.fields.decl}, ${body.data.files.decl}`)}`)}`;
+        bodyDef = `Body(type: '${body.type}', data: BodyForm(fields: ${body.data.fields.def}, files: ${body.data.files.def}))`;
       } else if (body.data?.array.length) {
         bodyDecl = lang.arrayType(body.data.array, body.data.decl);
         bodyDef = `Body(type: '${body.type}', data: ${bodyDecl}.empty())`;
@@ -77,7 +77,7 @@ class DioExecutor extends Executor {
     var origin = await dio.request(
       '\${plan.baseURL}\${path}',
       queryParameters: plan.params?.toJson(),
-      data: plan.body?.encode(),
+      data: bodyEncode(plan),
       options: options
         ..method = plan.method
         ..contentType = plan.body?.contentType,
@@ -88,16 +88,32 @@ class DioExecutor extends Executor {
     plan.answer.data = origin.data;
     return plan.answer;
   }
+
+  dynamic bodyEncode(Plan plan) {
+    var type = plan.body?.type;
+    var data = plan.body?.data;
+    if (type == null) {
+      return null;
+    } else if (type == 'json') {
+      return Convert.jsonEncode(data);
+    } else if (type == 'map' && data is Cls) {
+      return data.toJson();
+    } else if (type == 'form' && data is BodyForm) {
+      return Dio.FormData.fromMap({ ...data.fields.toJson(), ...data.files.toJson() });
+    } else {
+      return data;
+    }
+  }
 }  
 `,
   };
 
-  static toEntry(extend?: { path: string; executor: string }) {
+  static toEntry() {
     const { addX } = Json2classBase.func;
-    const executorConfig = extend?.executor
-      ? { import: `import '${extend.path}' as Extend;`, code: '' }
+    const executorConfig = this.env.extend.executor
+      ? { import: `import '${this.env.extend.path}' as Extend;`, code: '' }
       : this.innerExecutorConfig;
-    const executor = extend?.executor ? `Extend.${extend?.executor}` : 'DioExecutor';
+    const executor = this.env.extend.executor ? `Extend.${this.env.extend.executor}` : 'DioExecutor';
     return `
 import 'dart:typed_data' as TypedData;
 ${executorConfig.import}
@@ -114,14 +130,17 @@ class Answer {
 
 class Executor {
   Future${addX('Answer')} request(Plan plan) async => plan.answer;
+  dynamic bodyEncode(Plan plan) => null;
 }
 
 ${executorConfig.code}
 
-class BodyForm${addX('T')} {
+class BodyForm${addX('T extends Cls, K extends Cls')} {
   T fields;
+  K files;
   BodyForm({
     required this.fields,
+    required this.files,
   });
 }
 
@@ -139,18 +158,6 @@ class Body${addX('T')} {
     required this.type,
     required this.data,
   }) : contentType = _types[type];
-
-  encode() {
-    if (type == 'json') {
-      return Convert.jsonEncode(data);
-    } else if (type == 'map') {
-      return (data as Cls).toJson();
-    } else if (type == 'form') {
-      return Dio.FormData.fromMap(((data as dynamic).fields as Cls).toJson());
-    } else {
-      return data;
-    }
-  }
 }
 
 class Plan${addX('R extends Cls, S extends Cls?, P extends Cls?, B extends Body?')} {

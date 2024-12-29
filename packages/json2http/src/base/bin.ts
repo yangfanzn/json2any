@@ -7,11 +7,6 @@ import { Supported } from './type';
 import json2http from '../..';
 
 export class Bin extends Json2classBin.Bin {
-  envHttp = {
-    extend: '',
-    output: '',
-  };
-
   json2piece(dir: string) {
     const ajv = new Ajv();
     return Array.from(this.searchJsons(dir)).reduce((codes, [_, jsons]) => {
@@ -48,7 +43,7 @@ export class Bin extends Json2classBin.Bin {
 
     Array.from(jsons).forEach(([key, json]) => {
       const { http, Http } = json2http(type, key, json);
-      toEntry ||= Http.toEntry(this.parseExtend());
+      toEntry ||= Http.toEntry();
       const { code, dep, alias } = http.toCode();
       request.push(code);
       deps.push(...dep.map(e => e.code));
@@ -67,17 +62,15 @@ export class Bin extends Json2classBin.Bin {
     return files;
   }
 
-  parseExtend() {
-    let extend: { path: string; executor: string } | undefined;
-    if (this.envHttp.extend) {
+  parseExtend(outputPath: string, extendPath: string) {
+    const extend = { path: '', executor: '' };
+    if (extendPath) {
       const [, disabled, , name] =
-        `${Fs.readFileSync(this.envHttp.extend)}`.match(
+        `${Fs.readFileSync(extendPath)}`.match(
           /(\/\/\s+@json2http-disabled(\s+))?class\s+(\w+)\s+extends\s+Executor\s+/,
         ) ?? [];
-      extend = {
-        path: Path.relative(this.envHttp.output, this.envHttp.extend),
-        executor: disabled ? '' : name ?? '',
-      };
+      extend.path = Path.relative(outputPath, extendPath);
+      extend.executor = disabled ? '' : name ?? '';
     }
     return extend;
   }

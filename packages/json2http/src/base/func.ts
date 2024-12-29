@@ -37,6 +37,26 @@ export class Func extends Json2classBase.Func {
       }),
     );
   }
+
+  isBodyFiles(self: Json2classBase.Key) {
+    if (self instanceof Json2classBase.Simple) {
+      return (
+        self.parent?.parent?.parent?.parent &&
+        self.parent.key === 'files' &&
+        self.parent.parent.key === 'data' &&
+        self.parent.parent.parent.key === 'body' &&
+        !self.parent.parent?.parent?.parent?.parent
+      );
+    } else {
+      return (
+        self.parent?.parent?.parent &&
+        self.key === 'files' &&
+        self.parent.key === 'data' &&
+        self.parent.parent.key === 'body' &&
+        !self.parent?.parent?.parent?.parent
+      );
+    }
+  }
 }
 
 export const func = new Func();

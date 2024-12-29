@@ -1,13 +1,39 @@
-import { Json2classBase } from 'json2class';
+import { Json2classBase, Json2classDart } from 'json2class';
 import { SchemaPlan, SchemaBody } from './schema';
+import { func } from './func';
 
-// export abstract class Key extends Base.Key {}
-//
-// export abstract class Complex extends Base.Complex<Simple> implements Key {}
-//
-// export abstract class Simple extends Base.Simple<Complex> implements Key {}
+// todo: 增加统一代理机制
+const simpleToDecl2Def = Json2classDart.Simple.prototype.toDecl2Def;
+Json2classDart.Simple.prototype.toDecl2Def = function () {
+  if (func.isBodyFiles(this)) {
+    return { decl: 'Dio.MultipartFile', def: 'null' };
+  }
+  return simpleToDecl2Def.call(this, this.type);
+};
+const complexToClass = Json2classDart.Complex.prototype.toClass;
+Json2classDart.Complex.prototype.toClass = function () {
+  if (func.isBodyFiles(this)) {
+    this.child.forEach(e => {
+      e.optional = true;
+      e.array = e.array.map(() => true);
+    });
+  }
+  return complexToClass.call(this);
+};
 
 export abstract class Http<C extends Json2classBase.Complex, S extends Json2classBase.Simple<Json2classBase.Complex>> {
+  static env = {
+    extend: {
+      path: '',
+      executor: '',
+    },
+    output: '',
+  };
+
+  static toEntry() {
+    return '';
+  }
+
   json2plan(plan: C) {
     return (plan.child as (C | S)[]).reduce((x, cur) => {
       if (cur.optional) {
@@ -92,20 +118,18 @@ export abstract class Http<C extends Json2classBase.Complex, S extends Json2clas
       context: this as typeof this,
       code,
       alias,
-      dep: [plan.res, plan.seg, plan.params, body?.type === 'form' ? body.data.fields : body?.data].reduce(
-        (codes, cur) => {
-          if (!(cur instanceof Json2classBase.Complex)) {
-            return codes;
-          }
-          codes.push(...cur.toCode());
+      dep: [
+        plan.res,
+        plan.seg,
+        plan.params,
+        ...(body?.type === 'form' ? [body.data.fields, body.data.files] : [body?.data]),
+      ].reduce((codes, cur) => {
+        if (!(cur instanceof Json2classBase.Complex)) {
           return codes;
-        },
-        [] as { context: Json2classBase.Complex; code: string }[],
-      ),
+        }
+        codes.push(...cur.toCode());
+        return codes;
+      }, [] as { context: Json2classBase.Complex; code: string }[]),
     };
-  }
-
-  static toEntry(extend?: { path: string; executor: string }) {
-    return '';
   }
 }

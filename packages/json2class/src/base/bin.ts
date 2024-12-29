@@ -6,8 +6,6 @@ import { Supported } from './type';
 import json2class from '../..';
 
 export class Bin {
-  envClass = {};
-
   readDir(
     path: string,
     {

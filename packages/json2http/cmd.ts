@@ -2,7 +2,7 @@ import { program } from 'commander';
 import Path from 'path';
 import Fs from 'fs';
 import { bin } from './src/base/bin';
-import { Supported } from './src/base';
+import { Supported, Http } from './src/base';
 
 // 设置多个公共配置
 program.version('0.0.1', '-v --version', 'current version');
@@ -47,8 +47,8 @@ program
       bin.fileIsExit(extend);
     }
 
-    bin.envHttp.output = output;
-    bin.envHttp.extend = extend;
+    Http.env.output = output;
+    Http.env.extend = bin.parseExtend(output, extend);
 
     // todo: 同 json2class
     // Shelljs.rm('-rf', cache);
