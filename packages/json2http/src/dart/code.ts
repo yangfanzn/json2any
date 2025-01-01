@@ -128,9 +128,9 @@ class Answer {
   dynamic origin;
 }
 
-class Executor {
-  Future${addX('Answer')} request(Plan plan) async => plan.answer;
-  dynamic bodyEncode(Plan plan) => null;
+abstract class Executor {
+  Future${addX('Answer')} request(Plan plan);
+  dynamic bodyEncode(Plan plan);
 }
 
 ${executorConfig.code}
