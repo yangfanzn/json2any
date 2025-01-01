@@ -62,9 +62,18 @@ Future${addX(this.declPlan)} ${this.launch}(Future${addX('void')} Function(${thi
     };
   }
 
-  static innerExecutorConfig = {
-    import: "import 'package:dio/dio.dart' as Dio;",
-    code: `
+  static get executorConfig() {
+    if (this.env.extend.executor) {
+      return {
+        name: `Extend.${this.env.extend.executor}`,
+        import: `import '${this.env.extend.path}' as Extend;`,
+        code: '',
+      };
+    }
+    return {
+      name: 'DioExecutor',
+      import: "import 'package:dio/dio.dart' as Dio;",
+      code: `
 class DioExecutor extends Executor {
   Dio.Dio dio = Dio.Dio();
   Dio.Options options = Dio.Options(
@@ -110,14 +119,12 @@ class DioExecutor extends Executor {
   }
 }  
 `,
-  };
+    };
+  }
 
   static toEntry() {
     const { addX } = Json2classBase.func;
-    const executorConfig = this.env.extend.executor
-      ? { import: `import '${this.env.extend.path}' as Extend;`, code: '' }
-      : this.innerExecutorConfig;
-    const executor = this.env.extend.executor ? `Extend.${this.env.extend.executor}` : 'DioExecutor';
+    const { executorConfig } = this;
     return `
 import 'dart:typed_data' as TypedData;
 ${executorConfig.import}
@@ -187,7 +194,7 @@ class Plan${addX('R extends Cls, S extends Cls?, P extends Cls?, B extends Body?
     required this.body,
   });
 
-  ${executor} executor = ${executor}();
+  ${executorConfig.name} executor = ${executorConfig.name}();
 
   Answer answer = Answer();
 
