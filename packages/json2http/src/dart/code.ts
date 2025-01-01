@@ -67,7 +67,11 @@ Future${addX(this.declPlan)} ${this.launch}(Future${addX('void')} Function(${thi
     code: `
 class DioExecutor extends Executor {
   Dio.Dio dio = Dio.Dio();
-  Dio.Options options = Dio.Options(validateStatus: (e) => true, receiveDataWhenStatusError: true);
+  Dio.Options options = Dio.Options(
+    validateStatus: (e) => true,
+    receiveDataWhenStatusError: true,
+    responseType: Dio.ResponseType.plain,
+  );
   Future${Json2classBase.func.addX('Answer')} request(Plan plan) async {
     var path = plan.path;
     if (plan.seg != null) {
@@ -188,8 +192,9 @@ class Plan${addX('R extends Cls, S extends Cls?, P extends Cls?, B extends Body?
   Answer answer = Answer();
 
   Future${addX('Answer')} Function(Plan) transform = (Plan plan) async {
-    if (!RegExp('"statusCode":"0"').hasMatch(plan.answer.data)) {
-      return plan.answer..error = plan.answer.data;
+    var data = '\${plan.answer.data}';
+    if (!RegExp('"statusCode":"0"').hasMatch(data)) {
+      return plan.answer..error = data;
     }
     return plan.answer;
   };
@@ -198,14 +203,14 @@ class Plan${addX('R extends Cls, S extends Cls?, P extends Cls?, B extends Body?
       'R, S, P, B',
     )} plan) async {
     plan.answer = await plan.executor.request(plan);
+    plan.answer = await plan.transform(plan);
+    plan.res.fromAny(plan.answer.data);
     if (plan.answer.code != 200) {
       throw plan.answer.message;
     }
-    plan.answer = await plan.transform(plan);
     if (plan.answer.error.isNotEmpty) {
       throw plan.answer.error;
     }
-    plan.res.fromString(plan.answer.data);
     return plan;
   };
 }

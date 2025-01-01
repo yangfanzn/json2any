@@ -42,7 +42,16 @@ class Option {
 abstract class Cls {
   static final Option option = Option();
 
-  Cls fromString(String _) => fromJson(Convert.jsonDecode(_));
+  Cls fromAny(dynamic _) {
+    try {
+      if (_ is! Map) {
+        _ = Convert.jsonDecode('$_');
+      }
+      return fromJson(_);
+    } catch (e) {
+      return this;
+    }
+  }
 
   Cls fromJson(dynamic data, {Option Function(Option option)? setOption, Option? option});
 
