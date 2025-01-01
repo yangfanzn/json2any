@@ -1,7 +1,7 @@
 import { program } from 'commander';
 import Path from 'path';
 import Fs from 'fs';
-import { bin } from './src/base/bin';
+import { Json2classBin } from './bin';
 
 // 设置多个公共配置
 program.version('0.0.1', '-v --version', 'current version');
@@ -23,6 +23,8 @@ program
     '.',
   )
   .action(async (type, options) => {
+    const { bin } = Json2classBin;
+
     bin.isSupported(type);
 
     const workspace = Path.resolve(options.workspace);

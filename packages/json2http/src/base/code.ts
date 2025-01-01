@@ -6,7 +6,7 @@ import { func } from './func';
 const simpleToDecl2Def = Json2classDart.Simple.prototype.toDecl2Def;
 Json2classDart.Simple.prototype.toDecl2Def = function () {
   if (func.isBodyFiles(this)) {
-    return { decl: 'Dio.MultipartFile', def: 'null' };
+    return { decl: Http.env.extend.executor ? 'Extend.MultipartFile' : 'Dio.MultipartFile', def: 'null' };
   }
   return simpleToDecl2Def.call(this, this.type);
 };

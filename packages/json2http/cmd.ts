@@ -1,8 +1,8 @@
 import { program } from 'commander';
 import Path from 'path';
 import Fs from 'fs';
-import { bin } from './src/base/bin';
-import { Supported, Http } from './src/base';
+import { Json2httpBin } from './bin';
+import { Json2HttpBase } from '.';
 
 // 设置多个公共配置
 program.version('0.0.1', '-v --version', 'current version');
@@ -28,6 +28,9 @@ program
     'specify a path for the extension file (default is the file named `extend` in the output directory)',
   )
   .action(async (type, options) => {
+    const { bin } = Json2httpBin;
+    const { Supported, Http } = Json2HttpBase;
+
     bin.isSupported(type, Object.values(Supported)); // todo: 支持逻辑要在看看
 
     const workspace = Path.resolve(options.workspace);
