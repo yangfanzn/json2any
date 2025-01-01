@@ -23,8 +23,8 @@ export class Http extends Base.Http<Complex, Simple> {
         bodyDef = `Body(type: '${body.type}', data: ${bodyDecl}.empty())`;
         bodyDecl = `Body${addX(bodyDecl)}`;
       } else if (body.type === 'byte') {
-        bodyDecl = `Body${addX('TypedData.Uint8List')}`;
-        bodyDef = `Body(type: '${body.type}', data: TypedData.Uint8List(0))`;
+        bodyDecl = `Body${addX('Uint8List')}`;
+        bodyDef = `Body(type: '${body.type}', data: Uint8List(0))`;
       } else if (body.data) {
         bodyDecl = `Body${addX(body.data.decl)}`;
         bodyDef = `Body(type: '${body.type}', data: ${body.data.def})`;
@@ -52,7 +52,7 @@ export class Http extends Base.Http<Complex, Simple> {
 
     return {
       code: `
-Future${addX(this.declPlan)} ${this.launch}(Future${addX('void')} Function(${this.declPlan} plan) _) async {
+Future${addX(this.declPlan)} ${this.launch}(FutureOr${addX('void')} Function(${this.declPlan} plan) _) async {
   var plan = Plan(${args});
   await option(plan);
   await _(plan);
@@ -81,7 +81,7 @@ class DioExecutor extends Executor {
     receiveDataWhenStatusError: true,
     responseType: Dio.ResponseType.plain,
   );
-  Future${Json2classBase.func.addX('Answer')} request(Plan plan) async {
+  FutureOr${Json2classBase.func.addX('Answer')} request(Plan plan) async {
     var path = plan.path;
     if (plan.seg != null) {
       var seg = plan.seg?.toJson();
@@ -90,7 +90,7 @@ class DioExecutor extends Executor {
     var origin = await dio.request(
       '\${plan.baseURL}\${path}',
       queryParameters: plan.params?.toJson(),
-      data: bodyEncode(plan),
+      data: await bodyEncode(plan),
       options: options
         ..method = plan.method
         ..contentType = plan.body?.contentType,
@@ -126,7 +126,8 @@ class DioExecutor extends Executor {
     const { addX } = Json2classBase.func;
     const { executorConfig } = this;
     return `
-import 'dart:typed_data' as TypedData;
+import 'dart:async';
+import 'dart:typed_data';
 ${executorConfig.import}
 
 @cls@
@@ -140,7 +141,7 @@ class Answer {
 }
 
 abstract class Executor {
-  Future${addX('Answer')} request(Plan plan);
+  FutureOr${addX('Answer')} request(Plan plan);
   dynamic bodyEncode(Plan plan);
 }
 
@@ -198,7 +199,7 @@ class Plan${addX('R extends Cls, S extends Cls?, P extends Cls?, B extends Body?
 
   Answer answer = Answer();
 
-  Future${addX('Answer')} Function(Plan) transform = (Plan plan) async {
+  FutureOr${addX('Answer')} Function(Plan) transform = (Plan plan) {
     var data = '\${plan.answer.data}';
     if (!RegExp('"statusCode":"0"').hasMatch(data)) {
       return plan.answer..error = data;
@@ -206,7 +207,7 @@ class Plan${addX('R extends Cls, S extends Cls?, P extends Cls?, B extends Body?
     return plan.answer;
   };
 
-  Future${addX('Plan<R, S, P, B>')} Function(Plan${addX('R, S, P, B')} plan) request = (Plan${addX(
+  FutureOr${addX('Plan<R, S, P, B>')} Function(Plan${addX('R, S, P, B')} plan) request = (Plan${addX(
       'R, S, P, B',
     )} plan) async {
     plan.answer = await plan.executor.request(plan);
@@ -229,7 +230,7 @@ class Plan${addX('R extends Cls, S extends Cls?, P extends Cls?, B extends Body?
 class Json2http {
   Json2http._();
   static Json2http single = Json2http._();
-  static Future${addX('void')} Function(Plan plan) option = (Plan plan) async {};
+  static FutureOr${addX('void')} Function(Plan plan) option = (Plan plan) {};
 
 @request@
 
