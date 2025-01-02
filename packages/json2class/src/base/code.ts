@@ -35,7 +35,7 @@ export abstract class Key {
   }
 
   toFromJson() {
-    return `${this.prop} = _fromJson<${this.decl}>(_, '${this.prop}', <bool>[${this.array}], ${this.optional}, ${this.prop}, ${this.def}, opt);`;
+    return `${this.prop} = _fromJson<${this.decl}>(_, '${this.jsonKey}', <bool>[${this.array}], ${this.optional}, ${this.prop}, ${this.def}, opt);`;
   }
   abstract toDecl2Def(type?: string): { decl: string; def: string };
 }
