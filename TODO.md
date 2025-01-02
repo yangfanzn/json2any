@@ -1,0 +1,8 @@
+- 如何设置 header
+- 如何接口错误重试，刷 token 等
+- 异常怎么抛，请求过程中的几个关键方法 request transform 等怎么串起来 
+- 加拦截器
+- 构建的代码如何限制依赖版本
+- Executor.request 与 Plan.request 重复了，区分一下
+- json schema 报错提示
+- json2class 增加元配置，$ref 引用，递归结构等 ！！！

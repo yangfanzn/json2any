@@ -1,6 +1,9 @@
 import * as Base from '../base';
+import { keywords } from './keywords';
 
 export class Lang extends Base.Lang {
+  keywords = keywords;
+
   arrayType(array: boolean[], type: string): string {
     return array.reduce((v, e) => {
       return `List${Base.func.addX(`${v}${e ? '?' : ''}`)}`;
@@ -39,13 +42,15 @@ class ${this.decl} extends Cls {
     return this;
   }
   Map${Base.func.addX('String, dynamic')} toJson() {
-    return {${this.child.map(e => `r'${e.key}':_toJson(${e.prop})`)}};
+    return {${this.child.map(e => `'${e.jsonKey}':_toJson(${e.prop})`)}};
   }
 }`;
   }
 }
 
 export class Simple extends Base.Simple<Complex> {
+  lang = new Lang();
+
   baseDef = {
     [Base.BaseType.String]: { decl: 'String', def: "''" },
     [Base.BaseType.Number]: { decl: 'num', def: '0' },

@@ -52,15 +52,52 @@ export class Func {
     }
   }
 
-  convertKeyword(str: string, prefix: string, restore: boolean) {
-    // todo: keywords 清洗
+  convertWrap(str: string) {
+    // 可能引发换行的字符
+    const special: Record<string, string> = {
+      '\n': '\\n',
+      '\r': '\\r',
+      '\f': '\\f',
+      '\v': '\\v',
+      '\b': '\\b',
+      '\t': '\\t',
+      '\\': '\\\\',
+      $: '\\$',
+      "'": "\\'",
+    };
+    return str.replace(new RegExp(`[${Object.keys(special).join('')}\\\\]`, 'g'), e => special[e]);
+  }
+
+  quickHash(str: string) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash * 31 + str.charCodeAt(i)) % 100;
+    }
+    return hash.toString().padStart(2, '0');
+  }
+
+  convertKeyword(str: string, keywords: Record<string, string>, restore: boolean) {
+    const splitKey = '_';
+    const startKey = 'k';
     if (restore) {
-      return str.replace(new RegExp(`${prefix}(\\d+)`, 'g'), (_, e) => String.fromCharCode(e));
-    } else {
-      if (new RegExp(`${prefix}\d+`).test(str)) {
-        throw `${str} contains invalid field names`;
+      let x = str.replace(new RegExp(`${splitKey}(\\d+)${splitKey}`, 'g'), (_, e) => String.fromCharCode(e));
+      const [, hash] = x.match(new RegExp(`^${startKey}(\\d{2})`)) ?? [];
+      if (hash) {
+        const t = x.slice(3);
+        return hash === this.quickHash(t) ? t : x;
       }
-      return str.replace(/[^a-zA-Z\d]/g, e => `${prefix}${e.charCodeAt(0)}`);
+      return x;
+    } else {
+      if (keywords[str]) {
+        return `${startKey}${this.quickHash(str)}${str}`;
+      }
+      let [, x] = str.match(new RegExp('^(\\d)')) ?? [];
+      x = x ? `${splitKey}${x.charCodeAt(0)}${splitKey}` : '';
+      x = `${x}${str.slice(x ? 1 : 0).replace(/[^a-zA-Z0-9]/g, e => `${splitKey}${e.charCodeAt(0)}${splitKey}`)}`;
+      if (x.startsWith('_')) {
+        x = `${startKey}${this.quickHash(str)}${x}`;
+      }
+      return x;
     }
   }
 

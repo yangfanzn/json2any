@@ -47,10 +47,10 @@ abstract class Cls {
       if (_ is! Map) {
         _ = Convert.jsonDecode('$_');
       }
-      return fromJson(_);
     } catch (e) {
       return this;
     }
+    return fromJson(_);
   }
 
   Cls fromJson(dynamic data, {Option Function(Option option)? setOption, Option? option});

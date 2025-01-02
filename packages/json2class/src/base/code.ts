@@ -2,6 +2,8 @@ import { func } from './func';
 import { BaseType } from './type';
 
 export class Lang {
+  keywords: Record<string, string> = {};
+
   arrayType(array: boolean[], type: string) {
     return '';
   }
@@ -25,7 +27,11 @@ export abstract class Key {
   parent?: Key;
 
   get prop() {
-    return func.convertKeyword(this.key, '_', false);
+    return func.convertKeyword(this.key, this.lang.keywords, false);
+  }
+
+  get jsonKey() {
+    return func.convertWrap(this.key);
   }
 
   toFromJson() {
