@@ -158,7 +158,7 @@ class BodyForm${addX('T extends Cls, K extends Cls')} {
 
 class Body${addX('T')} {
   static Map${addX('String, String')} _types = {${Object.keys(Base.contentTypes)
-      .map(k => `'${k}': '${(Base.contentTypes as Record<string, { header: string }>)[k].header}'`)
+      .map(k => `'${k}': '${(Base.contentTypes as Record<string, { header: string }>)[k]?.header}'`)
       .join(',')}};
 
   final String type;

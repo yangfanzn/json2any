@@ -17,9 +17,9 @@ export class Bin extends Json2classBin.Bin {
           const [error] = validate.errors ?? [];
           this.exit(
             [
-              `${key}:${error.instancePath}`,
+              `${key}:${error?.instancePath}`,
               ...(validate.errors?.map(e => {
-                return `${e.message} ${e.params?.allowedValues?.join(', ') ?? ''}`;
+                return `${e.message} ${e.params?.['allowedValues']?.join(', ') ?? ''}`;
               }) ?? []),
             ].join('\n'),
           );

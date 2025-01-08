@@ -50,6 +50,8 @@ export class Func {
       default:
         throw `不可能出现的错误 ${type}`;
     }
+
+    return undefined;
   }
 
   convertWrap(str: string) {
@@ -65,7 +67,13 @@ export class Func {
       $: '\\$',
       "'": "\\'",
     };
-    return str.replace(new RegExp(`[${Object.keys(special).join('')}\\\\]`, 'g'), e => special[e]);
+    return str.replace(new RegExp(`[${Object.keys(special).join('')}\\\\]`, 'g'), e => {
+      const t = special[e];
+      if (t) {
+        return t;
+      }
+      throw '不可能发生';
+    });
   }
 
   quickHash(str: string) {
@@ -89,6 +97,7 @@ export class Func {
       return x;
     } else {
       if (keywords[str]) {
+        // todo: quickHash 总感觉不妥
         return `${startKey}${this.quickHash(str)}${str}`;
       }
       let [, x] = str.match(new RegExp('^(\\d)')) ?? [];
