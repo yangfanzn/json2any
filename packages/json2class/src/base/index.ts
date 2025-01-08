@@ -1,3 +1,4 @@
 export * from './code';
 export * from './func';
+export * from './schema';
 export * from './type';

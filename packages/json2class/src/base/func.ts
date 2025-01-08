@@ -1,4 +1,5 @@
 import { Complex, Simple } from './code';
+import { JsonType } from './type';
 
 export class Func {
   core2class(complex: typeof Complex, simple: typeof Simple<Complex>, key: string, json: any): Complex;
@@ -26,27 +27,30 @@ export class Func {
     const optional = key.endsWith('?');
     key = optional ? key.slice(0, -1) : key;
 
-    const type = Object.prototype.toString.call(json).slice(8, -1).toLowerCase();
+    const type = this.type(json);
     switch (type) {
-      case 'string':
-      case 'number':
-      case 'boolean':
+      case JsonType.String:
+      case JsonType.Number:
+      case JsonType.Boolean:
         if (!parent) {
           throw '简单类型必须有父类型';
         }
         // @ts-ignore
         return new simple(key, array, optional, json, parent, type);
-      case 'object':
+
+      case JsonType.Object:
         // @ts-ignore
         const self = new complex(key, array, optional, json, parent);
         self.child = Object.keys(json)
           .map(k => this.core2class(complex, simple, k, json[k], self))
           .filter(e => e);
         return self;
-      case 'null':
+
+      case JsonType.Null:
       // 配置的空数组，没有给数组元素
-      case 'undefined':
+      case JsonType.Undefined:
         break;
+
       default:
         throw `不可能出现的错误 ${type}`;
     }
@@ -120,6 +124,11 @@ export class Func {
     } else {
       return str;
     }
+  }
+
+  type(o: any) {
+    const t = Object.prototype.toString.call(o).slice(8, -1).toLowerCase() as JsonType;
+    return Object.values(JsonType).includes(t) ? t : undefined;
   }
 }
 
