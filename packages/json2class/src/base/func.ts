@@ -80,38 +80,44 @@ export class Func {
     });
   }
 
-  quickHash(str: string) {
+  quickHash(str: string, max: number) {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
-      hash = (hash * 31 + str.charCodeAt(i)) % 100;
+      hash = (hash * 31 + str.charCodeAt(i)) % Math.pow(10, max);
     }
-    return hash.toString().padStart(2, '0');
+    return hash.toString().padStart(max, '0');
   }
 
   convertKeyword(str: string, keywords: Record<string, string>, restore: boolean) {
+    const max = 3;
     const splitKey = '_';
     const startKey = 'k';
-    if (restore) {
-      let x = str.replace(new RegExp(`${splitKey}(\\d+)${splitKey}`, 'g'), (_, e) => String.fromCharCode(e));
-      const [, hash] = x.match(new RegExp(`^${startKey}(\\d{2})`)) ?? [];
-      if (hash) {
-        const t = x.slice(3);
-        return hash === this.quickHash(t) ? t : x;
-      }
-      return x;
-    } else {
+
+    if (!restore) {
       if (keywords[str]) {
-        // todo: quickHash 总感觉不妥
-        return `${startKey}${this.quickHash(str)}${str}`;
+        return `${startKey}${this.quickHash(str, max)}${str}`;
       }
       let [, x] = str.match(new RegExp('^(\\d)')) ?? [];
       x = x ? `${splitKey}${x.charCodeAt(0)}${splitKey}` : '';
       x = `${x}${str.slice(x ? 1 : 0).replace(/[^a-zA-Z0-9]/g, e => `${splitKey}${e.charCodeAt(0)}${splitKey}`)}`;
       if (x.startsWith('_')) {
-        x = `${startKey}${this.quickHash(str)}${x}`;
+        x = `${startKey}${this.quickHash(str, max)}${x}`;
       }
       return x;
     }
+
+    // quickHash 算法是必须的，因为不仅仅是下划线开头，keywords 也需要加前导
+    // quickHash 算法在 3 位数参数的情况下，针对 10 位字符串的 hash 冲突的概率只有 0.5%
+    // 这 0.5% 只有在使用 restore 时，才会触发，如果是单向转换，永远不会有问题
+
+    let x = str.replace(new RegExp(`${splitKey}(\\d+)${splitKey}`, 'g'), (_, e) => String.fromCharCode(e));
+    const [, hash] = x.match(new RegExp(`^${startKey}(\\d{${max})`)) ?? [];
+    if (hash) {
+      const t = x.slice(max + 1);
+      return hash === this.quickHash(t, max) ? t : x;
+    }
+    throw '不可能出现';
+    return x;
   }
 
   addX(child: string) {
