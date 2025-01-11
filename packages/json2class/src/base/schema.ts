@@ -2,7 +2,7 @@ import { func } from './func';
 import { JsonType } from './type';
 import { Complex } from './code';
 
-export const validateRef = (complex: Complex): string | undefined => {
+export const validate = (complex: Complex): string | undefined => {
   const json = complex.origin;
 
   if (func.type(json) !== JsonType.Object) {

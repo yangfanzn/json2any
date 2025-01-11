@@ -1,6 +1,6 @@
 import { func } from './func';
 import { BaseType } from './type';
-import { validateRef } from './schema';
+import { validate } from './schema';
 
 export class Lang {
   keywords: Record<string, string> = {};
@@ -45,13 +45,13 @@ export abstract class Complex extends Key {
   private static refs = {
     data: {} as Record<string, Complex>,
     resolved: false,
-    resolve(validate?: typeof validateRef) {
+    resolve(validate2?: typeof validate) {
       for (const path in Complex.refs.data) {
         const e = Complex.refs.data[path];
         if (!e || !e.parent) {
           continue;
         }
-        const ref = (validate ?? validateRef)(e);
+        const ref = (validate2 ?? validate)(e);
         if (!ref) {
           continue;
         }
@@ -75,8 +75,8 @@ export abstract class Complex extends Key {
     this.refs.data = {};
     this.refs.resolved = false;
   }
-  public static refsValidate(validate?: typeof validateRef) {
-    this.refs.resolve = this.refs.resolve.bind(this, validate);
+  public static refsValidate(validate2?: typeof validate) {
+    this.refs.resolve = this.refs.resolve.bind(this, validate2);
   }
 
   private clone(self: typeof this) {

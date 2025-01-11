@@ -65,12 +65,4 @@ program
     // ChildProcess.exec(bin.format);
   });
 
-program
-  .description('test')
-  .command('test', { hidden: true })
-  .action(async (type, options) => {
-    const { test } = require('./src/base/test');
-    test();
-  });
-
 program.parse();

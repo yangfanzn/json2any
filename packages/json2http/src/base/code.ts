@@ -3,7 +3,7 @@ import { SchemaPlan, SchemaBody } from './schema';
 import { func } from './func';
 
 Json2classBase.Complex.refsValidate(e => {
-  const x = Json2classBase.validateRef(e);
+  const x = Json2classBase.validate(e);
   if (x) {
     const i = x.indexOf('#');
     let launch = x.slice(0, i);

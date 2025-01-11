@@ -1,28 +1,18 @@
 import Fs from 'fs';
 import Path from 'path';
-import Ajv from 'ajv';
 import { Json2classBin } from 'json2class/bin';
-import { schemaJson, SchemaTs } from './schema';
+import { SchemaTs, validate } from './schema';
 import { Supported } from './type';
 import json2http from '../..';
 
 export class Bin extends Json2classBin.Bin {
   json2piece(dir: string) {
-    const ajv = new Ajv();
     return Array.from(this.searchJsons(dir)).reduce((codes, [_, jsons]) => {
       Object.keys(jsons).forEach(key => {
         const json = jsons[key];
-        const validate = ajv.compile(schemaJson);
-        if (!validate(json)) {
-          const [error] = validate.errors ?? [];
-          this.exit(
-            [
-              `${key}:${error?.instancePath}`,
-              ...(validate.errors?.map(e => {
-                return `${e.message} ${e.params?.['allowedValues']?.join(', ') ?? ''}`;
-              }) ?? []),
-            ].join('\n'),
-          );
+        const error = validate(json);
+        if (error) {
+          this.exit(`${_} ${key} ${error}`);
         }
         if (codes.has(key)) {
           this.exit(`${key} already exists`);
