@@ -55,6 +55,9 @@ export abstract class Complex extends Key {
         if (!ref) {
           continue;
         }
+        if (e.index === ref) {
+          throw `禁止引用自身 ${ref}`;
+        }
         const $ref = Complex.refs.data[ref];
         if (!$ref) {
           throw `引用地址 ${ref} 不存在`;

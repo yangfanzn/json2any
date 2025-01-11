@@ -5,7 +5,12 @@ import { func } from './func';
 Json2classBase.Complex.refsValidate(e => {
   const x = Json2classBase.validateRef(e);
   if (x) {
-    let [launch = '', ref = ''] = x.split('#');
+    const i = x.indexOf('#');
+    let launch = x.slice(0, i);
+    const ref = x.slice(i + 1);
+    if (i < 0) {
+      throw '$ref 缺少锚点标记符';
+    }
     if (!launch) {
       let p = e.parent;
       while (p) {
