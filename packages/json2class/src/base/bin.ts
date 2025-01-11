@@ -107,14 +107,12 @@ export class Bin {
       `json2class.${type}`,
       [
         Fs.readFileSync(Path.resolve(__dirname, `../src/${type}/temp.${type}`)),
-        ...Array.from(jsons).reduce((codes, [key, json]) => {
-          codes.push(
-            ...json2class(type, key, json)
-              .toCode()
-              .map(e => e.code),
-          );
-          return codes;
-        }, [] as string[]),
+        ...Array.from(jsons)
+          .map(([key, json]) => json2class(type, key, json))
+          .reduce((codes, cur) => {
+            codes.push(...cur.toCode().map(e => e.code));
+            return codes;
+          }, [] as string[]),
       ].join(''),
     );
     return files;

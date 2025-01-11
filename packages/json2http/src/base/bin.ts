@@ -41,14 +41,15 @@ export class Bin extends Json2classBin.Bin {
     const deps = [] as string[];
     const aliases = [] as string[];
 
-    Array.from(jsons).forEach(([key, json]) => {
-      const { http, Http } = json2http(type, key, json);
-      toEntry ||= Http.toEntry();
-      const { code, dep, alias } = http.toCode();
-      request.push(code);
-      deps.push(...dep.map(e => e.code));
-      aliases.push(alias);
-    });
+    Array.from(jsons)
+      .map(([key, json]) => json2http(type, key, json))
+      .forEach(({ http, Http }) => {
+        toEntry ||= Http.toEntry();
+        const { code, dep, alias } = http.toCode();
+        request.push(code);
+        deps.push(...dep.map(e => e.code));
+        aliases.push(alias);
+      });
 
     const files = new Map<string, string>();
     files.set(

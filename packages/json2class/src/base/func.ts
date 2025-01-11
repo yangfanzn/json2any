@@ -133,8 +133,7 @@ export class Func {
   }
 
   type(o: any) {
-    const t = Object.prototype.toString.call(o).slice(8, -1).toLowerCase() as JsonType;
-    return Object.values(JsonType).includes(t) ? t : undefined;
+    return Object.prototype.toString.call(o).slice(8, -1).toLowerCase();
   }
 }
 

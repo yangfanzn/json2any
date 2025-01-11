@@ -1,5 +1,6 @@
 import { func } from './func';
 import { BaseType } from './type';
+import { validateRef } from './schema';
 
 export class Lang {
   keywords: Record<string, string> = {};
@@ -17,7 +18,7 @@ export abstract class Key {
   abstract key: string;
   abstract array: boolean[];
   abstract optional: boolean;
-  abstract origin: string;
+  abstract origin: any;
   abstract decl: string;
   abstract def: string;
 
@@ -41,15 +42,96 @@ export abstract class Key {
 }
 
 export abstract class Complex extends Key {
+  private static refs = {
+    data: {} as Record<string, Complex>,
+    resolved: false,
+    resolve(validate?: typeof validateRef) {
+      for (const path in Complex.refs.data) {
+        const e = Complex.refs.data[path];
+        if (!e || !e.parent) {
+          continue;
+        }
+        const ref = (validate ?? validateRef)(e);
+        if (!ref) {
+          continue;
+        }
+        const $ref = Complex.refs.data[ref];
+        if (!$ref) {
+          throw `引用地址 ${ref} 不存在`;
+        }
+        const i = e.parent.child.findIndex(ee => ee === e);
+        if (i < 0) {
+          continue;
+        }
+        e.parent.child[i] = $ref.clone(e);
+      }
+      Complex.refs.resolved = true;
+    },
+  };
+  public static refsReset() {
+    this.refs.data = {};
+    this.refs.resolved = false;
+  }
+  public static refsValidate(validate?: typeof validateRef) {
+    this.refs.resolve = this.refs.resolve.bind(this, validate);
+  }
+
+  private clone(self: typeof this) {
+    let p = self.parent;
+    let optional: boolean | undefined = undefined;
+    if (!self.array.length) {
+      const { decl } = this;
+      while (p && optional === undefined) {
+        if (p.decl === decl) {
+          optional = true;
+        }
+        p = p.parent;
+      }
+    }
+    return new (this as any).constructor(
+      this.key,
+      self.array,
+      optional ?? self.optional,
+      this.origin,
+      this.parent,
+      self,
+    );
+  }
+
+  get index(): string {
+    return `${this.parent ? this.parent.index : ''}/${this.key}`;
+  }
+
+  get prop() {
+    return func.convertKeyword(this.$ref?.key ?? this.key, this.lang.keywords, false);
+  }
+
+  get jsonKey() {
+    return func.convertWrap(this.$ref?.key ?? this.key);
+  }
+
   protected constructor(
     public key: string,
     public array: boolean[],
     public optional: boolean,
-    public origin: string,
+    public origin: any,
     parent?: Complex,
+    private $ref?: Complex,
   ) {
     super();
     this.parent = parent as typeof this;
+
+    if ($ref) {
+      return;
+    }
+    const index = this.index;
+    if (Complex.refs.data[index]) {
+      throw `生成的类型已经存在 ${index}`;
+    }
+    if (Complex.refs.resolved) {
+      throw '不应该发生';
+    }
+    Complex.refs.data[index] = this;
   }
 
   child: (typeof this | Simple<typeof this>)[] = [];
@@ -65,11 +147,17 @@ export abstract class Complex extends Key {
   }
 
   toDecl2Def() {
-    const decl = `${this.parent?.decl ?? ''}${this.prop}` as string;
+    const decl = `${this.parent?.decl ?? ''}${super.prop}` as string;
     return { decl, def: `new ${decl}()` };
   }
 
   toCode() {
+    if (!Complex.refs.resolved) {
+      Complex.refs.resolve();
+    }
+    if (this.$ref) {
+      return [];
+    }
     return this.child
       .filter(e => e instanceof Complex)
       .reduce(
@@ -94,7 +182,7 @@ export abstract class Simple<C extends Complex> extends Key {
     public key: string,
     public array: boolean[],
     public optional: boolean,
-    public origin: string,
+    public origin: any,
     public parent: C,
     public type: BaseType,
   ) {

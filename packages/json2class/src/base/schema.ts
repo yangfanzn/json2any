@@ -1,9 +1,12 @@
 import { func } from './func';
 import { JsonType } from './type';
+import { Complex } from './code';
 
-export const validate = (json: any) => {
+export const validateRef = (complex: Complex): string | undefined => {
+  const json = complex.origin;
+
   if (func.type(json) !== JsonType.Object) {
-    throw '不可能发生的';
+    return undefined;
   }
 
   if (json.hasOwnProperty('$ref')) {
@@ -14,6 +17,7 @@ export const validate = (json: any) => {
     if (t.length !== 1) {
       throw `存在 $ref 字段时不能包含其他字段 ${t}`;
     }
+    return json.$ref;
   }
 
   return undefined;

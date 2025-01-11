@@ -2,6 +2,22 @@ import { Json2classBase, Json2classDart } from 'json2class';
 import { SchemaPlan, SchemaBody } from './schema';
 import { func } from './func';
 
+Json2classBase.Complex.refsValidate(e => {
+  const x = Json2classBase.validateRef(e);
+  if (x) {
+    let [launch = '', ref = ''] = x.split('#');
+    if (!launch) {
+      let p = e.parent;
+      while (p) {
+        launch = p.key;
+        p = p.parent;
+      }
+    }
+    return `/${func.convertLaunch(launch)}${ref}`;
+  }
+  return x;
+});
+
 // todo: 增加统一代理机制
 const simpleToDecl2Def = Json2classDart.Simple.prototype.toDecl2Def;
 Json2classDart.Simple.prototype.toDecl2Def = function () {
@@ -87,8 +103,7 @@ export abstract class Http<C extends Json2classBase.Complex, S extends Json2clas
 
   protected constructor(public key: string, plan: C) {
     this.plan = this.json2plan(plan);
-    this.launch = this.key.replace(/[\/{}]/g, '');
-    this.plan.title.parent.key = this.launch;
+    this.launch = plan.key;
   }
 
   abstract toLaunch(body?: SchemaBody): { code: string; alias: string };
