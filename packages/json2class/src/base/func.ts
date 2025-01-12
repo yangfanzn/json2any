@@ -1,5 +1,5 @@
 import { Complex, Simple } from './code';
-import { JsonType } from './type';
+import { JsonType, UnreachableError, AssertError } from './type';
 
 export class Func {
   core2class(complex: typeof Complex, simple: typeof Simple<Complex>, key: string, json: any): Complex;
@@ -33,7 +33,7 @@ export class Func {
       case JsonType.Number:
       case JsonType.Boolean:
         if (!parent) {
-          throw '简单类型必须有父类型';
+          this.assertError('simple must have a parent type');
         }
         // @ts-ignore
         return new simple(key, array, optional, json, parent, type);
@@ -52,7 +52,7 @@ export class Func {
         break;
 
       default:
-        throw `不可能出现的错误 ${type}`;
+        this.unreachableError(`core2class parsed an unknown typeof ${type}`);
     }
 
     return undefined;
@@ -76,7 +76,8 @@ export class Func {
       if (t) {
         return t;
       }
-      throw '不可能发生';
+      this.unreachableError('convertWrap');
+      throw 0;
     });
   }
 
@@ -116,7 +117,7 @@ export class Func {
       const t = x.slice(max + 1);
       return hash === this.quickHash(t, max) ? t : x;
     }
-    throw '不可能出现';
+    this.unreachableError('convertKeyword');
     return x;
   }
 
@@ -134,6 +135,26 @@ export class Func {
 
   type(o: any) {
     return Object.prototype.toString.call(o).slice(8, -1).toLowerCase();
+  }
+
+  unreachableError(message: string, detail?: string) {
+    const list = [
+      'the occurrence of this error indicates an unexpected situation in the program,',
+      'please report this error to the author[yangfanzn@163.com]. Thank you very much!\n',
+    ];
+    if (detail) {
+      list.unshift(detail);
+    }
+    list.unshift(message);
+    throw new UnreachableError(list.join('\n'));
+  }
+
+  assertError(message: string, detail?: string) {
+    const list = [message];
+    if (detail) {
+      list.push(detail);
+    }
+    throw new AssertError(list.join('\n'));
   }
 }
 

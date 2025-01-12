@@ -1,6 +1,6 @@
 import { func } from './func';
-import { BaseType } from './type';
 import { validate } from './schema';
+import { BaseType } from './type';
 
 export class Lang {
   keywords: Record<string, string> = {};
@@ -56,11 +56,11 @@ export abstract class Complex extends Key {
           continue;
         }
         if (e.index === ref) {
-          throw `禁止引用自身 ${ref}`;
+          func.assertError('$ref is not allowed to reference itself', ref);
         }
         const $ref = Complex.refs.data[ref];
         if (!$ref) {
-          throw `引用地址 ${ref} 不存在`;
+          return func.assertError('the reference address does not exist', ref);
         }
         const i = e.parent.child.findIndex(ee => ee === e);
         if (i < 0) {
@@ -129,10 +129,10 @@ export abstract class Complex extends Key {
     }
     const index = this.index;
     if (Complex.refs.data[index]) {
-      throw `生成的类型已经存在 ${index}`;
+      func.assertError('the type structure already exists', index);
     }
     if (Complex.refs.resolved) {
-      throw '不应该发生';
+      func.unreachableError('refs has been resolved');
     }
     Complex.refs.data[index] = this;
   }

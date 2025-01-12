@@ -25,7 +25,7 @@ export class Bin {
     } = {},
   ) {
     if (!Fs.existsSync(path)) {
-      throw `[${path}] directory does not exist`;
+      this.exit(`[${path}] directory does not exist`);
     }
     const files = [] as Array<string>;
     Fs.readdirSync(path).forEach(each => {

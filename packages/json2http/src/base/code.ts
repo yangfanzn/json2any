@@ -9,7 +9,7 @@ Json2classBase.Complex.refsValidate(e => {
     let launch = x.slice(0, i);
     const ref = x.slice(i + 1);
     if (i < 0) {
-      throw '$ref 缺少锚点标记符';
+      func.assertError('$ref is missing the anchor marker(#)');
     }
     if (!launch) {
       let p = e.parent;
@@ -76,7 +76,7 @@ export abstract class Http<C extends Json2classBase.Complex, S extends Json2clas
             x.body = cur;
             break;
           default:
-            throw '不可能 json2plan1';
+            func.unreachableError('json2plan.complex');
         }
       } else {
         switch (cur.key) {
@@ -90,7 +90,7 @@ export abstract class Http<C extends Json2classBase.Complex, S extends Json2clas
             x.method = cur;
             break;
           default:
-            throw '不可能 json2plan2';
+            func.unreachableError('json2plan.simple');
         }
       }
 
@@ -119,14 +119,15 @@ export abstract class Http<C extends Json2classBase.Complex, S extends Json2clas
     if (plan.body) {
       const type = plan.body.getChildByKey('type', false)?.origin as SchemaBody['type'];
       if (!type) {
-        throw '不可能发生';
+        func.unreachableError('body.type cannot be empty');
       }
       if (type === 'form') {
         const data = plan.body.getChildByKey('data');
         const fields = data?.getChildByKey('fields');
         const files = data?.getChildByKey('files');
         if (!fields || !files) {
-          throw '不可能发生';
+          func.unreachableError('fields and files must exist when body.type is form');
+          throw 0;
         }
         body = { type, data: { fields, files } };
       } else {

@@ -17,3 +17,21 @@ export enum BaseType {
 export enum Supported {
   Dart = 'dart',
 }
+
+export class UnreachableError extends Error {
+  constructor(public message: string) {
+    super();
+  }
+  toString() {
+    return this.message;
+  }
+}
+
+export class AssertError extends Error {
+  constructor(public message: string) {
+    super();
+  }
+  toString() {
+    return this.message;
+  }
+}

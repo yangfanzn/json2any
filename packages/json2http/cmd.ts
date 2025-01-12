@@ -65,4 +65,4 @@ program
     // ChildProcess.exec(bin.format);
   });
 
-program.parse();
+program.parseAsync().catch(e => Json2httpBin.bin.exit(e));

@@ -2,23 +2,23 @@ import { func } from './func';
 import { JsonType } from './type';
 import { Complex } from './code';
 
-export const validate = (complex: Complex): string | undefined => {
+export const validate = (complex: Complex) => {
   const json = complex.origin;
 
   if (func.type(json) !== JsonType.Object) {
-    return undefined;
+    return '';
   }
 
   if (json.hasOwnProperty('$ref')) {
     if (func.type(json.$ref) !== JsonType.String) {
-      throw '$ref 字段必须是字符串类型';
+      func.assertError('$ref must be a string');
     }
     const t = Object.keys(json);
     if (t.length !== 1) {
-      throw `存在 $ref 字段时不能包含其他字段 ${t}`;
+      func.assertError(`$ref is mutually exclusive with other fields`, t.join());
     }
     return json.$ref;
   }
 
-  return undefined;
+  return '';
 };
