@@ -125,8 +125,7 @@ class DioExecutor extends Executor {
   static toEntry() {
     const { addX } = Json2classBase.func;
     const { executorConfig } = this;
-    return `
-import 'dart:async';
+    return `import 'dart:async';
 import 'dart:typed_data';
 ${executorConfig.import}
 
@@ -235,7 +234,6 @@ class Json2http {
 @request@
 
 }
-
 `;
   }
 }

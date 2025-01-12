@@ -2,6 +2,7 @@ import Fs from 'fs';
 import Path from 'path';
 import Json5 from 'json5';
 import Shelljs from 'shelljs';
+import { func } from './func';
 import { Supported } from './type';
 import json2class from '../..';
 
@@ -106,7 +107,8 @@ export class Bin {
     files.set(
       `json2class.${type}`,
       [
-        Fs.readFileSync(Path.resolve(__dirname, `../src/${type}/temp.${type}`)),
+        func.addCopyRight('json2class'),
+        func.clearComment(Fs.readFileSync(Path.resolve(__dirname, `../src/${type}/temp.${type}`)).toString()),
         ...Array.from(jsons)
           .map(([key, json]) => json2class(type, key, json))
           .reduce((codes, cur) => {

@@ -2,6 +2,7 @@ import Fs from 'fs';
 import Path from 'path';
 import { Json2classBin } from 'json2class/bin';
 import { SchemaTs, validate } from './schema';
+import { func } from './func';
 import { Supported } from './type';
 import json2http from '../..';
 
@@ -44,11 +45,19 @@ export class Bin extends Json2classBin.Bin {
     const files = new Map<string, string>();
     files.set(
       `json2http.${type}`,
-      toEntry
-        .replace(/@cls@/, `${Fs.readFileSync(Path.resolve(__dirname, `../../json2class/src/${type}/temp.${type}`))}`)
-        .replace(/@aliases@/, aliases.join(''))
-        .replace(/@deps@/, deps.join(''))
-        .replace(/@request@/, request.join('')),
+      [
+        func.addCopyRight('json2http'),
+        toEntry
+          .replace(
+            /@cls@/,
+            func.clearComment(
+              Fs.readFileSync(Path.resolve(__dirname, `../../json2class/src/${type}/temp.${type}`)).toString(),
+            ),
+          )
+          .replace(/@aliases@/, aliases.join(''))
+          .replace(/@deps@/, deps.join(''))
+          .replace(/@request@/, request.join('')),
+      ].join(''),
     );
     return files;
   }
