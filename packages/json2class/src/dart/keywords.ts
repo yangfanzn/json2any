@@ -67,4 +67,9 @@ export const keywords: Record<string, string> = {
   with: 'with',
   while: 'while',
   yield: 'yield',
+  //
+  fromJson: 'fromJson',
+  fromAny: 'fromAny',
+  toJson: 'toJson',
+  create: 'create',
 };

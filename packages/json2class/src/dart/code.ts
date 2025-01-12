@@ -36,7 +36,7 @@ export class Complex extends Base.Complex {
 class ${this.decl} extends Cls {
   create() => ${this.def};
   ${this.child.map(e => this.lang.toProp(e)).join('')}
-  ${this.decl} fromJson(dynamic _, {Option Function(Option option)? setOption, Option? option}) {
+  ${this.decl} fromJson(dynamic _, {Option Function(Option _)? setOption, Option? option}) {
     Option opt = option ?? (setOption == null ? null : setOption(Cls.option.create())) ?? Cls.option;
     ${this.child.map(e => e.toFromJson()).join('')}
     return this;
