@@ -31,7 +31,6 @@ export class Complex extends Base.Complex {
   lang = new Lang();
 
   toClass() {
-    // todo: dynamic _, 用转换关键字变量替换(或用 this 明确指向，因为内部方法如 fromJson 也可能会冲突)
     return `
 class ${this.decl} extends Cls {
   create() => ${this.def};

@@ -12,7 +12,7 @@ program.option('-d, --debug', 'output extra debugging');
 // action(command1, command2, ..., options对象)
 program
   .description('generate http request function based on JSON configuration')
-  .command('make <type>') // todo: type 设置可选值
+  .command('make <type>')
   .option(
     '-w, --workspace <workspace>',
     'specify the workspace directory (default is current directory) for json config search.',
@@ -53,16 +53,9 @@ program
     Http.env.output = output;
     Http.env.extend = bin.parseExtend(output, extend);
 
-    // todo: 同 json2class
-    // Shelljs.rm('-rf', cache);
-    // Shelljs.mkdir('-p', cache);
-
     bin.http2file(bin.json2piece(workspace), type).forEach((code, file) => {
       Fs.writeFileSync(`${output}/${file}`, code);
     });
-
-    // format: Shelljs.exec 会报错
-    // ChildProcess.exec(bin.format);
   });
 
 program.parseAsync().catch(e => Json2httpBin.bin.exit(e));
