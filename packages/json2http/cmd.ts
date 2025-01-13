@@ -4,12 +4,9 @@ import Fs from 'fs';
 import { Json2httpBin } from './bin';
 import { Json2HttpBase } from '.';
 
-// 设置多个公共配置
 program.version('0.0.1', '-v --version', 'current version');
 program.option('-d, --debug', 'output extra debugging');
 
-// <必选> [可选]
-// action(command1, command2, ..., options对象)
 program
   .description('generate http request function based on JSON configuration')
   .command('make <type>')

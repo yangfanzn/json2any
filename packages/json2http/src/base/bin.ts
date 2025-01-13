@@ -13,10 +13,10 @@ export class Bin extends Json2classBin.Bin {
         const json = jsons[key];
         const error = validate(json);
         if (error) {
-          this.exit(`${_} ${key} ${error}`);
+          func.assertError(`${_} ${key} ${error}`);
         }
         if (codes.has(key)) {
-          this.exit(`${key} already exists`);
+          func.assertError(`${key} already exists`);
         }
         // schema 验证通过，这里的 http 就满足 SchemaTs
         codes.set(key, json);

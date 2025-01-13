@@ -3,12 +3,9 @@ import Path from 'path';
 import Fs from 'fs';
 import { Json2classBin } from './bin';
 
-// 设置多个公共配置
 program.version('0.0.1', '-v --version', 'current version');
 program.option('-d, --debug', 'output extra debugging');
 
-// <必选> [可选]
-// action(command1, command2, ..., options对象)
 program
   .description('generate class entity type based on json config')
   .command('make <type>')

@@ -25,9 +25,8 @@ export class Bin {
       level?: number;
     } = {},
   ) {
-    if (!Fs.existsSync(path)) {
-      this.exit(`[${path}] directory does not exist`);
-    }
+    this.dirIsExist(path);
+
     const files = [] as Array<string>;
     Fs.readdirSync(path).forEach(each => {
       const location = Path.join(path, each).replace(/\\/g, '/');
@@ -60,13 +59,13 @@ export class Bin {
 
   dirIsExist(dir: string) {
     if (!Fs.existsSync(dir) || !Fs.statSync(dir).isDirectory()) {
-      this.exit(`"${dir}" is not a valid directory`);
+      func.assertError('is not a valid directory', dir);
     }
   }
 
   fileIsExit(file: string) {
     if (!Fs.existsSync(file) || !Fs.statSync(file).isFile()) {
-      this.exit(`"${file}" is not a valid file`);
+      func.assertError('is not a valid file', file);
     }
   }
 
@@ -80,7 +79,7 @@ export class Bin {
       supported = base;
     }
     if (!supported.includes(type)) {
-      this.exit(`The following languages are currently supported: ${supported.join(' / ')}`);
+      func.assertError('the following languages are currently supported', supported.join());
     }
   }
 
