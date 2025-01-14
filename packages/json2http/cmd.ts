@@ -1,4 +1,4 @@
-import { program } from 'commander';
+import { Option, program } from 'commander';
 import Path from 'path';
 import Fs from 'fs';
 import { Json2httpBin } from './bin';
@@ -9,7 +9,12 @@ program.option('-d, --debug', 'output extra debugging');
 
 program
   .description('generate http request function based on JSON configuration')
-  .command('make <type>')
+  .command('make')
+  .addOption(
+    new Option('-l, --language <language>', 'specify the language for generating code')
+      .choices(Object.values(Json2HttpBase.Language))
+      .makeOptionMandatory(),
+  )
   .option(
     '-w, --workspace <workspace>',
     'specify the workspace directory (default is current directory) for json config search.',
@@ -24,11 +29,16 @@ program
     '-x, --extend <extend>',
     'specify a path for the extension file (default is the file named `extend` in the output directory)',
   )
-  .action(async (type, options) => {
+  .option(
+    '-e, --defaultExecutor <defaultExecutor>',
+    [
+      'to facilitate usage, built-in executors for different languages have been provided',
+      `you can specify one for your runtime environment, there are [${Object.values(Json2HttpBase.DefaultExecutor)}]`,
+    ].join('\n'),
+  )
+  .action(async options => {
     const { bin } = Json2httpBin;
-    const { Supported, Http } = Json2HttpBase;
-
-    bin.isSupported(type, Object.values(Supported)); // todo: 支持逻辑要在看看
+    const { func, DefaultExecutor, Language } = Json2HttpBase;
 
     const workspace = Path.resolve(options.workspace);
     bin.dirIsExist(workspace);
@@ -36,21 +46,48 @@ program
     const output = Path.resolve(options.output || workspace);
     bin.dirIsExist(output);
 
+    const { desc } = func.language(func.envJson2http.language);
+
     const extend =
       options.extend === ''
         ? ''
-        : Path.resolve(options.extend === undefined ? `${output}/extend.${type}` : options.extend);
-    if (options.extend === undefined) {
-      // todo: 默认情况，如果文件不存在，则主动创建
-    }
+        : Path.resolve(
+            options.extend === undefined ? `${output}/extend.${func.language(options.language).ext}` : options.extend,
+          );
     if (extend) {
-      bin.fileIsExit(extend);
+      try {
+        bin.fileIsExit(extend);
+      } catch (e) {
+        if (options.extend === undefined) {
+          Fs.writeFileSync(extend, Fs.readFileSync(Path.resolve(__dirname, `../src/${desc}/extend`)));
+        } else {
+          throw e;
+        }
+      }
     }
 
-    Http.env.output = output;
-    Http.env.extend = bin.parseExtend(output, extend);
+    func.envJson2http.language = func.envJson2class.language = options.language;
+    func.envJson2http.output = output;
+    func.envJson2http.extend = bin.parseExtend(output, extend);
+    let defaultExecutor = options.defaultExecutor;
+    if (!defaultExecutor) {
+      switch (func.envJson2http.language) {
+        case Language.Dart3:
+          defaultExecutor = DefaultExecutor.Dart_Dio5;
+          break;
+        // case Language.ArkTs5:
+        //   defaultExecutor = DefaultExecutor.ArkTs_Http5;
+        //   break;
+      }
+    }
+    if (!defaultExecutor.startsWith(`${desc}_`)) {
+      func.assertError(
+        `the set language(${func.envJson2http.language}) does not match the executor(${defaultExecutor})`,
+      );
+    }
+    func.envJson2http.defaultExecutor = defaultExecutor;
 
-    bin.http2file(bin.json2piece(workspace), type).forEach((code, file) => {
+    bin.http2file(bin.json2piece(workspace)).forEach((code, file) => {
       Fs.writeFileSync(`${output}/${file}`, code);
     });
   });

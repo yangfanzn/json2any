@@ -3,7 +3,6 @@ import Path from 'path';
 import Json5 from 'json5';
 import Shelljs from 'shelljs';
 import { func } from './func';
-import { Supported } from './type';
 import json2class from '../..';
 
 export class Bin {
@@ -69,20 +68,6 @@ export class Bin {
     }
   }
 
-  isSupported(type: string, supported?: string[]) {
-    const base = Object.values(Supported) as string[];
-    if (supported) {
-      if (supported.find(e => !base.includes(e))) {
-        throw '不应该发生的情况'; // todo: test
-      }
-    } else {
-      supported = base;
-    }
-    if (!supported.includes(type)) {
-      func.assertError('the following languages are currently supported', supported.join());
-    }
-  }
-
   searchJsons(dir: string) {
     return this.readDir(dir, {
       recursion: 3, // 最多搜索 3 层
@@ -101,15 +86,16 @@ export class Bin {
     }, new Map<string, any>());
   }
 
-  class2file(jsons: Map<string, string>, type: Supported) {
+  class2file(jsons: Map<string, string>) {
+    const { ext, desc } = func.language(func.envJson2class.language);
     const files = new Map<string, string>();
     files.set(
-      `json2class.${type}`,
+      `json2class.${ext}`,
       [
         func.addCopyRight('json2class'),
-        func.clearComment(Fs.readFileSync(Path.resolve(__dirname, `../src/${type}/temp.${type}`)).toString()),
+        func.clearComment(Fs.readFileSync(Path.resolve(__dirname, `../src/${desc}/temp.${ext}`)).toString()),
         ...Array.from(jsons)
-          .map(([key, json]) => json2class(type, key, json))
+          .map(([key, json]) => json2class(key, json))
           .reduce((codes, cur) => {
             codes.push(...cur.toCode().map(e => e.code));
             return codes;

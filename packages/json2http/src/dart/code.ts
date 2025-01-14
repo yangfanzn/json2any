@@ -63,10 +63,10 @@ Future${addX(this.declPlan)} ${this.launch}(FutureOr${addX('void')} Function(${t
   }
 
   static get executorConfig() {
-    if (this.env.extend.executor) {
+    if (Base.func.envJson2http.extend.executor) {
       return {
-        name: `Extend.${this.env.extend.executor}`,
-        import: `import '${this.env.extend.path}' as Extend;`,
+        name: `Extend.${Base.func.envJson2http.extend.executor}`,
+        import: `import '${Base.func.envJson2http.extend.path}' as Extend;`,
         code: '',
       };
     }

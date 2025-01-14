@@ -27,7 +27,7 @@ Json2classBase.Complex.refsValidate(e => {
 const simpleToDecl2Def = Json2classDart.Simple.prototype.toDecl2Def;
 Json2classDart.Simple.prototype.toDecl2Def = function () {
   if (func.isBodyFiles(this)) {
-    return { decl: Http.env.extend.executor ? 'Extend.MultipartFile' : 'Dio.MultipartFile', def: 'null' };
+    return { decl: func.envJson2http.extend.executor ? 'Extend.MultipartFile' : 'Dio.MultipartFile', def: 'null' };
   }
   return simpleToDecl2Def.call(this, this.type);
 };
@@ -43,14 +43,6 @@ Json2classDart.Complex.prototype.toClass = function () {
 };
 
 export abstract class Http<C extends Json2classBase.Complex, S extends Json2classBase.Simple<Json2classBase.Complex>> {
-  static env = {
-    extend: {
-      path: '',
-      executor: '',
-    },
-    output: '',
-  };
-
   static toEntry() {
     return '';
   }

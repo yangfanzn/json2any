@@ -1,0 +1,13 @@
+import 'json2http.dart';
+
+// execute it in the app entry point
+setOption() {
+  Json2http.option = (plan) {
+    // public configuration.
+    plan.baseURL = 'http://localhost:3000';
+    // other api configurations.
+    // if (plan is planextendoptionsequence) {
+    //
+    // }
+  };
+}

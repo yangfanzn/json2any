@@ -1,7 +1,11 @@
 import { Complex, Simple } from './code';
-import { JsonType, UnreachableError, AssertError } from './type';
+import { JsonType, UnreachableError, AssertError, Language } from './type';
 
 export class Func {
+  envJson2class = {
+    language: Language.Dart3,
+  };
+
   core2class(complex: typeof Complex, simple: typeof Simple<Complex>, key: string, json: any): Complex;
   core2class(
     complex: typeof Complex,
@@ -171,6 +175,14 @@ export class Func {
       list.push(detail);
     }
     throw new AssertError(list.join('\n'));
+  }
+
+  language(language: Language) {
+    const languages: Record<Language, { ext: string; desc: string }> = {
+      [Language.Dart3]: { ext: 'dart', desc: 'dart' },
+      // [Language.ArkTs5]: { ext: 'ets', desc: 'arkTs' },
+    };
+    return languages[language];
   }
 }
 

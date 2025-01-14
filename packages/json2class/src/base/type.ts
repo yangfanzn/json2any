@@ -14,8 +14,9 @@ export enum BaseType {
   Boolean = 'boolean',
 }
 
-export enum Supported {
-  Dart = 'dart',
+export enum Language {
+  Dart3 = 'dart@3',
+  // ArkTs5 = 'arkTs@5',
 }
 
 export class UnreachableError extends Error {

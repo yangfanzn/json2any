@@ -3,7 +3,6 @@ import Path from 'path';
 import { Json2classBin } from 'json2class/bin';
 import { SchemaTs, validate } from './schema';
 import { func } from './func';
-import { Supported } from './type';
 import json2http from '../..';
 
 export class Bin extends Json2classBin.Bin {
@@ -25,7 +24,7 @@ export class Bin extends Json2classBin.Bin {
     }, new Map<string, SchemaTs>());
   }
 
-  http2file(jsons: Map<string, SchemaTs>, type: Supported): Map<string, string> {
+  http2file(jsons: Map<string, SchemaTs>) {
     let toEntry = '';
 
     const request = [] as string[];
@@ -33,7 +32,7 @@ export class Bin extends Json2classBin.Bin {
     const aliases = [] as string[];
 
     Array.from(jsons)
-      .map(([key, json]) => json2http(type, key, json))
+      .map(([key, json]) => json2http(key, json))
       .forEach(({ http, Http }) => {
         toEntry ||= Http.toEntry();
         const { code, dep, alias } = http.toCode();
@@ -42,16 +41,17 @@ export class Bin extends Json2classBin.Bin {
         aliases.push(alias);
       });
 
+    const { ext, desc } = func.language(func.envJson2http.language);
     const files = new Map<string, string>();
     files.set(
-      `json2http.${type}`,
+      `json2http.${ext}`,
       [
         func.addCopyRight('json2http'),
         toEntry
           .replace(
             /@cls@/,
             func.clearComment(
-              Fs.readFileSync(Path.resolve(__dirname, `../../json2class/src/${type}/temp.${type}`)).toString(),
+              Fs.readFileSync(Path.resolve(__dirname, `../../json2class/src/${desc}/temp.${ext}`)).toString(),
             ),
           )
           .replace(/@aliases@/, aliases.join(''))
