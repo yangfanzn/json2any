@@ -52,7 +52,7 @@ export class Bin {
   }
 
   exit(msg: string) {
-    console.log(msg);
+    console.error(msg);
     Shelljs.exit(1);
   }
 
