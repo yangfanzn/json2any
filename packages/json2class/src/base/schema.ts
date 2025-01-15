@@ -9,7 +9,7 @@ export const validate = (complex: Complex) => {
     return '';
   }
 
-  if (json.hasOwnProperty('$ref')) {
+  if (Object.prototype.hasOwnProperty.call(json, '$ref')) {
     if (func.type(json.$ref) !== JsonType.String) {
       func.assertError('$ref must be a string');
     }
