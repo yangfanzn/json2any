@@ -4,12 +4,16 @@ import Fs from 'fs';
 import { Json2httpBin } from './bin';
 import { Json2HttpBase } from '.';
 
-program.version('0.0.1', '-v --version', 'current version');
-program.option('-d, --debug', 'output extra debugging');
+const description = [
+  'generate http request function based on JSON configuration',
+  `currently supported languages: ${Object.values(Json2HttpBase.Language)}`,
+].join('\n');
+
+program.description(description).version('0.0.1', '-v --version', 'current version');
 
 program
-  .description('generate http request function based on JSON configuration')
-  .command('make')
+  .description(description)
+  .command('build')
   .addOption(
     new Option('-l, --language <language>', 'specify the language for generating code')
       .choices(Object.values(Json2HttpBase.Language))

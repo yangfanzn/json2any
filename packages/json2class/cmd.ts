@@ -4,12 +4,16 @@ import Fs from 'fs';
 import { Json2classBin } from './bin';
 import { Json2classBase } from '.';
 
-program.version('0.0.1', '-v --version', 'current version');
-program.option('-d, --debug', 'output extra debugging');
+const description = [
+  'generate class entity type based on json config',
+  `currently supported languages: ${Object.values(Json2classBase.Language)}`,
+].join('\n');
+
+program.description(description).version('0.0.1', '-v --version', 'current version');
 
 program
-  .description('generate class entity type based on json config')
-  .command('make')
+  .command('build')
+  .description(description)
   .addOption(
     new Option('-l, --language <language>', 'specify the language for generating code')
       .choices(Object.values(Json2classBase.Language))
@@ -25,7 +29,6 @@ program
     'specify the output directory for build artifacts (defaults to the workspace directory if not provided)',
     '.',
   )
-
   .action(async options => {
     const { bin } = Json2classBin;
     const { func } = Json2classBase;
