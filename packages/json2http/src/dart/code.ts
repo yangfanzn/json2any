@@ -62,26 +62,26 @@ Future${addX(this.declPlan)} ${this.launch}(FutureOr${addX('void')} Function(${t
     };
   }
 
-  static get executorConfig() {
-    if (Base.func.envJson2http.extend.executor) {
+  static get agentConfig() {
+    if (Base.func.envJson2http.extend.agent) {
       return {
-        name: `Extend.${Base.func.envJson2http.extend.executor}`,
+        name: `Extend.${Base.func.envJson2http.extend.agent}`,
         import: `import '${Base.func.envJson2http.extend.path}' as Extend;`,
         code: '',
       };
     }
     return {
-      name: 'DioExecutor',
+      name: 'DioAgent',
       import: "import 'package:dio/dio.dart' as Dio;",
       code: `
-class DioExecutor extends Executor {
+class DioAgent extends Agent {
   Dio.Dio dio = Dio.Dio();
   Dio.Options options = Dio.Options(
     validateStatus: (e) => true,
     receiveDataWhenStatusError: true,
     responseType: Dio.ResponseType.plain,
   );
-  FutureOr${Json2classBase.func.addX('Answer')} request(Plan plan) async {
+  FutureOr${Json2classBase.func.addX('Reply')} fetch(Plan plan) async {
     var path = plan.path;
     if (plan.seg != null) {
       var seg = plan.seg?.toJson();
@@ -90,19 +90,19 @@ class DioExecutor extends Executor {
     var origin = await dio.request(
       '\${plan.baseURL}\${path}',
       queryParameters: plan.params?.toJson(),
-      data: await bodyEncode(plan),
+      data: await body(plan),
       options: options
         ..method = plan.method
         ..contentType = plan.body?.contentType,
     );
-    plan.answer.origin = origin;
-    plan.answer.code = origin.statusCode ?? 0;
-    plan.answer.message = origin.statusMessage ?? '';
-    plan.answer.data = origin.data;
-    return plan.answer;
+    plan.reply.origin = origin;
+    plan.reply.code = origin.statusCode ?? 0;
+    plan.reply.message = origin.statusMessage ?? '';
+    plan.reply.data = origin.data;
+    return plan.reply;
   }
 
-  dynamic bodyEncode(Plan plan) {
+  dynamic body(Plan plan) {
     var type = plan.body?.type;
     var data = plan.body?.data;
     if (type == null) {
@@ -124,14 +124,14 @@ class DioExecutor extends Executor {
 
   static toEntry() {
     const { addX } = Json2classBase.func;
-    const { executorConfig } = this;
+    const { agentConfig } = this;
     return `import 'dart:async';
 import 'dart:typed_data';
-${executorConfig.import}
+${agentConfig.import}
 
 @cls@
 
-class Answer {
+class Reply {
   int code = 0;
   String message = '';
   String error = '';
@@ -139,12 +139,12 @@ class Answer {
   dynamic origin;
 }
 
-abstract class Executor {
-  FutureOr${addX('Answer')} request(Plan plan);
-  dynamic bodyEncode(Plan plan);
+abstract class Agent {
+  FutureOr${addX('Reply')} fetch(Plan plan);
+  dynamic body(Plan plan);
 }
 
-${executorConfig.code}
+${agentConfig.code}
 
 class BodyForm${addX('T extends Cls, K extends Cls')} {
   T fields;
@@ -194,29 +194,29 @@ class Plan${addX('R extends Cls, S extends Cls?, P extends Cls?, B extends Body?
     required this.body,
   });
 
-  ${executorConfig.name} executor = ${executorConfig.name}();
+  ${agentConfig.name} agent = ${agentConfig.name}();
 
-  Answer answer = Answer();
+  Reply reply = Reply();
 
-  FutureOr${addX('Answer')} Function(Plan) transform = (Plan plan) {
-    var data = '\${plan.answer.data}';
+  FutureOr${addX('Reply')} Function(Plan) transform = (Plan plan) {
+    var data = '\${plan.reply.data}';
     if (!RegExp('"statusCode":"0"').hasMatch(data)) {
-      return plan.answer..error = data;
+      return plan.reply..error = data;
     }
-    return plan.answer;
+    return plan.reply;
   };
 
   FutureOr${addX('Plan<R, S, P, B>')} Function(Plan${addX('R, S, P, B')} plan) request = (Plan${addX(
       'R, S, P, B',
     )} plan) async {
-    plan.answer = await plan.executor.request(plan);
-    plan.answer = await plan.transform(plan);
-    plan.res.fromAny(plan.answer.data);
-    if (plan.answer.code != 200) {
-      throw plan.answer.message;
+    plan.reply = await plan.agent.fetch(plan);
+    plan.reply = await plan.transform(plan);
+    plan.res.fromAny(plan.reply.data);
+    if (plan.reply.code != 200) {
+      throw plan.reply.message;
     }
-    if (plan.answer.error.isNotEmpty) {
-      throw plan.answer.error;
+    if (plan.reply.error.isNotEmpty) {
+      throw plan.reply.error;
     }
     return plan;
   };

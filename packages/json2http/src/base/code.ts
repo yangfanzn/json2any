@@ -27,7 +27,7 @@ Json2classBase.Complex.refsValidate(e => {
 const simpleToDecl2Def = Json2classDart.Simple.prototype.toDecl2Def;
 Json2classDart.Simple.prototype.toDecl2Def = function () {
   if (func.isBodyFiles(this)) {
-    return { decl: func.envJson2http.extend.executor ? 'Extend.MultipartFile' : 'Dio.MultipartFile', def: 'null' };
+    return { decl: func.envJson2http.extend.agent ? 'Extend.MultipartFile' : 'Dio.MultipartFile', def: 'null' };
   }
   return simpleToDecl2Def.call(this, this.type);
 };

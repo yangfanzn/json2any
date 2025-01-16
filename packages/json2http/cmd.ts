@@ -34,15 +34,15 @@ program
     'specify a path for the extension file (default is the file named `extend` in the output directory)',
   )
   .option(
-    '-e, --defaultExecutor <defaultExecutor>',
+    '-a, --default-agent <defaultAgent>',
     [
-      'to facilitate usage, built-in executors for different languages have been provided',
-      `you can specify one for your runtime environment, there are [${Object.values(Json2HttpBase.DefaultExecutor)}]`,
+      'to facilitate usage, built-in agents for different languages have been provided',
+      `you can specify one for your runtime environment, there are [${Object.values(Json2HttpBase.DefaultAgent)}]`,
     ].join('\n'),
   )
   .action(async options => {
     const { bin } = Json2httpBin;
-    const { func, DefaultExecutor, Language } = Json2HttpBase;
+    const { func, DefaultAgent, Language } = Json2HttpBase;
 
     const workspace = Path.resolve(options.workspace);
     bin.dirIsExist(workspace);
@@ -73,23 +73,21 @@ program
     func.envJson2http.language = func.envJson2class.language = options.language;
     func.envJson2http.output = output;
     func.envJson2http.extend = bin.parseExtend(output, extend);
-    let defaultExecutor = options.defaultExecutor;
-    if (!defaultExecutor) {
+    let defaultAgent = options.defaultAgent;
+    if (!defaultAgent) {
       switch (func.envJson2http.language) {
         case Language.Dart3:
-          defaultExecutor = DefaultExecutor.Dart_Dio5;
+          defaultAgent = DefaultAgent.Dart_Dio5;
           break;
         // case Language.ArkTs5:
-        //   defaultExecutor = DefaultExecutor.ArkTs_Http5;
+        //   defaultAgent = DefaultAgent.ArkTs_Http5;
         //   break;
       }
     }
-    if (!defaultExecutor.startsWith(`${desc}_`)) {
-      func.assertError(
-        `the set language(${func.envJson2http.language}) does not match the executor(${defaultExecutor})`,
-      );
+    if (!defaultAgent.startsWith(`${desc}_`)) {
+      func.assertError(`the set language(${func.envJson2http.language}) does not match the agent(${defaultAgent})`);
     }
-    func.envJson2http.defaultExecutor = defaultExecutor;
+    func.envJson2http.defaultAgent = defaultAgent;
 
     bin.http2file(bin.json2piece(workspace)).forEach((code, file) => {
       Fs.writeFileSync(`${output}/${file}`, code);

@@ -1,16 +1,16 @@
 import { Json2classBase } from 'json2class';
 import { Http } from './code';
 import { SchemaTs } from './schema';
-import { Language, DefaultExecutor } from './type';
+import { Language, DefaultAgent } from './type';
 
 export class Func extends Json2classBase.Func {
   envJson2http = {
     language: Language.Dart3,
-    defaultExecutor: DefaultExecutor.Dart_Dio5,
+    defaultAgent: DefaultAgent.Dart_Dio5,
     output: '',
     extend: {
       path: '',
-      executor: '',
+      agent: '',
     },
   };
 

@@ -5,7 +5,7 @@ export enum Language {
   // ArkTs5 = 'arkTs@5',
 }
 
-export enum DefaultExecutor {
+export enum DefaultAgent {
   Dart_Dio5 = 'dart_dio@5',
   // ArkTs_Http5 = 'arkTs_http@5',
 }
