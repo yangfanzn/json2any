@@ -98,7 +98,11 @@ class DioAgent extends Agent {
     plan.reply.origin = origin;
     plan.reply.code = origin.statusCode ?? 0;
     plan.reply.message = origin.statusMessage ?? '';
-    plan.reply.data = origin.data;
+    try {
+      plan.reply.data = Convert.jsonDecode(origin.data);
+    } catch (e) {
+      plan.reply.data = origin.data;
+    }
     return plan.reply;
   }
 
@@ -143,9 +147,7 @@ abstract class Agent {
   FutureOr${addX('Reply')} fetch(Plan plan);
   dynamic body(Plan plan);
 }
-
 ${agentConfig.code}
-
 class BodyForm${addX('T extends Cls, K extends Cls')} {
   T fields;
   K files;
@@ -169,6 +171,27 @@ class Body${addX('T')} {
     required this.type,
     required this.data,
   }) : contentType = _types[type];
+}
+
+class Hook {
+  FutureOr${addX('void')} Function(Plan) before = (Plan plan) {};
+  FutureOr${addX('void')} Function(Plan) after = (Plan plan) {};
+  FutureOr${addX('Reply')} Function(Plan) validate = (Plan plan) {
+    try {
+      if (plan.reply.data['statusCode'] != '0') {
+        plan.reply.error = plan.reply.data['statusMessage'];
+      }
+    } catch (e) {
+      plan.reply.error = e.toString();
+    }
+    return plan.reply;
+  };
+}
+
+class HttpError implements Exception {
+  final Plan plan;
+  HttpError({required this.plan});
+  String toString() => plan.reply.error.isNotEmpty ? plan.reply.error : plan.reply.message;
 }
 
 class Plan${addX('R extends Cls, S extends Cls?, P extends Cls?, B extends Body?')} {
@@ -197,26 +220,22 @@ class Plan${addX('R extends Cls, S extends Cls?, P extends Cls?, B extends Body?
   ${agentConfig.name} agent = ${agentConfig.name}();
 
   Reply reply = Reply();
-
-  FutureOr${addX('Reply')} Function(Plan) transform = (Plan plan) {
-    var data = '\${plan.reply.data}';
-    if (!RegExp('"statusCode":"0"').hasMatch(data)) {
-      return plan.reply..error = data;
-    }
-    return plan.reply;
-  };
+  
+  Hook hook = Hook();
 
   FutureOr${addX('Plan<R, S, P, B>')} Function(Plan${addX('R, S, P, B')} plan) request = (Plan${addX(
       'R, S, P, B',
     )} plan) async {
+    await plan.hook.before(plan);
     plan.reply = await plan.agent.fetch(plan);
-    plan.reply = await plan.transform(plan);
+    plan.reply = await plan.hook.validate(plan);
     plan.res.fromAny(plan.reply.data);
-    if (plan.reply.code != 200) {
-      throw plan.reply.message;
+    await plan.hook.after(plan);
+    if (plan.reply.code != 200 && plan.reply.message.isNotEmpty) {
+      throw HttpError(plan: plan);
     }
     if (plan.reply.error.isNotEmpty) {
-      throw plan.reply.error;
+      throw HttpError(plan: plan);
     }
     return plan;
   };
