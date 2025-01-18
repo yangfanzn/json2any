@@ -232,13 +232,14 @@ npx json2class build -l dart@3 -s ~/projects/test/
 ```
 
 ### 指定 class 文件生成目录
-默认会在执行命令的当前目录生成 class 文件
+默认会在 json 配置的查找目录下生成 class 文件
 ```sh
 cd ~/projects/test/
 npx json2class build -l dart@3 -o ../cache/
 ```
-指定 -o 参数，可以指定一个输出目录，通常建议将该目录加入 .gitignore
+指定 -o 参数，可以指定一个输出目录，通常建议将该目录或生成的文件加入 .gitignore
 ```gitignore
 # .gitignore
 ~/projects/cache/
+json2class.*
 ```

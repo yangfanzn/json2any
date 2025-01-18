@@ -88,6 +88,11 @@ export const validate = (json: any) => {
 
   json = Object.assign({}, json);
 
+  const k = Object.keys(json).find(e => !['title', 'method', 'params', 'body', 'res', 'path'].includes(e));
+  if (k) {
+    return `configured unsupported field [${k}]`;
+  }
+
   if (['title', 'method', 'res'].findIndex(k => !json.hasOwnProperty(k)) >= 0) {
     return 'title method res are required';
   }
@@ -101,12 +106,12 @@ export const validate = (json: any) => {
   }
 
   if (json.hasOwnProperty('params')) {
-    if (func.type(json.params) === JsonType.Object) {
-      if (!Object.values(json.params).filter(e => func.type(e) !== JsonType.String).length) {
-        return '';
-      }
+    if (
+      func.type(json.params) !== JsonType.Object ||
+      Object.values(json.params).filter(e => func.type(e) !== JsonType.String).length
+    ) {
+      return `params must be an record${func.addX('string, string')}`;
     }
-    return `params must be an record${func.addX('string, string')}`;
   }
 
   if (json.hasOwnProperty('body')) {
@@ -123,37 +128,32 @@ export const validate = (json: any) => {
     }
 
     if (json.body.type === 'map') {
-      if (func.type(json.body.data) === JsonType.Object) {
-        if (!Object.values(json.body.data).filter(e => func.type(e) !== JsonType.String).length) {
-          return '';
-        }
-      }
-      return `body.map.data must be an record${func.addX('string, string')}`;
-    } else if (json.body.type === 'form') {
       if (
-        func.type(json.body.data) === JsonType.Object &&
-        func.type(json.body.data.fields) === JsonType.Object &&
-        func.type(json.body.data.files) === JsonType.Object
+        func.type(json.body.data) !== JsonType.Object ||
+        Object.values(json.body.data).filter(e => func.type(e) !== JsonType.String).length
       ) {
-        const keys = Object.assign({}, json.body.data.fields, json.body.data.files);
-        let conflict = '';
-        if (
-          !Object.keys(keys).filter(k => {
-            conflict = json.body.data.fields.hasOwnProperty(k) && json.body.data.files.hasOwnProperty(k) ? k : '';
-            const e = keys[k];
-            if (func.type(e) === JsonType.Array) {
-              return (e as []).find(ee => func.type(ee) !== JsonType.String);
-            }
-            return func.type(e) !== JsonType.String;
-          }).length
-        ) {
-          if (conflict) {
-            return `fields and files in body.form.data has conflict field name of ${conflict}`;
-          }
-          return '';
-        }
+        return `body.map.data must be an record${func.addX('string, string')}`;
       }
-      return `fields and files in body.form.data must be an record${func.addX('string, string | string[]')}`;
+    } else if (json.body.type === 'form') {
+      const keys = Object.assign({}, json.body.data.fields, json.body.data.files);
+      let conflict = '';
+      if (
+        func.type(json.body.data) !== JsonType.Object ||
+        func.type(json.body.data.fields) !== JsonType.Object ||
+        func.type(json.body.data.files) !== JsonType.Object ||
+        Object.keys(keys).filter(k => {
+          conflict = json.body.data.fields.hasOwnProperty(k) && json.body.data.files.hasOwnProperty(k) ? k : '';
+          const e = keys[k];
+          if (func.type(e) === JsonType.Array) {
+            return (e as []).find(ee => func.type(ee) !== JsonType.String);
+          }
+          return func.type(e) !== JsonType.String;
+        }).length
+      ) {
+        return `fields and files in body.form.data must be an record${func.addX('string, string | string[]')}`;
+      } else if (conflict) {
+        return `fields and files in body.form.data has conflict field name of ${conflict}`;
+      }
     } else if (json.body.type === 'plain') {
       if (func.type(json.body.data) !== JsonType.String) {
         return 'body.plain.data must be an string';
