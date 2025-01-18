@@ -4,6 +4,8 @@ import * as Json2HttpDart from './src/dart';
 export * as Json2HttpBase from './src/base';
 export * as Json2HttpDart from './src/dart';
 
+export * from 'json2class';
+
 export default function json2http(key: string, json: Json2HttpBase.SchemaTs) {
   switch (Json2HttpBase.func.envJson2http.language) {
     case Json2HttpBase.Language.Dart3:

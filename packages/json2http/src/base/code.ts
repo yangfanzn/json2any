@@ -2,25 +2,18 @@ import { Json2classBase, Json2classDart } from 'json2class';
 import { SchemaPlan, SchemaBody } from './schema';
 import { func } from './func';
 
-Json2classBase.Complex.refsValidate(e => {
-  const x = Json2classBase.validate(e);
-  if (x) {
-    const i = x.indexOf('#');
-    let launch = x.slice(0, i);
-    const ref = x.slice(i + 1);
-    if (i < 0) {
-      func.assertError('$ref is missing the anchor marker(#)');
+Object.defineProperty(Json2classBase.Key.prototype, 'prop', {
+  get() {
+    let key = this.key;
+    if (!this.parent) {
+      // no parent, is complex, and is top.
+      // remove the '/{}' and concatenate directly.
+      // consistent with the way nested objects are concatenated.
+      // '/{}' in json key are properly escaped.
+      key = key.replace(/[\/{}]/g, '');
     }
-    if (!launch) {
-      let p = e.parent;
-      while (p) {
-        launch = p.key;
-        p = p.parent;
-      }
-    }
-    return `/${func.convertLaunch(launch)}${ref}`;
-  }
-  return x;
+    return func.convertKeyword(key, this.lang.keywords, false);
+  },
 });
 
 // todo: 增加统一代理机制
@@ -100,7 +93,7 @@ export abstract class Http<C extends Json2classBase.Complex, S extends Json2clas
 
   protected constructor(public key: string, plan: C) {
     this.plan = this.json2plan(plan);
-    this.launch = plan.key;
+    this.launch = func.convertLaunch(key);
   }
 
   abstract toLaunch(body?: SchemaBody): { code: string; alias: string };

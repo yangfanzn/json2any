@@ -104,7 +104,7 @@ export class Func {
       }
       let [, x] = str.match(new RegExp('^(\\d)')) ?? [];
       x = x ? `${splitKey}${x.charCodeAt(0)}${splitKey}` : '';
-      x = `${x}${str.slice(x ? 1 : 0).replace(/[^a-zA-Z0-9]/g, e => `${splitKey}${e.charCodeAt(0)}${splitKey}`)}`;
+      x = `${x}${str.slice(x ? 1 : 0).replace(/[^a-zA-Z0-9_]/g, e => `${splitKey}${e.charCodeAt(0)}${splitKey}`)}`;
       if (x.startsWith('_')) {
         x = `${startKey}${this.quickHash(str, max)}${x}`;
       }

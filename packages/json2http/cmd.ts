@@ -20,14 +20,13 @@ program
       .makeOptionMandatory(),
   )
   .option(
-    '-w, --workspace <workspace>',
-    'specify the workspace directory (default is current directory) for json config search.',
+    '-s, --search <search>',
+    'specify the search directory (default is current directory) for json config search.',
     '.',
   )
   .option(
     '-o, --output <output>',
-    'specify the output directory for build artifacts (defaults to the workspace directory if not provided)',
-    '.',
+    'specify the output directory for build artifacts (defaults to the search directory if not provided)',
   )
   .option(
     '-x, --extend <extend>',
@@ -44,10 +43,10 @@ program
     const { bin } = Json2httpBin;
     const { func, DefaultAgent, Language } = Json2HttpBase;
 
-    const workspace = Path.resolve(options.workspace);
-    bin.dirIsExist(workspace);
+    const search = Path.resolve(options.search);
+    bin.dirIsExist(search);
 
-    const output = Path.resolve(options.output || workspace);
+    const output = Path.resolve(options.output || search);
     bin.dirIsExist(output);
 
     const { desc } = func.language(func.envJson2http.language);
@@ -89,7 +88,7 @@ program
     }
     func.envJson2http.defaultAgent = defaultAgent;
 
-    bin.http2file(bin.json2piece(workspace)).forEach((code, file) => {
+    bin.http2file(bin.json2piece(search)).forEach((code, file) => {
       Fs.writeFileSync(`${output}/${file}`, code);
     });
   });

@@ -72,4 +72,5 @@ export const keywords: Record<string, string> = {
   fromAny: 'fromAny',
   toJson: 'toJson',
   create: 'create',
+  option: 'option',
 };

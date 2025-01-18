@@ -28,7 +28,15 @@ export abstract class Key {
   parent?: Key;
 
   get prop() {
-    return func.convertKeyword(this.key, this.lang.keywords, false);
+    let key = this.key;
+    if (!this.parent) {
+      // no parent, is complex, and is top.
+      // remove the '/' and concatenate directly.
+      // consistent with the way nested objects are concatenated.
+      // '/' in json key are properly escaped.
+      key = key.replace(/\//g, '');
+    }
+    return func.convertKeyword(key, this.lang.keywords, false);
   }
 
   get jsonKey() {
@@ -39,19 +47,27 @@ export abstract class Key {
     return `this.${this.prop} = _fromJson<${this.decl}>(_, '${this.jsonKey}', <bool>[${this.array}], ${this.optional}, this.${this.prop}, ${this.def}, opt);`;
   }
   abstract toDecl2Def(type?: string): { decl: string; def: string };
+
+  getRoot() {
+    let p = this.parent;
+    while (p?.parent) {
+      p = p.parent;
+    }
+    return p ?? this;
+  }
 }
 
 export abstract class Complex extends Key {
   private static refs = {
     data: {} as Record<string, Complex>,
     resolved: false,
-    resolve(validate2?: typeof validate) {
+    resolve() {
       for (const path in Complex.refs.data) {
         const e = Complex.refs.data[path];
         if (!e || !e.parent) {
           continue;
         }
-        const ref = (validate2 ?? validate)(e);
+        const ref = validate(e);
         if (!ref) {
           continue;
         }
@@ -62,21 +78,21 @@ export abstract class Complex extends Key {
         if (!$ref) {
           return func.assertError('the reference address does not exist', ref);
         }
+        if (validate($ref)) {
+          return func.assertError('the address referenced still points to a reference', ref);
+        }
         const i = e.parent.child.findIndex(ee => ee === e);
         if (i < 0) {
           continue;
         }
         e.parent.child[i] = $ref.clone(e);
       }
-      Complex.refs.resolved = true;
+      this.resolved = true;
     },
   };
   public static refsReset() {
     this.refs.data = {};
     this.refs.resolved = false;
-  }
-  public static refsValidate(validate2?: typeof validate) {
-    this.refs.resolve = this.refs.resolve.bind(this, validate2);
   }
 
   private clone(self: typeof this) {
@@ -102,7 +118,7 @@ export abstract class Complex extends Key {
   }
 
   get index(): string {
-    return `${this.parent ? this.parent.index : ''}/${this.key}`;
+    return `${this.parent ? `${this.parent.index}/` : ''}${this.key}${this.parent ? '' : '#'}`;
   }
 
   get prop() {

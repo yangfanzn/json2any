@@ -20,28 +20,27 @@ program
       .makeOptionMandatory(),
   )
   .option(
-    '-w, --workspace <workspace>',
-    'specifies the workspace directory (default is current directory) for json config search.',
+    '-s, --search <search>',
+    'specifies the search directory (default is current directory) for json config search.',
     '.',
   )
   .option(
     '-o, --output <output>',
-    'specify the output directory for build artifacts (defaults to the workspace directory if not provided)',
-    '.',
+    'specify the output directory for build artifacts (defaults to the search directory if not provided)',
   )
   .action(async options => {
     const { bin } = Json2classBin;
     const { func } = Json2classBase;
 
-    const workspace = Path.resolve(options.workspace);
-    bin.dirIsExist(workspace);
+    const search = Path.resolve(options.search);
+    bin.dirIsExist(search);
 
-    const output = Path.resolve(options.output || workspace);
+    const output = Path.resolve(options.output || search);
     bin.dirIsExist(output);
 
     func.envJson2class.language = options.language;
 
-    bin.class2file(bin.searchJsons(workspace)).forEach((code, file) => {
+    bin.class2file(bin.searchJsons(search)).forEach((code, file) => {
       Fs.writeFileSync(`${output}/${file}`, code);
     });
   });

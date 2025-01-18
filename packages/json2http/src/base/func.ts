@@ -38,19 +38,13 @@ export class Func extends Json2classBase.Func {
     // @ts-ignore
     return new http(
       key,
-      this.core2class(
-        complex as typeof Json2classBase.Complex,
-        simple as typeof Json2classBase.Simple,
-        this.convertLaunch(key),
-        {
-          ...json,
-          res: json.res,
-          path,
-          [`seg${seg ? '' : '?'}`]: seg ?? {},
-          [`params${json.params ? '' : '?'}`]: json.params ?? {},
-          [`body${json.body ? '' : '?'}`]: json.body ?? {},
-        },
-      ),
+      this.core2class(complex as typeof Json2classBase.Complex, simple as typeof Json2classBase.Simple, key, {
+        ...json,
+        path,
+        [`seg${seg ? '' : '?'}`]: seg ?? {},
+        [`params${json.params ? '' : '?'}`]: json.params ?? {},
+        [`body${json.body ? '' : '?'}`]: json.body ?? {},
+      }),
     );
   }
 

@@ -78,8 +78,7 @@ export class Bin {
         file
           .replace(/\.\w+$/, '')
           .split(dir)
-          .pop()
-          ?.replace(/\//g, '') ?? '',
+          .pop() ?? '',
         Json5.parse(Fs.readFileSync(file).toString()),
       );
       return codes;
