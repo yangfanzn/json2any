@@ -28,7 +28,7 @@ export const contentTypes = {
   },
   plain: {
     header: 'text/plain',
-    type: {} as { type: 'plain'; data: string },
+    type: {} as { type: 'plain' },
   },
 } as const;
 
@@ -97,8 +97,12 @@ export const validate = (json: any) => {
     return 'title method res are required';
   }
 
+  if (func.type(json.title) !== JsonType.String) {
+    return 'title must be an string';
+  }
+
   if (!methodTypes.includes(json.method)) {
-    return `method is out of the enums[${methodTypes}] range`;
+    return `method = ${json.method} is out of the enums[${methodTypes}] range`;
   }
 
   if (func.type(json.res) !== JsonType.Object) {
@@ -118,50 +122,55 @@ export const validate = (json: any) => {
     if (func.type(json.body) !== JsonType.Object) {
       return 'body must be an object';
     }
-    if (json.body.hasOwnProperty('type')) {
-      if (!bodyTypes.includes(json.body.type)) {
-        return `body.type is out of the enums[${bodyTypes}] range`;
-      }
-    }
-    if (json.body.type !== 'byte' && (json.body.data === null || json.body.data === undefined)) {
-      return 'except for body.type = byte, body.data must exist and cannot be null';
+
+    const type = json.body.hasOwnProperty('type') ? json.body.type : 'json';
+    if (!bodyTypes.includes(type)) {
+      return `body.type = ${type} is out of the enums[${bodyTypes}] range`;
     }
 
-    if (json.body.type === 'map') {
-      if (
-        func.type(json.body.data) !== JsonType.Object ||
-        Object.values(json.body.data).filter(e => func.type(e) !== JsonType.String).length
-      ) {
-        return `body.map.data must be an record${func.addX('string, string')}`;
-      }
-    } else if (json.body.type === 'form') {
-      const keys = Object.assign({}, json.body.data.fields, json.body.data.files);
-      let conflict = '';
-      if (
-        func.type(json.body.data) !== JsonType.Object ||
-        func.type(json.body.data.fields) !== JsonType.Object ||
-        func.type(json.body.data.files) !== JsonType.Object ||
-        Object.keys(keys).filter(k => {
-          conflict = json.body.data.fields.hasOwnProperty(k) && json.body.data.files.hasOwnProperty(k) ? k : '';
-          const e = keys[k];
-          if (func.type(e) === JsonType.Array) {
-            return (e as []).find(ee => func.type(ee) !== JsonType.String);
-          }
-          return func.type(e) !== JsonType.String;
-        }).length
-      ) {
-        return `fields and files in body.form.data must be an record${func.addX('string, string | string[]')}`;
-      } else if (conflict) {
-        return `fields and files in body.form.data has conflict field name of ${conflict}`;
-      }
-    } else if (json.body.type === 'plain') {
-      if (func.type(json.body.data) !== JsonType.String) {
-        return 'body.plain.data must be an string';
-      }
-    } else if (json.body.type === 'byte') {
-      if (json.body.hasOwnProperty('data')) {
-        return 'body.byte.data is forbidden to set';
-      }
+    switch (type) {
+      case 'map':
+        if (
+          func.type(json.body.data) !== JsonType.Object ||
+          Object.values(json.body.data).filter(e => func.type(e) !== JsonType.String).length
+        ) {
+          return `body.map.data must be an record${func.addX('string, string')}`;
+        }
+        break;
+      case 'form':
+        const keys = Object.assign({}, json.body.data?.fields, json.body.data?.files);
+        let conflict = '';
+        if (
+          func.type(json.body.data) !== JsonType.Object ||
+          func.type(json.body.data.fields) !== JsonType.Object ||
+          func.type(json.body.data.files) !== JsonType.Object ||
+          Object.keys(keys).filter(k => {
+            conflict = json.body.data.fields.hasOwnProperty(k) && json.body.data.files.hasOwnProperty(k) ? k : '';
+            const e = keys[k];
+            if (func.type(e) === JsonType.Array) {
+              return (e as []).find(ee => func.type(ee) !== JsonType.String);
+            }
+            return func.type(e) !== JsonType.String;
+          }).length
+        ) {
+          return `fields and files in body.form.data must be an record${func.addX('string, string | string[]')}`;
+        } else if (conflict) {
+          return `fields and files in body.form.data has conflict field name of ${conflict}`;
+        }
+        break;
+      case 'plain':
+      case 'byte':
+        if (json.body.hasOwnProperty('data')) {
+          return `body.${type}.data is forbidden to set`;
+        }
+        break;
+      case 'json':
+        if (json.body.data === null || json.body.data === undefined) {
+          return 'body.json.data must exist and cannot be null';
+        }
+        break;
+      default:
+        func.unreachableError(`${json.body.type} is a non-existent body.type`);
     }
   }
 

@@ -10,7 +10,7 @@ export class Bin extends Json2classBin.Bin {
     return Array.from(this.searchJsons(dir)).reduce((codes, [_, jsons]) => {
       Object.keys(jsons).forEach(key => {
         const json = jsons[key];
-        const error = validate(json, key);
+        const error = validate(json);
         if (error) {
           func.assertError(`${_}#${key} ${error}`);
         }
