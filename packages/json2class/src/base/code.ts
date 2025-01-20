@@ -61,72 +61,53 @@ export abstract class Complex extends Key {
   private static refs = {
     data: {} as Record<string, Complex>,
     resolved: false,
-    resolve() {
-      for (const path in Complex.refs.data) {
-        const e = Complex.refs.data[path];
-        if (!e || !e.parent) {
-          continue;
-        }
-        const ref = validate(e);
-        if (!ref) {
-          continue;
-        }
-        if (e.index === ref) {
-          func.assertError('$ref is not allowed to reference itself', ref);
-        }
-        const $ref = Complex.refs.data[ref];
-        if (!$ref) {
-          return func.assertError('the reference address does not exist', ref);
-        }
-        if (validate($ref)) {
-          return func.assertError('the address referenced still points to a reference', ref);
-        }
-        const i = e.parent.child.findIndex(ee => ee === e);
-        if (i < 0) {
-          continue;
-        }
-        e.parent.child[i] = $ref.clone(e);
-      }
-      this.resolved = true;
-    },
   };
   public static refsReset() {
     this.refs.data = {};
     this.refs.resolved = false;
   }
+  public static refsResolve() {
+    if (this.refs.resolved) {
+      return;
+    }
+    this.refs.resolved = true;
+    for (const path in this.refs.data) {
+      const e = this.refs.data[path];
+      if (!e) {
+        // just for static type check
+        continue;
+      }
+      const ref = validate(e);
+      if (!ref) {
+        continue;
+      }
+      const $ref = this.refs.data[ref];
+      if (!$ref) {
+        return func.assertError('the reference address does not exist', ref);
+      }
+      e.$refSet($ref);
+    }
+  }
 
-  private clone(self: typeof this) {
-    let p = self.parent;
-    let optional: boolean | undefined = undefined;
-    if (!self.array.length) {
-      const { decl } = this;
-      while (p && optional === undefined) {
+  private $ref?: typeof this;
+  private $refSet($ref: typeof this) {
+    this.$ref = $ref;
+    let p = this.parent;
+    if (!this.array.length) {
+      const { decl } = $ref;
+      while (p) {
         if (p.decl === decl) {
-          optional = true;
+          // avoid instantiation deadlock
+          this.optional = true;
+          break;
         }
         p = p.parent;
       }
     }
-    return new (this as any).constructor(
-      this.key,
-      self.array,
-      optional ?? self.optional,
-      this.origin,
-      this.parent,
-      self,
-    );
   }
 
   get index(): string {
     return `${this.parent ? `${this.parent.index}/` : ''}${this.key}${this.parent ? '' : '#'}`;
-  }
-
-  get prop() {
-    return func.convertKeyword(this.$ref?.key ?? this.key, this.lang.keywords, false);
-  }
-
-  get jsonKey() {
-    return func.convertWrap(this.$ref?.key ?? this.key);
   }
 
   protected constructor(
@@ -135,14 +116,10 @@ export abstract class Complex extends Key {
     public optional: boolean,
     public origin: any,
     parent?: Complex,
-    private $ref?: Complex,
   ) {
     super();
     this.parent = parent as typeof this;
 
-    if ($ref) {
-      return;
-    }
     const index = this.index;
     if (Complex.refs.data[index]) {
       func.assertError('the type structure already exists', index);
@@ -166,17 +143,24 @@ export abstract class Complex extends Key {
   }
 
   toDecl2Def() {
-    const decl = `${this.parent?.decl ?? ''}${super.prop}` as string;
+    const self = this.getReal();
+    const decl = `${self.parent?.decl ?? ''}${self.prop}` as string;
     return { decl, def: `new ${decl}()` };
   }
 
+  private coded = false;
   toCode() {
-    if (!Complex.refs.resolved) {
-      Complex.refs.resolve();
-    }
+    Complex.refsResolve();
+
     if (this.$ref) {
       return [];
     }
+
+    if (this.coded) {
+      return [];
+    }
+    this.coded = true;
+
     return this.child
       .filter(e => e instanceof Complex)
       .reduce(
@@ -192,7 +176,22 @@ export abstract class Complex extends Key {
   getChildByKey(key: string, C: null): typeof this | Simple<typeof this> | undefined;
   getChildByKey(key: string, C?: true): typeof this | undefined;
   getChildByKey(key: string, C: boolean | null = true): typeof this | Simple<typeof this> | undefined {
-    return this.child.find(e => e.key === key && (C === null || e instanceof (C ? Complex : Simple)));
+    let t = this.child.find(e => e.key === key && (C === null || e instanceof (C ? Complex : Simple)));
+    if (t instanceof Complex) {
+      t = t.getReal();
+    }
+    return t;
+  }
+
+  getReal() {
+    let t = this;
+    while (t.$ref) {
+      t = t.$ref;
+      if (this === t) {
+        func.assertError('circular reference error', t.index);
+      }
+    }
+    return t;
   }
 }
 

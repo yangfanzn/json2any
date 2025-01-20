@@ -6,10 +6,10 @@ export class Complex extends Json2classDart.Complex {}
 export class Simple extends Json2classDart.Simple {}
 
 export class Http extends Base.Http<Complex, Simple> {
-  toLaunch(body?: Base.SchemaBody) {
+  toLaunch(plan: Base.SchemaPlan) {
     const { addX } = Json2classBase.func;
-    const { plan } = this;
-    const { lang } = plan.title.parent;
+
+    const { body } = plan;
 
     let bodyDecl = 'Null';
     let bodyDef = 'null';
@@ -19,7 +19,7 @@ export class Http extends Base.Http<Complex, Simple> {
         bodyDecl = `Body${addX(`BodyForm${addX(`${body.data.fields.decl}, ${body.data.files.decl}`)}`)}`;
         bodyDef = `Body(type: '${body.type}', data: BodyForm(fields: ${body.data.fields.def}, files: ${body.data.files.def}))`;
       } else if (body.data?.array.length) {
-        bodyDecl = lang.arrayType(body.data.array, body.data.decl);
+        bodyDecl = plan.title.lang.arrayType(body.data.array, body.data.decl);
         bodyDef = `Body(type: '${body.type}', data: ${bodyDecl}.empty())`;
         bodyDecl = `Body${addX(bodyDecl)}`;
       } else if (body.type === 'plain') {
@@ -161,8 +161,8 @@ class BodyForm${addX('T extends Cls, K extends Cls')} {
 }
 
 class Body${addX('T')} {
-  static Map${addX('String, String')} _types = {${Object.keys(Base.contentTypes)
-      .map(k => `'${k}': '${(Base.contentTypes as Record<string, { header: string }>)[k]?.header}'`)
+  static Map${addX('String, String')} _types = {${Base.bodyTypes
+      .map(k => `'${k}': '${(Base.contentTypes as Record<string, string>)[k]}'`)
       .join(',')}};
 
   final String type;

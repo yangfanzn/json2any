@@ -6,7 +6,7 @@ export * as Json2HttpDart from './src/dart';
 
 export * from 'json2class';
 
-export default function json2http(key: string, json: Json2HttpBase.SchemaTs) {
+export default function json2http(key: string, json: any) {
   switch (Json2HttpBase.func.envJson2http.language) {
     case Json2HttpBase.Language.Dart3:
       return {

@@ -51,7 +51,8 @@ export class Func {
         return self;
 
       case JsonType.Null:
-      // 配置的空数组，没有给数组元素
+      // config empty array, has not item
+      // unit test
       case JsonType.Undefined:
         break;
 
@@ -121,7 +122,7 @@ export class Func {
       const t = x.slice(max + 1);
       return hash === this.quickHash(t, max) ? t : x;
     }
-    this.unreachableError('convertKeyword');
+    this.unreachableError('convertKeyword restore can not be used');
     return x;
   }
 
@@ -170,10 +171,11 @@ export class Func {
   }
 
   assertError(message: string, detail?: string) {
-    const list = [message];
+    const list: string[] = [];
     if (detail) {
       list.push(detail);
     }
+    list.push(message);
     throw new AssertError(list.join('\n'));
   }
 

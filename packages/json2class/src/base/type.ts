@@ -19,7 +19,11 @@ export enum Language {
   // ArkTs5 = 'arkTs@5',
 }
 
-export class UnreachableError extends Error {
+export abstract class Err extends Error {
+  inner = true;
+}
+
+export class UnreachableError extends Err {
   constructor(public message: string) {
     super();
   }
@@ -28,7 +32,7 @@ export class UnreachableError extends Error {
   }
 }
 
-export class AssertError extends Error {
+export class AssertError extends Err {
   constructor(public message: string) {
     super();
   }

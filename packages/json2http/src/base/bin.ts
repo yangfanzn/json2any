@@ -1,8 +1,7 @@
 import Fs from 'fs';
 import Path from 'path';
-import { Json2classBin } from 'json2class/bin';
-import { SchemaTs, validate } from './schema';
 import { func } from './func';
+import { Json2classBin } from 'json2class/bin'; // circular reference: import { Json2classBin } from '../../bin'
 import json2http from '../..';
 
 export class Bin extends Json2classBin.Bin {
@@ -10,21 +9,16 @@ export class Bin extends Json2classBin.Bin {
     return Array.from(this.searchJsons(dir)).reduce((codes, [_, jsons]) => {
       Object.keys(jsons).forEach(key => {
         const json = jsons[key];
-        const error = validate(json);
-        if (error) {
-          func.assertError(`${_}#${key} ${error}`);
-        }
         if (codes.has(key)) {
-          func.assertError(`${key} already exists`);
+          func.assertError('plan config already exists', `${_} ${key}`);
         }
-        // schema 验证通过，这里的 http 就满足 SchemaTs
         codes.set(key, json);
       });
       return codes;
-    }, new Map<string, SchemaTs>());
+    }, new Map<string, any>());
   }
 
-  http2file(jsons: Map<string, SchemaTs>) {
+  http2file(jsons: Map<string, any>) {
     let toEntry = '';
 
     const request = [] as string[];

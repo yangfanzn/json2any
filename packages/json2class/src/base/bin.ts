@@ -51,8 +51,15 @@ export class Bin {
     return files;
   }
 
-  exit(msg: string) {
-    console.error(msg);
+  exit(err: any) {
+    try {
+      if (!err.inner) {
+        func.unreachableError(err.toString());
+      }
+    } catch (e) {
+      err = e;
+    }
+    console.error(err);
     Shelljs.exit(1);
   }
 
@@ -70,7 +77,7 @@ export class Bin {
 
   searchJsons(dir: string) {
     return this.readDir(dir, {
-      recursion: 3, // 最多搜索 3 层
+      recursion: 3, // max search 3 level
       ext: ['.json5', '.json'],
       ignore: /\/\./,
     }).reduce((codes, file) => {
@@ -79,7 +86,7 @@ export class Bin {
           .replace(/\.\w+$/, '')
           .split(dir)
           .pop() ?? '',
-        Json5.parse(Fs.readFileSync(file).toString()),
+        Object.assign({}, Json5.parse(Fs.readFileSync(file).toString())),
       );
       return codes;
     }, new Map<string, any>());

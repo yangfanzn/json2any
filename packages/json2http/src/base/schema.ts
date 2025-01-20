@@ -1,73 +1,26 @@
 import { Json2classBase } from 'json2class';
 
-type JSONValue = string | number | boolean | null | JSONArray | JSONObject;
-type JSONArray = JSONValue[];
-type JSONObject = { [key: string]: JSONValue };
-type JSONData = Exclude<JSONValue, null>;
-
 const methodTypes = ['GET', 'POST', 'PUT', 'DELETE'] as const;
 export const contentTypes = {
-  json: {
-    header: 'application/json',
-    type: {} as { type?: 'json'; data: JSONData },
-  },
-  map: {
-    header: 'application/x-www-form-urlencoded',
-    type: {} as { type: 'map'; data: Record<string, string> },
-  },
-  form: {
-    header: 'multipart/form-data',
-    type: {} as {
-      type: 'form';
-      data: { fields: Record<string, string | string[]>; files: Record<string, string | string[]> };
-    },
-  },
-  byte: {
-    header: 'application/octet-stream',
-    type: {} as { type: 'byte' },
-  },
-  plain: {
-    header: 'text/plain',
-    type: {} as { type: 'plain' },
-  },
+  json: 'application/json',
+  map: 'application/x-www-form-urlencoded',
+  form: 'multipart/form-data',
+  byte: 'application/octet-stream',
+  plain: 'text/plain',
 } as const;
+export const bodyTypes = Object.keys(contentTypes);
 
-type Method = (typeof methodTypes)[number];
-type ContentTypes = typeof contentTypes;
-type BodyTs = {
-  [K in keyof ContentTypes]: ContentTypes[K]['type'];
-}[keyof ContentTypes];
-
-export interface SchemaTs {
-  res: Record<string, JSONValue>;
-  path: string;
-  title: string;
-  method: Method;
-  params?: Record<string, string>;
-  body?: BodyTs;
+export interface SchemaPlan {
+  path: Json2classBase.Simple<Json2classBase.Complex>;
+  seg?: Json2classBase.Complex;
+  title: Json2classBase.Simple<Json2classBase.Complex>;
+  method: Json2classBase.Simple<Json2classBase.Complex>;
+  res: Json2classBase.Complex;
+  params?: Json2classBase.Complex;
+  body?: SchemaBody;
 }
-
-export interface SchemaPlan<C, S> {
-  res: C;
-
-  // 接口外层的配置 key，总是用于生成代码的名称
-  // 如果没有设置 path 字段，外层 key 同时也是接口请求的 path
-  // 如果设置了 path，外层 key 就只是别名
-  // 所以，虽然 path 在 schemaJson 上不是必选的，但是最后一定有值
-  path: S;
-
-  // 从 path 中分析提取
-  seg?: C;
-
-  title: S;
-  method: S;
-
-  params?: C;
-  body?: C;
-}
-
 interface SchemaBodyBase {
-  type: BodyTs['type'];
+  type: keyof typeof contentTypes;
 }
 interface SchemaBodyForm extends SchemaBodyBase {
   type: 'form';
@@ -77,75 +30,134 @@ interface SchemaBodyForm extends SchemaBodyBase {
   };
 }
 interface SchemaBodyOther extends SchemaBodyBase {
-  type: Exclude<BodyTs['type'], 'form'>;
+  type: Exclude<keyof typeof contentTypes, 'form'>;
   data?: Json2classBase.Complex | Json2classBase.Simple<Json2classBase.Complex>;
 }
-export type SchemaBody = SchemaBodyForm | SchemaBodyOther;
+type SchemaBody = SchemaBodyForm | SchemaBodyOther;
 
-const bodyTypes = Object.keys(contentTypes);
-export const validate = (json: any) => {
+export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
   const { JsonType, func } = Json2classBase;
 
-  json = Object.assign({}, json);
+  plan = plan.getReal();
 
-  const k = Object.keys(json).find(e => !['title', 'method', 'params', 'body', 'res', 'path'].includes(e));
-  if (k) {
-    return `configured unsupported field [${k}]`;
+  const ks = plan.child
+    .map(e => {
+      const key = e.key;
+      return ['title', 'method', 'params', 'body', 'res', 'path', 'seg'].includes(key) ? '' : key;
+    })
+    .filter(Boolean);
+  if (ks.length) {
+    func.assertError(`configured unsupported field [${ks.join()}]`);
   }
 
-  if (['title', 'method', 'res'].findIndex(k => !json.hasOwnProperty(k)) >= 0) {
-    return 'title method res are required';
+  const path = plan.getChildByKey('path', false);
+  const seg = plan.getChildByKey('seg', null);
+
+  const title = plan.getChildByKey('title', false);
+  const method = plan.getChildByKey('method', false);
+  const res = plan.getChildByKey('res', true);
+  const params = plan.getChildByKey('params', null);
+  const body = plan.getChildByKey('body', null);
+
+  if (!path || func.type(path.origin) !== JsonType.String) {
+    func.unreachableError('path must exist and is an string');
+    throw 0;
+  }
+  if (!path.origin.startsWith('/')) {
+    func.assertError('path must start with /');
   }
 
-  if (func.type(json.title) !== JsonType.String) {
-    return 'title must be an string';
-  }
-
-  if (!methodTypes.includes(json.method)) {
-    return `method = ${json.method} is out of the enums[${methodTypes}] range`;
-  }
-
-  if (func.type(json.res) !== JsonType.Object) {
-    return 'res must be an object';
-  }
-
-  if (json.hasOwnProperty('params')) {
+  if (seg) {
     if (
-      func.type(json.params) !== JsonType.Object ||
-      Object.values(json.params).filter(e => func.type(e) !== JsonType.String).length
+      !(seg instanceof Json2classBase.Complex) ||
+      // func.type(seg.origin) !== JsonType.Object ||
+      Object.values(seg.origin).filter(e => func.type(e) !== JsonType.String).length
     ) {
-      return `params must be an record${func.addX('string, string')}`;
+      func.unreachableError(`seg must be an record${func.addX('string, string')}`);
+      throw 0;
     }
   }
 
-  if (json.hasOwnProperty('body')) {
-    if (func.type(json.body) !== JsonType.Object) {
-      return 'body must be an object';
+  if (!title || title.array.length || func.type(title.origin) !== JsonType.String) {
+    func.assertError('title must exist and is an string');
+    throw 0;
+  }
+
+  if (!method || method.array.length || func.type(method.origin) !== JsonType.String) {
+    func.assertError('method must exist and is an string');
+    throw 0;
+  }
+  if (!methodTypes.includes(method.origin)) {
+    func.assertError(`method = ${method.origin} is out of the enums[${methodTypes}] range`);
+  }
+
+  if (!res || res.array.length) {
+    func.assertError('res must exist and is an object');
+    throw 0;
+  }
+
+  // use plan.origin for check params when null or []
+  if (plan.origin.hasOwnProperty('params')) {
+    if (
+      // !(params instanceof Json2classBase.Complex) ||
+      // params.array.length ||
+      func.type(plan.origin.params) !== JsonType.Object ||
+      Object.values(plan.origin.params).filter(e => func.type(e) !== JsonType.String).length
+    ) {
+      func.assertError(`params must be an record${func.addX('string, string')}`);
+      throw 0;
+    }
+  }
+  if (params && !(params instanceof Json2classBase.Complex)) {
+    func.unreachableError('unnecessary check just for schemaBody static type check');
+    throw 0;
+  }
+
+  let schemaBody: SchemaBody | undefined;
+
+  if (body) {
+    if (!(body instanceof Json2classBase.Complex) || body.array.length || func.type(body.origin) !== JsonType.Object) {
+      func.assertError('body must be an object');
+      throw 0;
     }
 
-    const type = json.body.hasOwnProperty('type') ? json.body.type : 'json';
+    // when non-type, default is json
+    const type = body.origin.hasOwnProperty('type') ? body.origin.type : 'json';
     if (!bodyTypes.includes(type)) {
-      return `body.type = ${type} is out of the enums[${bodyTypes}] range`;
+      func.assertError(`body.type = ${type} is out of the enums[${bodyTypes}] range`);
     }
 
     switch (type) {
       case 'map':
         if (
-          func.type(json.body.data) !== JsonType.Object ||
-          Object.values(json.body.data).filter(e => func.type(e) !== JsonType.String).length
+          func.type(body.origin.data) !== JsonType.Object ||
+          Object.values(body.origin.data).filter(e => func.type(e) !== JsonType.String).length
         ) {
-          return `body.map.data must be an record${func.addX('string, string')}`;
+          func.assertError(`body.map.data must be an record${func.addX('string, string')}`);
         }
         break;
       case 'form':
-        const keys = Object.assign({}, json.body.data?.fields, json.body.data?.files);
+        const data = body.getChildByKey('data');
+        const fields = data?.getChildByKey('fields');
+        const files = data?.getChildByKey('files');
+        const error = `fields and files in body.form.data must be an record${func.addX('string, string | string[]')}`;
+
+        if (
+          !data ||
+          !fields ||
+          !files ||
+          func.type(data.origin) !== JsonType.Object ||
+          func.type(fields.origin) !== JsonType.Object ||
+          func.type(files.origin) !== JsonType.Object
+        ) {
+          func.assertError(error);
+          throw 0;
+        }
+        const keys = Object.assign({}, fields.origin, files.origin);
         let conflict = '';
         if (
-          func.type(json.body.data) !== JsonType.Object ||
-          func.type(json.body.data.fields) !== JsonType.Object ||
-          func.type(json.body.data.files) !== JsonType.Object ||
           Object.keys(keys).filter(k => {
-            conflict = json.body.data.fields.hasOwnProperty(k) && json.body.data.files.hasOwnProperty(k) ? k : '';
+            conflict = fields.origin.hasOwnProperty(k) && files.origin.hasOwnProperty(k) ? k : '';
             const e = keys[k];
             if (func.type(e) === JsonType.Array) {
               return (e as []).find(ee => func.type(ee) !== JsonType.String);
@@ -153,26 +165,32 @@ export const validate = (json: any) => {
             return func.type(e) !== JsonType.String;
           }).length
         ) {
-          return `fields and files in body.form.data must be an record${func.addX('string, string | string[]')}`;
+          func.assertError(error);
         } else if (conflict) {
-          return `fields and files in body.form.data has conflict field name of ${conflict}`;
+          func.assertError(`fields and files in body.form.data has conflict field name of ${conflict}`);
         }
+
+        schemaBody = { type, data: { fields, files } };
+
         break;
       case 'plain':
       case 'byte':
-        if (json.body.hasOwnProperty('data')) {
-          return `body.${type}.data is forbidden to set`;
+        if (body.origin.hasOwnProperty('data')) {
+          func.assertError(`body.${type}.data is forbidden to set`);
         }
         break;
       case 'json':
-        if (json.body.data === null || json.body.data === undefined) {
-          return 'body.json.data must exist and cannot be null';
+        if (body.origin.data === null || body.origin.data === undefined) {
+          func.assertError('body.json.data must exist and cannot be null');
         }
         break;
       default:
-        func.unreachableError(`${json.body.type} is a non-existent body.type`);
+        func.unreachableError(`${type} is a non-existent body.type`);
+        break;
     }
+
+    schemaBody ??= { type, data: body.getChildByKey('data', null) };
   }
 
-  return '';
+  return { path, seg, title, method, res, params, body: schemaBody };
 };
