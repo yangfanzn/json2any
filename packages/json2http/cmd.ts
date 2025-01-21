@@ -35,12 +35,14 @@ program
     '-x, --extend <extend>',
     'specify a path for the extension file (default is the file named `extend` in the output directory)',
   )
-  .option(
-    '-a, --default-agent <defaultAgent>',
-    [
-      'to facilitate usage, built-in agents for different languages have been provided',
-      `you can specify one for your runtime environment, there are [${Object.values(Base.DefaultAgent)}]`,
-    ].join('\n'),
+  .addOption(
+    new Option(
+      '-a, --default-agent <defaultAgent>',
+      [
+        'to facilitate usage, built-in agents for different languages have been provided',
+        `you can specify one for your runtime environment, there are [${Object.values(Base.DefaultAgent)}]`,
+      ].join('\n'),
+    ).choices(Object.values(Base.DefaultAgent)),
   )
   .action(async options => {
     const { env, func, DefaultAgent, Language } = Base;
@@ -51,14 +53,13 @@ program
     const output = Path.resolve(options.output || search);
     bin.dirIsExist(output);
 
-    const { desc } = func.language(env.language);
-
+    env.debug = Json2classBase.env.debug = !!options.debug;
+    env.language = Json2classBase.env.language = options.language;
+    const { desc, ext } = func.language(env.language);
     const extend =
       options.extend === ''
         ? ''
-        : Path.resolve(
-            options.extend === undefined ? `${output}/extend.${func.language(options.language).ext}` : options.extend,
-          );
+        : Path.resolve(options.extend === undefined ? `${output}/extend.${ext}` : options.extend);
     if (extend) {
       try {
         bin.fileIsExit(extend);
@@ -70,9 +71,6 @@ program
         }
       }
     }
-
-    env.debug = Json2classBase.env.debug = !!options.debug;
-    env.language = Json2classBase.env.language = options.language;
     env.output = output;
     env.extend = bin.parseExtend(output, extend);
     let defaultAgent = options.defaultAgent;
@@ -86,6 +84,7 @@ program
         //   break;
       }
     }
+
     if (!defaultAgent.startsWith(`${desc}_`)) {
       func.assertError(`the set language(${env.language}) does not match the agent(${defaultAgent})`);
     }

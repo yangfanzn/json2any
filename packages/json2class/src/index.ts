@@ -7,5 +7,6 @@ export function json2class(key: string, json: any) {
       return Base.func.core2class(Dart.Complex, Dart.Simple, key, json);
     // case Base.Language.ArkTs5:
     //   Base.func.assertError('Looking forward to it');
+    //   throw 0;
   }
 }

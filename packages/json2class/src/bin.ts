@@ -52,7 +52,6 @@ export class Bin {
   }
 
   exit(err: any) {
-    console.log('@@', Base.env.debug);
     try {
       if (!err.inner) {
         Base.func.unreachableError(err.toString());

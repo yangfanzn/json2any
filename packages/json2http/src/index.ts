@@ -10,5 +10,6 @@ export function json2http(key: string, json: any) {
       };
     // case Base.Language.ArkTs5:
     //   Base.func.assertError('Looking forward to it');
+    //   throw 0;
   }
 }
