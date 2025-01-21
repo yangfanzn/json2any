@@ -33,7 +33,7 @@ export class Func {
       case JsonType.Number:
       case JsonType.Boolean:
         if (!parent) {
-          this.assertError('simple must have a parent type');
+          this.unreachableError('simple must have a parent type');
         }
         // @ts-ignore
         return new simple(key, array, optional, json, parent, type);
@@ -77,8 +77,7 @@ export class Func {
       if (t) {
         return t;
       }
-      this.unreachableError('convertWrap');
-      throw 0;
+      return this.unreachableError('convertWrap');
     });
   }
 
@@ -154,7 +153,7 @@ export class Func {
     return Object.prototype.toString.call(o).slice(8, -1).toLowerCase();
   }
 
-  unreachableError(message: string, detail?: string) {
+  unreachableError(message: string, detail?: string): any {
     const list = [
       'the occurrence of this error indicates an unexpected situation in the program,',
       'please report this error to the author[yangfanzn@163.com]. Thank you very much!\n',
@@ -166,7 +165,7 @@ export class Func {
     throw new UnreachableError(list.join('\n'));
   }
 
-  assertError(message: string, detail?: string) {
+  assertError(message: string, detail?: string): any {
     const list: string[] = [];
     if (detail) {
       list.push(detail);

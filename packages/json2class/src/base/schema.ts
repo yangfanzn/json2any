@@ -13,11 +13,11 @@ export const validate = (e: Complex) => {
     let x = json.$ref;
 
     if (func.type(x) !== JsonType.String) {
-      func.assertError('$ref must be a string');
+      func.assertError('$ref must be a string', e.index);
     }
     const t = Object.keys(json);
     if (t.length !== 1) {
-      func.assertError(`$ref is mutually exclusive with other fields`, t.join());
+      func.assertError('$ref must be a unique field', e.index);
     }
 
     const i = x.indexOf('#');
@@ -25,7 +25,7 @@ export const validate = (e: Complex) => {
     const ref = x.slice(i + 1);
 
     if (i < 0) {
-      func.assertError('$ref is missing the anchor marker(#)');
+      func.assertError('$ref is missing the anchor marker(#)', e.index);
     }
 
     if (!filename) {
