@@ -1,7 +1,12 @@
-const path = require('path');
-const fs = require('fs');
+const Path = require('path');
+const Fs = require('fs');
 
 // todo: clean-webpack-plugin & *.d.ts
+
+/** @enum {string} */
+const Type = { Json2class: 'json2class', Json2http: 'json2http' };
+/** @type {Type} */
+const type = Path.basename(Path.resolve('.')) || Type.Json2class;
 
 module.exports = {
   entry: {
@@ -10,7 +15,7 @@ module.exports = {
     index: './index.ts',
   },
   output: {
-    path: path.resolve('./', 'lib'),
+    path: Path.resolve('./', 'lib'),
     filename: '[name].js',
     libraryTarget: 'commonjs2',
   },
@@ -23,7 +28,7 @@ module.exports = {
       {
         test: /\.ts$/,
         use: 'ts-loader',
-        exclude: /node_modules/,
+        exclude: new RegExp(`node_modules${type === Type.Json2http ? `|${Type.Json2class}` : ''}`),
       },
     ],
   },
@@ -31,12 +36,12 @@ module.exports = {
     {
       apply: compiler => {
         compiler.hooks.afterEmit.tapAsync('AddShebangPlugin', (compilation, callback) => {
-          const bin = path.resolve('./lib/cmd.js');
-          const content = fs.readFileSync(bin, 'utf8').toString();
+          const bin = Path.resolve('./lib/cmd.js');
+          const content = Fs.readFileSync(bin, 'utf8').toString();
           if (!content.startsWith('#!')) {
-            fs.writeFileSync(bin, `#!/usr/bin/env node\n${content}`);
+            Fs.writeFileSync(bin, `#!/usr/bin/env node\n${content}`);
           }
-          fs.chmodSync(bin, '755');
+          Fs.chmodSync(bin, '755');
           callback();
         });
       },
