@@ -1,18 +1,7 @@
 import { Json2classBase } from 'json2class';
 import { Http } from './code';
-import { Language, DefaultAgent } from './type';
 
 export class Func extends Json2classBase.Func {
-  envJson2http = {
-    language: Language.Dart3,
-    defaultAgent: DefaultAgent.Dart_Dio5,
-    output: '',
-    extend: {
-      path: '',
-      agent: '',
-    },
-  };
-
   core2http(
     http: typeof Http<Json2classBase.Complex, Json2classBase.Simple<Json2classBase.Complex>>,
     complex: typeof Json2classBase.Complex,

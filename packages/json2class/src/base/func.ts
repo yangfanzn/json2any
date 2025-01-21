@@ -2,10 +2,6 @@ import { Complex, Simple } from './code';
 import { JsonType, UnreachableError, AssertError, Language } from './type';
 
 export class Func {
-  envJson2class = {
-    language: Language.Dart3,
-  };
-
   core2class(complex: typeof Complex, simple: typeof Simple<Complex>, key: string, json: any): Complex;
   core2class(
     complex: typeof Complex,

@@ -1,22 +1,23 @@
 import { program, Option } from 'commander';
 import Path from 'path';
 import Fs from 'fs';
-import { Json2classBin } from './bin';
-import { Json2classBase } from '.';
+import { bin } from './src/bin';
+import * as Base from './src/base';
 
 const description = [
   'generate class entity type based on json config',
-  `currently supported languages: ${Object.values(Json2classBase.Language)}`,
+  `currently supported languages: ${Object.values(Base.Language)}`,
 ].join('\n');
 
 program.description(description).version('0.0.1', '-v --version', 'current version');
 
 program
-  .command('build')
   .description(description)
+  .command('build')
+  .option('-d, --debug', 'output extra debugging')
   .addOption(
     new Option('-l, --language <language>', 'specify the language for generating code')
-      .choices(Object.values(Json2classBase.Language))
+      .choices(Object.values(Base.Language))
       .makeOptionMandatory(),
   )
   .option(
@@ -29,8 +30,7 @@ program
     'specify the output directory for build artifacts (defaults to the search directory if not provided)',
   )
   .action(async options => {
-    const { bin } = Json2classBin;
-    const { func } = Json2classBase;
+    const { env } = Base;
 
     const search = Path.resolve(options.search);
     bin.dirIsExist(search);
@@ -38,11 +38,12 @@ program
     const output = Path.resolve(options.output || search);
     bin.dirIsExist(output);
 
-    func.envJson2class.language = options.language;
+    env.debug = !!options.debug;
+    env.language = options.language;
 
     bin.class2file(bin.searchJsons(search)).forEach((code, file) => {
       Fs.writeFileSync(`${output}/${file}`, code);
     });
   });
 
-program.parseAsync().catch(e => Json2classBin.bin.exit(e));
+program.parseAsync().catch(e => bin.exit(e));

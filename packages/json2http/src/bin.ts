@@ -1,8 +1,8 @@
 import Fs from 'fs';
 import Path from 'path';
-import { func } from './func';
-import { Json2classBin } from 'json2class/bin'; // circular reference: import { Json2classBin } from '../../bin'
-import json2http from '../..';
+import { Json2classBin } from 'json2class/bin';
+import { json2http } from '.';
+import * as Base from './base';
 
 export class Bin extends Json2classBin.Bin {
   json2piece(dir: string) {
@@ -10,7 +10,7 @@ export class Bin extends Json2classBin.Bin {
       Object.keys(jsons).forEach(key => {
         const json = jsons[key];
         if (codes.has(key)) {
-          func.assertError('plan config already exists', `${_} ${key}`);
+          Base.func.assertError('plan config already exists', `${_} ${key}`);
         }
         codes.set(key, json);
       });
@@ -19,6 +19,8 @@ export class Bin extends Json2classBin.Bin {
   }
 
   http2file(jsons: Map<string, any>) {
+    const { func, env } = Base;
+
     let toEntry = '';
 
     const request = [] as string[];
@@ -35,7 +37,7 @@ export class Bin extends Json2classBin.Bin {
         aliases.push(alias);
       });
 
-    const { ext, desc } = func.language(func.envJson2http.language);
+    const { ext, desc } = func.language(env.language);
     const files = new Map<string, string>();
     files.set(
       `json2http.${ext}`,

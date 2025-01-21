@@ -40,3 +40,8 @@ export class AssertError extends Err {
     return this.message;
   }
 }
+
+export const env = {
+  debug: false,
+  language: Language.Dart3,
+};

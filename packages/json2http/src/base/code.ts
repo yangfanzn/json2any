@@ -1,6 +1,7 @@
 import { Json2classBase, Json2classDart } from 'json2class';
 import { SchemaPlan, validate } from './schema';
 import { func } from './func';
+import { env } from './type';
 
 Object.defineProperty(Json2classBase.Key.prototype, 'prop', {
   get() {
@@ -20,7 +21,7 @@ Object.defineProperty(Json2classBase.Key.prototype, 'prop', {
 const simpleToDecl2Def = Json2classDart.Simple.prototype.toDecl2Def;
 Json2classDart.Simple.prototype.toDecl2Def = function () {
   if (func.isBodyFiles(this)) {
-    return { decl: func.envJson2http.extend.agent ? 'Extend.MultipartFile' : 'Dio.MultipartFile', def: 'null' };
+    return { decl: env.extend.agent ? 'Extend.MultipartFile' : 'Dio.MultipartFile', def: 'null' };
   }
   return simpleToDecl2Def.call(this, this.type);
 };

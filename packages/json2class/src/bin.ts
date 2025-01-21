@@ -2,8 +2,8 @@ import Fs from 'fs';
 import Path from 'path';
 import Json5 from 'json5';
 import Shelljs from 'shelljs';
-import { func } from './func';
-import json2class from '../..';
+import * as Base from './base';
+import { json2class } from '.';
 
 export class Bin {
   readDir(
@@ -52,26 +52,27 @@ export class Bin {
   }
 
   exit(err: any) {
+    console.log('@@', Base.env.debug);
     try {
       if (!err.inner) {
-        func.unreachableError(err.toString());
+        Base.func.unreachableError(err.toString());
       }
     } catch (e) {
       err = e;
     }
-    console.error(err);
+    console.error(Base.env.debug ? err : err.toString());
     Shelljs.exit(1);
   }
 
   dirIsExist(dir: string) {
     if (!Fs.existsSync(dir) || !Fs.statSync(dir).isDirectory()) {
-      func.assertError('is not a valid directory', dir);
+      Base.func.assertError('is not a valid directory', dir);
     }
   }
 
   fileIsExit(file: string) {
     if (!Fs.existsSync(file) || !Fs.statSync(file).isFile()) {
-      func.assertError('is not a valid file', file);
+      Base.func.assertError('is not a valid file', file);
     }
   }
 
@@ -93,7 +94,8 @@ export class Bin {
   }
 
   class2file(jsons: Map<string, string>) {
-    const { ext, desc } = func.language(func.envJson2class.language);
+    const { func, env } = Base;
+    const { ext, desc } = func.language(env.language);
     const files = new Map<string, string>();
     files.set(
       `json2class.${ext}`,

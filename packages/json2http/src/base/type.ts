@@ -16,3 +16,14 @@ Object.values(Language).forEach((e: string) => {
     Json2classBase.func.unreachableError('enum Language');
   }
 });
+
+export const env = {
+  debug: false,
+  language: Language.Dart3,
+  defaultAgent: DefaultAgent.Dart_Dio5,
+  output: '',
+  extend: {
+    path: '',
+    agent: '',
+  },
+};

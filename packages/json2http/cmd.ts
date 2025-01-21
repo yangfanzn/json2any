@@ -1,12 +1,14 @@
 import { Option, program } from 'commander';
 import Path from 'path';
 import Fs from 'fs';
-import { Json2httpBin } from './bin';
-import { Json2HttpBase } from '.';
+import { bin } from './src/bin';
+import * as Base from './src/base';
+
+import { Json2classBase } from 'json2class/bin';
 
 const description = [
   'generate http request function based on JSON configuration',
-  `currently supported languages: ${Object.values(Json2HttpBase.Language)}`,
+  `currently supported languages: ${Object.values(Base.Language)}`,
 ].join('\n');
 
 program.description(description).version('0.0.1', '-v --version', 'current version');
@@ -14,9 +16,10 @@ program.description(description).version('0.0.1', '-v --version', 'current versi
 program
   .description(description)
   .command('build')
+  .option('-d, --debug', 'output extra debugging')
   .addOption(
     new Option('-l, --language <language>', 'specify the language for generating code')
-      .choices(Object.values(Json2HttpBase.Language))
+      .choices(Object.values(Base.Language))
       .makeOptionMandatory(),
   )
   .option(
@@ -36,12 +39,11 @@ program
     '-a, --default-agent <defaultAgent>',
     [
       'to facilitate usage, built-in agents for different languages have been provided',
-      `you can specify one for your runtime environment, there are [${Object.values(Json2HttpBase.DefaultAgent)}]`,
+      `you can specify one for your runtime environment, there are [${Object.values(Base.DefaultAgent)}]`,
     ].join('\n'),
   )
   .action(async options => {
-    const { bin } = Json2httpBin;
-    const { func, DefaultAgent, Language } = Json2HttpBase;
+    const { env, func, DefaultAgent, Language } = Base;
 
     const search = Path.resolve(options.search);
     bin.dirIsExist(search);
@@ -49,7 +51,7 @@ program
     const output = Path.resolve(options.output || search);
     bin.dirIsExist(output);
 
-    const { desc } = func.language(func.envJson2http.language);
+    const { desc } = func.language(env.language);
 
     const extend =
       options.extend === ''
@@ -69,12 +71,13 @@ program
       }
     }
 
-    func.envJson2http.language = func.envJson2class.language = options.language;
-    func.envJson2http.output = output;
-    func.envJson2http.extend = bin.parseExtend(output, extend);
+    env.debug = Json2classBase.env.debug = !!options.debug;
+    env.language = Json2classBase.env.language = options.language;
+    env.output = output;
+    env.extend = bin.parseExtend(output, extend);
     let defaultAgent = options.defaultAgent;
     if (!defaultAgent) {
-      switch (func.envJson2http.language) {
+      switch (env.language) {
         case Language.Dart3:
           defaultAgent = DefaultAgent.Dart_Dio5;
           break;
@@ -84,13 +87,13 @@ program
       }
     }
     if (!defaultAgent.startsWith(`${desc}_`)) {
-      func.assertError(`the set language(${func.envJson2http.language}) does not match the agent(${defaultAgent})`);
+      func.assertError(`the set language(${env.language}) does not match the agent(${defaultAgent})`);
     }
-    func.envJson2http.defaultAgent = defaultAgent;
+    env.defaultAgent = defaultAgent;
 
     bin.http2file(bin.json2piece(search)).forEach((code, file) => {
       Fs.writeFileSync(`${output}/${file}`, code);
     });
   });
 
-program.parseAsync().catch(e => Json2httpBin.bin.exit(e));
+program.parseAsync().catch(e => bin.exit(e));

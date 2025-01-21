@@ -66,10 +66,10 @@ Future${addX(this.declPlan)} ${this.launch}(FutureOr${addX('void')} Function(${t
   }
 
   static get agentConfig() {
-    if (Base.func.envJson2http.extend.agent) {
+    if (Base.env.extend.agent) {
       return {
-        name: `Extend.${Base.func.envJson2http.extend.agent}`,
-        import: `import '${Base.func.envJson2http.extend.path}' as Extend;`,
+        name: `Extend.${Base.env.extend.agent}`,
+        import: `import '${Base.env.extend.path}' as Extend;`,
         code: '',
       };
     }
