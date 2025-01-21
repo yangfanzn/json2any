@@ -16,8 +16,15 @@
     "types"
   ],
   "main": "./lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./bin": "./lib/bin.js"
+  },
   "types": "./types/",
   "bin": {
     "json2http": "./lib/cmd.js"
+  },
+  "dependencies": {
+    "json2class": "0.0.1"
   }
 }
