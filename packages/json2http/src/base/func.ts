@@ -7,7 +7,7 @@ export class Func extends Json2classBase.Func {
     complex: typeof Json2classBase.Complex,
     simple: typeof Json2classBase.Simple<Json2classBase.Complex>,
     key: string,
-    json: any,
+    json: Record<string, any>,
   ): Http<Json2classBase.Complex, Json2classBase.Simple<Json2classBase.Complex>> {
     // must be objected
     if (this.type(json) !== Json2classBase.JsonType.Object) {
@@ -16,7 +16,7 @@ export class Func extends Json2classBase.Func {
 
     // if not have path, set key to path
     // because of get seg from path, here must transform to string
-    const path = `${json.path ?? key}`;
+    const path = `${json['path'] ?? key}`;
 
     // get seg from path
     const seg = path.match(/{.*?}/g)?.reduce((x, cur) => {
@@ -24,7 +24,7 @@ export class Func extends Json2classBase.Func {
       return x;
     }, {} as Record<string, string>);
 
-    if (!json.hasOwnProperty('$ref')) {
+    if (!json.hasOwnProperty('$meta')) {
       // let plan config can be reused,
       // although it seems like it does not have any practical use
       json = { ...json, path, seg };

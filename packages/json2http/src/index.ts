@@ -1,7 +1,7 @@
 import * as Base from './base';
 import * as Dart from './dart';
 
-export function json2http(key: string, json: any) {
+export function json2http(key: string, json: Record<string, any>) {
   switch (Base.env.language) {
     case Base.Language.Dart3:
       return {

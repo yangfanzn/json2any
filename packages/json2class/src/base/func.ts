@@ -2,19 +2,19 @@ import { Complex, Simple } from './code';
 import { JsonType, UnreachableError, AssertError, Language } from './type';
 
 export class Func {
-  core2class(complex: typeof Complex, simple: typeof Simple<Complex>, key: string, json: any): Complex;
+  core2class(complex: typeof Complex, simple: typeof Simple<Complex>, key: string, json: Record<string, any>): Complex;
   core2class(
     complex: typeof Complex,
     simple: typeof Simple<Complex>,
     key: string,
-    json: any,
+    json: Record<string, any>,
     parent: Complex,
   ): Complex | Simple<Complex>;
   core2class(
     complex: typeof Complex,
     simple: typeof Simple<Complex>,
     key: string,
-    json: any,
+    json: Record<string, any>,
     parent?: Complex,
   ): Complex | Simple<Complex> | undefined {
     const array: boolean[] = [];

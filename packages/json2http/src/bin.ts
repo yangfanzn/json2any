@@ -6,19 +6,13 @@ import * as Base from './base';
 
 export class Bin extends Json2classBin.Bin {
   json2piece(dir: string) {
-    return Array.from(this.searchJsons(dir)).reduce((codes, [_, jsons]) => {
-      Object.keys(jsons).forEach(key => {
-        const json = jsons[key];
-        if (codes.has(key)) {
-          Base.func.assertError('plan config already exists', `${_} ${key}`);
-        }
-        codes.set(key, json);
-      });
+    return Array.from(this.searchJsons(dir)).reduce((codes, [file, jsons]) => {
+      codes.push(...Object.keys(jsons).map(key => ({ key, file, json: jsons[key] })));
       return codes;
-    }, new Map<string, any>());
+    }, [] as { key: string; file: string; json: any }[]);
   }
 
-  http2file(jsons: Map<string, any>) {
+  http2file(jsons: { key: string; file: string; json: any }[]) {
     const { func, env } = Base;
 
     let toEntry = '';
@@ -28,7 +22,7 @@ export class Bin extends Json2classBin.Bin {
     const aliases = [] as string[];
 
     Array.from(jsons)
-      .map(([key, json]) => json2http(key, json))
+      .map(({ key, json }) => json2http(key, json))
       .forEach(({ http, Http }) => {
         toEntry ||= Http.toEntry();
         const { code, dep, alias } = http.toCode();

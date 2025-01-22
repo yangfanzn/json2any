@@ -86,13 +86,14 @@ export class Bin {
           .replace(/\.\w+$/, '')
           .split(dir)
           .pop() ?? '',
-        Object.assign({}, Json5.parse(Fs.readFileSync(file).toString())),
+        // Object.assign return any, use as to confirm Recode type
+        Object.assign({}, Json5.parse(Fs.readFileSync(file).toString())) as Record<string, any>,
       );
       return codes;
-    }, new Map<string, any>());
+    }, new Map<string, Record<string, any>>());
   }
 
-  class2file(jsons: Map<string, string>) {
+  class2file(jsons: Map<string, Record<string, any>>) {
     const { func, env } = Base;
     const { ext, desc } = func.language(env.language);
     const files = new Map<string, string>();
@@ -102,6 +103,7 @@ export class Bin {
         func.addCopyRight('json2class'),
         func.clearComment(Fs.readFileSync(Path.resolve(__dirname, `../src/${desc}/temp.${ext}`)).toString()),
         ...Array.from(jsons)
+          // key is file
           .map(([key, json]) => json2class(key, json))
           .reduce((codes, cur) => {
             codes.push(...cur.toCode().map(e => e.code));

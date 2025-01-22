@@ -39,7 +39,7 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
   const { JsonType, func } = Json2classBase;
 
   plan = plan.getReal();
-  const index = plan.index;
+  const { index } = plan;
 
   const ks = plan.child
     .map(e => {

@@ -71,30 +71,49 @@ export abstract class Complex extends Key {
       return;
     }
     this.refs.resolved = true;
+
+    const roots: Complex[] = [];
     for (const path in this.refs.data) {
       const e = this.refs.data[path];
       if (!e) {
         // just for static type check
         continue;
       }
-      const ref = validate(e);
-      if (!ref) {
+
+      // search root for class name unique check
+      if (!e.parent) {
+        roots.push(e);
+      }
+
+      const index = validate(e);
+      if (!index) {
         continue;
       }
-      const $ref = this.refs.data[ref];
-      if (!$ref) {
-        return func.assertError('the reference address does not exist', ref);
+      const ref = this.refs.data[index];
+      if (!ref) {
+        return func.assertError('the reference address does not exist', index);
       }
-      e.$refSet($ref);
+      e.refSet(ref);
+    }
+
+    // class name unique check
+    const unique: Record<string, boolean> = {};
+    for (const e of roots) {
+      if (!e.ref) {
+        if (unique[e.decl]) {
+          func.assertError(`the class prefix already exists`, e.index);
+        }
+        unique[e.decl] = true;
+      }
     }
   }
 
-  private $ref?: typeof this;
-  private $refSet($ref: typeof this) {
-    this.$ref = $ref;
+  private ref?: typeof this;
+  private refSet(ref: typeof this) {
+    this.ref = ref;
     let p = this.parent;
     if (!this.array.length) {
-      const { decl } = $ref;
+      const { decl } = ref;
       while (p) {
         if (p.decl === decl) {
           // avoid instantiation deadlock
@@ -152,7 +171,7 @@ export abstract class Complex extends Key {
   toCode() {
     Complex.refsResolve();
 
-    if (this.$ref) {
+    if (this.ref) {
       return [];
     }
 
@@ -185,8 +204,8 @@ export abstract class Complex extends Key {
 
   getReal() {
     let t = this;
-    while (t.$ref) {
-      t = t.$ref;
+    while (t.ref) {
+      t = t.ref;
       if (this === t) {
         func.assertError('circular reference error', t.index);
       }
