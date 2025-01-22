@@ -71,6 +71,8 @@ program
         }
       }
     }
+
+    env.search = Json2classBase.env.search = search;
     env.output = output;
     env.extend = bin.parseExtend(output, extend);
     let defaultAgent = options.defaultAgent;

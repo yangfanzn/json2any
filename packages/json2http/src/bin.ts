@@ -7,9 +7,9 @@ import * as Base from './base';
 export class Bin extends Json2classBin.Bin {
   json2piece(dir: string) {
     return Array.from(this.searchJsons(dir)).reduce((codes, [file, jsons]) => {
-      codes.push(...Object.keys(jsons).map(key => ({ key, file, json: jsons[key] })));
+      codes.push(...Object.keys(jsons).map(key => ({ key, json: jsons[key], file })));
       return codes;
-    }, [] as { key: string; file: string; json: any }[]);
+    }, [] as { key: string; json: any; file: string }[]);
   }
 
   http2file(jsons: { key: string; file: string; json: any }[]) {
@@ -22,7 +22,7 @@ export class Bin extends Json2classBin.Bin {
     const aliases = [] as string[];
 
     Array.from(jsons)
-      .map(({ key, json }) => json2http(key, json))
+      .map(({ key, json, file }) => json2http(key, json, file))
       .forEach(({ http, Http }) => {
         toEntry ||= Http.toEntry();
         const { code, dep, alias } = http.toCode();

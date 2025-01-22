@@ -44,4 +44,5 @@ export class AssertError extends Err {
 export const env = {
   debug: false,
   language: Language.Dart3,
+  search: '',
 };

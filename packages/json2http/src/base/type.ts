@@ -21,6 +21,7 @@ export const env = {
   debug: false,
   language: Language.Dart3,
   defaultAgent: DefaultAgent.Dart_Dio5,
+  search: '',
   output: '',
   extend: {
     path: '',

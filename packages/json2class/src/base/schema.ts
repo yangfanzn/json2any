@@ -4,10 +4,9 @@ import { Complex } from './code';
 
 export const validate = (e: Complex) => {
   const json = e.origin;
-  const { index } = e;
 
   if (func.type(json) !== JsonType.Object) {
-    func.unreachableError('complex.origin must be an object', index);
+    func.unreachableError('complex.origin must be an object', e);
   }
 
   // must use Object.prototype.hasOwnProperty, json.hasOwnProperty maybe is true in json
@@ -16,20 +15,20 @@ export const validate = (e: Complex) => {
     const meta = json.$meta;
 
     if (func.type(meta) !== JsonType.Object) {
-      func.assertError('$meta must be an object', index);
+      func.assertError('$meta must be an object', e);
     }
     const keys = Object.keys(meta);
     if (!keys.length) {
-      func.assertError('$meta is not allowed to be an empty object', index);
+      func.assertError('$meta is not allowed to be an empty object', e);
     }
 
     if (keys.includes('ref')) {
       // ref config
       if (func.type(meta.ref) !== JsonType.String) {
-        func.assertError('$meta.ref must be a string', index);
+        func.assertError('$meta.ref must be a string', e);
       }
       if (keys.length !== 1) {
-        func.assertError('$meta.ref must be a unique field', index);
+        func.assertError('$meta.ref must be a unique field', e);
       }
 
       let ref = meta.ref;
@@ -37,7 +36,7 @@ export const validate = (e: Complex) => {
       let filename = ref.slice(0, i);
       ref = ref.slice(i + 1);
       if (i < 0) {
-        func.assertError('$meta.ref is missing the anchor marker(#)', index);
+        func.assertError('$meta.ref is missing the anchor marker(#)', e);
       }
       if (!filename) {
         filename = e.getRoot().key;
@@ -46,7 +45,7 @@ export const validate = (e: Complex) => {
       return `${filename}#${ref}`;
     } else {
       // others
-      func.assertError('$meta.ref is the only configuration currently supported', index);
+      func.assertError('$meta.ref is the only configuration currently supported', e);
     }
   }
 

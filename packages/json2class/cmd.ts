@@ -40,6 +40,7 @@ program
 
     env.debug = !!options.debug;
     env.language = options.language;
+    env.search = search;
 
     bin.class2file(bin.searchJsons(search)).forEach((code, file) => {
       Fs.writeFileSync(`${output}/${file}`, code);

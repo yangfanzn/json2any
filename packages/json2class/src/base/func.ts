@@ -1,8 +1,15 @@
 import { Complex, Simple } from './code';
-import { JsonType, UnreachableError, AssertError, Language } from './type';
+import { JsonType, UnreachableError, AssertError, Language, env } from './type';
 
 export class Func {
-  core2class(complex: typeof Complex, simple: typeof Simple<Complex>, key: string, json: Record<string, any>): Complex;
+  core2class(
+    complex: typeof Complex,
+    simple: typeof Simple<Complex>,
+    key: string,
+    json: Record<string, any>,
+    parent?: Complex,
+    file?: string,
+  ): Complex;
   core2class(
     complex: typeof Complex,
     simple: typeof Simple<Complex>,
@@ -16,7 +23,11 @@ export class Func {
     key: string,
     json: Record<string, any>,
     parent?: Complex,
+    file?: string,
   ): Complex | Simple<Complex> | undefined {
+    // json2class: key is file
+    file = file ?? key;
+
     const array: boolean[] = [];
     while (Array.isArray(json)) {
       // 先取 1，再用 0 复写，注意反过来会有问题
@@ -33,16 +44,16 @@ export class Func {
       case JsonType.Number:
       case JsonType.Boolean:
         if (!parent) {
-          this.unreachableError('simple must have a parent type');
+          this.unreachableError('simple must have a parent type', [key, file]);
         }
         // @ts-ignore
         return new simple(key, array, optional, json, parent, type);
 
       case JsonType.Object:
         // @ts-ignore
-        const self = new complex(key, array, optional, json, parent);
+        const self = new complex(key, array, optional, json, parent, file);
         self.child = Object.keys(json)
-          .map(k => this.core2class(complex, simple, k, json[k], self))
+          .map(k => this.core2class(complex, simple, k, json[k], self, file))
           .filter(e => e);
         return self;
 
@@ -53,7 +64,7 @@ export class Func {
         break;
 
       default:
-        this.unreachableError(`core2class parsed an unknown typeof ${type}`);
+        this.unreachableError(`core2class parsed an unknown typeof [${type}]`);
     }
 
     return undefined;
@@ -153,24 +164,38 @@ export class Func {
     return Object.prototype.toString.call(o).slice(8, -1).toLowerCase();
   }
 
-  unreachableError(message: string, detail?: string): any {
-    const list = [
-      'the occurrence of this error indicates an unexpected situation in the program,',
-      'please report this error to the author[yangfanzn@163.com]. Thank you very much!\n',
-    ];
+  private errorFormat(detail?: (string | undefined)[] | Complex) {
+    const list: (string | undefined)[] = [];
     if (detail) {
-      list.unshift(detail);
+      if (detail instanceof Complex) {
+        detail.file && list.push(`file: ${env.search}${detail.file}.json(5)`);
+        list.push(`index: ${detail.index}`);
+        try {
+          // circular reference may occur
+          list.push(`class: ${detail.decl}`);
+        } catch (e) {}
+      } else {
+        list.push(...detail.filter(Boolean));
+      }
     }
-    list.unshift(message);
+    return list;
+  }
+
+  unreachableError(message: string, detail?: (string | undefined)[] | Complex): any {
+    const list: (string | undefined)[] = [message];
+    list.push(...this.errorFormat(detail));
+    list.push(
+      ...[
+        'the occurrence of this error indicates an unexpected situation in the program,',
+        'please report this error to the author[yangfanzn@gmail.com]. Thank you very much!\n',
+      ],
+    );
     throw new UnreachableError(list.join('\n'));
   }
 
-  assertError(message: string, detail?: string): any {
-    const list: string[] = [];
-    if (detail) {
-      list.push(detail);
-    }
-    list.push(message);
+  assertError(message: string, detail?: (string | undefined)[] | Complex): any {
+    const list: (string | undefined)[] = [message];
+    list.push(...this.errorFormat(detail));
     throw new AssertError(list.join('\n'));
   }
 

@@ -65,13 +65,13 @@ export class Bin {
 
   dirIsExist(dir: string) {
     if (!Fs.existsSync(dir) || !Fs.statSync(dir).isDirectory()) {
-      Base.func.assertError('is not a valid directory', dir);
+      Base.func.assertError('is not a valid directory', [dir]);
     }
   }
 
   fileIsExit(file: string) {
     if (!Fs.existsSync(file) || !Fs.statSync(file).isFile()) {
-      Base.func.assertError('is not a valid file', file);
+      Base.func.assertError('is not a valid file', [file]);
     }
   }
 

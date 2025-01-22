@@ -91,7 +91,7 @@ export abstract class Complex extends Key {
       }
       const ref = this.refs.data[index];
       if (!ref) {
-        return func.assertError('the reference address does not exist', index);
+        return func.assertError('the reference address does not exist', e);
       }
       e.refSet(ref);
     }
@@ -101,7 +101,7 @@ export abstract class Complex extends Key {
     for (const e of roots) {
       if (!e.ref) {
         if (unique[e.decl]) {
-          func.assertError(`the class prefix already exists`, e.index);
+          func.assertError(`the class prefix already exists`, e);
         }
         unique[e.decl] = true;
       }
@@ -135,16 +135,17 @@ export abstract class Complex extends Key {
     public optional: boolean,
     public origin: any,
     parent?: Complex,
+    public file?: string,
   ) {
     super();
     this.parent = parent as typeof this;
 
     const index = this.index;
     if (Complex.refs.data[index]) {
-      func.assertError('the type structure already exists', index);
+      func.assertError('the type structure already exists', this);
     }
     if (Complex.refs.resolved) {
-      func.unreachableError('refs has been resolved');
+      func.unreachableError('refs has been resolved', this);
     }
     Complex.refs.data[index] = this;
   }
@@ -207,7 +208,7 @@ export abstract class Complex extends Key {
     while (t.ref) {
       t = t.ref;
       if (this === t) {
-        func.assertError('circular reference error', t.index);
+        func.assertError('circular reference error', t);
       }
     }
     return t;

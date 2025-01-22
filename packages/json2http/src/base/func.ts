@@ -8,10 +8,11 @@ export class Func extends Json2classBase.Func {
     simple: typeof Json2classBase.Simple<Json2classBase.Complex>,
     key: string,
     json: Record<string, any>,
+    file?: string,
   ): Http<Json2classBase.Complex, Json2classBase.Simple<Json2classBase.Complex>> {
     // must be objected
     if (this.type(json) !== Json2classBase.JsonType.Object) {
-      this.assertError('plan config must be an object', key);
+      this.assertError('plan config must be an object', [file, key]);
     }
 
     // if not have path, set key to path
@@ -33,7 +34,14 @@ export class Func extends Json2classBase.Func {
     // @ts-ignore
     return new http(
       key,
-      this.core2class(complex as typeof Json2classBase.Complex, simple as typeof Json2classBase.Simple, key, json),
+      this.core2class(
+        complex as typeof Json2classBase.Complex,
+        simple as typeof Json2classBase.Simple,
+        key,
+        json,
+        undefined,
+        file,
+      ),
     );
   }
 
