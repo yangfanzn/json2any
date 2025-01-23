@@ -30,7 +30,7 @@ class Option {
   MoreIndex moreIndex = MoreIndex.Fill;
   MissIndex missIndex = MissIndex.Skip;
 
-  create() {
+  copy() {
     return Option()
       ..missKey = missKey
       ..diffType = diffType
@@ -39,25 +39,31 @@ class Option {
   }
 }
 
-abstract class Cls {
-  static final Option option = Option();
+abstract class Json2class {
+  static final Option defaultOption = Option();
 
-  Cls fromAny(dynamic _) {
+  // to resolve fromAny do not have option argument in plan.request
+  // must be read and write option out of plan.request
+  // in most cases, Json2class's data is empty where in plan.request, does no need option
+  // so, here option set to optional, let it follow to the default option to avoid instantiation
+  Option? option;
+
+  Json2class fromAny(dynamic data, {void Function(Option option)? setOption, Option? option}) {
     try {
-      if (_ is! Map) {
-        _ = Convert.jsonDecode('$_');
+      if (data is! Map) {
+        data = Convert.jsonDecode('$data');
       }
     } catch (e) {
       return this;
     }
-    return fromJson(_);
+    return fromJson(data, setOption: setOption, option: option);
   }
 
-  Cls fromJson(dynamic data, {Option Function(Option option)? setOption, Option? option});
+  Json2class fromJson(dynamic data, {void Function(Option option)? setOption, Option? option});
+
+  Json2class toNew();
 
   Map<String, dynamic> toJson();
-
-  Cls create();
 
   _isSameSimple(dynamic source, dynamic target) {
     return source.runtimeType == target.runtimeType || (source is num && target is num);
@@ -161,7 +167,7 @@ abstract class Cls {
       dynamic _cur = cur.elementAtOrNull(i);
       if (array.length == level) {
         // 到达数据层
-        if (def is Cls) {
+        if (def is Json2class) {
           if (!isExist) {
             if (option.moreIndex == MoreIndex.Null && array[level - 1]) {
               t.add(null);
@@ -171,31 +177,31 @@ abstract class Cls {
               } else {
                 // 填充
                 if (_data is Map) {
-                  if (_cur != null && _cur is! Cls) {
+                  if (_cur != null && _cur is! Json2class) {
                     throw '不可能出现: 不为空的数组当前值应该与传入的默认值类型一致';
                   }
-                  t.add((_cur ?? def.create()).fromJson(_data, option: option));
+                  t.add((_cur ?? def.toNew()).fromJson(_data, option: option));
                 } else if (array[level - 1]) {
                   t.add(null);
                 } else {
                   // 类型不一致时，只要是可选字段都设置为 null
                   // 其他情况给默认值
-                  t.add(def.create());
+                  t.add(def.toNew());
                 }
               }
             }
           } else if (_data is Map) {
-            if (_cur != null && _cur is! Cls) {
+            if (_cur != null && _cur is! Json2class) {
               throw '不可能出现: 不为空的数组当前值应该与传入的默认值类型一致';
             }
-            t.add((_cur ?? def.create()).fromJson(_data, option: option));
+            t.add((_cur ?? def.toNew()).fromJson(_data, option: option));
           } else if (array[level - 1] && _data == null) {
             t.add(null);
           } else {
             if (option.diffType == DiffType.Null && array[level - 1]) {
               t.add(null);
             } else {
-              t.add(option.diffType == DiffType.Keep ? _cur : def.create());
+              t.add(option.diffType == DiffType.Keep ? _cur : def.toNew());
             }
           }
         } else {
@@ -311,8 +317,8 @@ abstract class Cls {
             t.add(cur[data.length + i]);
           } else {
             // 如果是 MissIndex.Null，又不是可选字段，默认行为是 Fill 默认值
-            if (def is Cls) {
-              t.add(def.create());
+            if (def is Json2class) {
+              t.add(def.toNew());
             } else {
               t.add(def);
             }
@@ -375,22 +381,22 @@ abstract class Cls {
         }
       }
     } else {
-      if (def is Cls) {
+      if (def is Json2class) {
         if (!isExist) {
           if (option.missKey == MissKey.Null && optional) {
             return null;
           } else {
-            return option.missKey == MissKey.Keep ? cur : def.create();
+            return option.missKey == MissKey.Keep ? cur : def.toNew();
           }
         } else if (data is Map) {
-          return (cur ?? def.create()).fromJson(data, option: option);
+          return (cur ?? def.toNew()).fromJson(data, option: option);
         } else if (optional && data == null) {
           return null;
         } else {
           if (option.diffType == DiffType.Null && optional) {
             return null;
           } else {
-            return option.diffType == DiffType.Keep ? cur : def.create();
+            return option.diffType == DiffType.Keep ? cur : def.toNew();
           }
         }
       } else {
@@ -417,8 +423,8 @@ abstract class Cls {
 
   dynamic _toJson(dynamic data) {
     if (data is List) {
-      return data.map((e) => e is Cls ? e.toJson() : e).toList();
-    } else if (data is Cls) {
+      return data.map((e) => e is Json2class ? e.toJson() : e).toList();
+    } else if (data is Json2class) {
       return data.toJson();
     } else {
       return data;

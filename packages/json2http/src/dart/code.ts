@@ -55,10 +55,10 @@ export class Http extends Base.Http<Complex, Simple> {
 
     return {
       code: `
-Future${addX(this.declPlan)} ${this.launch}(FutureOr${addX('void')} Function(${this.declPlan} plan) _) async {
+Future${addX(this.declPlan)} ${this.launch}(FutureOr${addX('void')} Function(${this.declPlan} plan) setPlan) async {
   var plan = Plan(${args});
-  await option(plan);
-  await _(plan);
+  await Json2http.setPlan(plan);
+  await setPlan(plan);
   return plan.request(plan);
 }`,
       alias: `typedef ${this.declPlan} = Plan${addX(types)};`,
@@ -116,7 +116,7 @@ class DioAgent extends Agent {
       return null;
     } else if (type == 'json') {
       return Convert.jsonEncode(data);
-    } else if (type == 'map' && data is Cls) {
+    } else if (type == 'map' && data is Json2class) {
       return data.toJson();
     } else if (type == 'form' && data is BodyForm) {
       return Dio.FormData.fromMap({ ...data.fields.toJson(), ...data.files.toJson() });
@@ -136,7 +136,7 @@ class DioAgent extends Agent {
 import 'dart:typed_data';
 ${agentConfig.import}
 
-@cls@
+@json2class@
 
 class Reply {
   int code = 0;
@@ -151,7 +151,7 @@ abstract class Agent {
   dynamic body(Plan plan);
 }
 ${agentConfig.code}
-class BodyForm${addX('T extends Cls, K extends Cls')} {
+class BodyForm${addX('T extends Json2class, K extends Json2class')} {
   T fields;
   K files;
   BodyForm({
@@ -197,7 +197,7 @@ class HttpError implements Exception {
   String toString() => plan.reply.error.isNotEmpty ? plan.reply.error : plan.reply.message;
 }
 
-class Plan${addX('R extends Cls, S extends Cls?, P extends Cls?, B extends Body?')} {
+class Plan${addX('R extends Json2class, S extends Json2class?, P extends Json2class?, B extends Body?')} {
   String baseURL = '';
   R res;
 
@@ -251,7 +251,7 @@ class Plan${addX('R extends Cls, S extends Cls?, P extends Cls?, B extends Body?
 class Json2http {
   Json2http._();
   static Json2http single = Json2http._();
-  static FutureOr${addX('void')} Function(Plan plan) option = (Plan plan) {};
+  static FutureOr${addX('void')} Function(Plan plan) setPlan = (Plan plan) {};
 
 @request@
 

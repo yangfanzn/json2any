@@ -1,4 +1,7 @@
+import base from '../base/keywords';
+
 export const keywords: Record<string, string> = {
+  ...base,
   abstract: 'abstract',
   as: 'as',
   assert: 'assert',
@@ -67,10 +70,4 @@ export const keywords: Record<string, string> = {
   with: 'with',
   while: 'while',
   yield: 'yield',
-  //
-  fromJson: 'fromJson',
-  fromAny: 'fromAny',
-  toJson: 'toJson',
-  create: 'create',
-  option: 'option',
 };

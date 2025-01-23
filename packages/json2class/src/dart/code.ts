@@ -32,14 +32,14 @@ export class Complex extends Base.Complex {
 
   toClass() {
     return `
-class ${this.decl} extends Cls {
-  create() => ${this.def};
+class ${this.decl} extends Json2class {
   ${this.child.map(e => this.lang.toProp(e)).join('')}
-  ${this.decl} fromJson(dynamic _, {Option Function(Option _)? setOption, Option? option}) {
-    Option opt = option ?? (setOption == null ? null : setOption(Cls.option.create())) ?? Cls.option;
+  ${this.decl} fromJson(dynamic data, {void Function(Option option)? setOption, Option? option}) {
+    Option opt = (option ?? this.option ?? Json2class.defaultOption).copy(); setOption?.call(opt);
     ${this.child.map(e => e.toFromJson()).join('')}
     return this;
   }
+  toNew() => ${this.def};
   Map${Base.func.addX('String, dynamic')} toJson() {
     return {${this.child.map(e => `'${e.jsonKey}':_toJson(${e.prop})`)}};
   }

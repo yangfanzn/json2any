@@ -39,7 +39,7 @@ export class Bin extends Json2classBin.Bin {
         func.addCopyRight('json2http'),
         toEntry
           .replace(
-            /@cls@/,
+            /@json2class@/,
             func.clearComment(
               Fs.readFileSync(Path.resolve(__dirname, `../../json2class/src/${desc}/temp.${ext}`)).toString(),
             ),
