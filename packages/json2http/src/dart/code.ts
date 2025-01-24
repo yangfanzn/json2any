@@ -44,13 +44,20 @@ export class Http extends Base.Http<Complex, Simple> {
     ].join(', ');
 
     const args = [
-      `res: ${plan.res.def}`,
       `path: '${plan.path.origin}'`,
       `seg: ${plan.seg ? plan.seg.def : 'null'}`,
       `title: '${plan.title.origin}'`,
       `method: '${plan.method.origin}'`,
+      `res: ${plan.res.def}`,
       `params: ${plan.params ? plan.params.def : 'null'}`,
       `body: ${bodyDef}`,
+      // why use Convert.jsonDecode even if then value is Map<String, dynamic>
+      //    the important reason is headers like body.files both support String and List<String>
+      //    but the dart does not support Map<String, String | List<String>>, if the tools make headers to a special type
+      //    is unsuitable，because of headers usually does not change on a special request but need change on a common request with Map
+      `headers: ${
+        plan.headers ? `Convert.jsonDecode('${Base.func.convertWrap(JSON.stringify(plan.headers.origin))}')` : 'null'
+      }`,
     ].join(', ');
 
     return {
@@ -96,7 +103,8 @@ class DioAgent extends Agent {
       data: await body(plan),
       options: options
         ..method = plan.method
-        ..contentType = plan.body?.contentType,
+        ..contentType = plan.body?.contentType
+        ..headers = plan.headers,
     );
     plan.reply.origin = origin;
     plan.reply.code = origin.statusCode ?? 0;
@@ -199,16 +207,18 @@ class HttpError implements Exception {
 
 class Plan${addX('R extends Json2class, S extends Json2class?, P extends Json2class?, B extends Body?')} {
   String baseURL = '';
-  R res;
 
   String path;
   S seg;
 
   String title;
   String method;
+  R res;
 
   P params;
   B body;
+  
+  Map${addX('String, dynamic')}? headers;
 
   Plan({
     required this.path,
@@ -218,6 +228,7 @@ class Plan${addX('R extends Json2class, S extends Json2class?, P extends Json2cl
     required this.res,
     required this.params,
     required this.body,
+    required this.headers,
   });
 
   ${agentConfig.name} agent = ${agentConfig.name}();

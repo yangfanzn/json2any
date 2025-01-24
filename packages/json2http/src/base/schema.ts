@@ -18,6 +18,7 @@ export interface SchemaPlan {
   res: Json2classBase.Complex;
   params?: Json2classBase.Complex;
   body?: SchemaBody;
+  headers?: Json2classBase.Complex;
 }
 interface SchemaBodyBase {
   type: keyof typeof contentTypes;
@@ -43,21 +44,22 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
   const ks = plan.child
     .map(e => {
       const key = e.key;
-      return ['title', 'method', 'params', 'body', 'res', 'path', 'seg'].includes(key) ? '' : key;
+      return ['path', 'seg', 'title', 'method', 'res', 'params', 'body', 'headers'].includes(key) ? '' : key;
     })
     .filter(Boolean);
   if (ks.length) {
     func.assertError(`configured unsupported field [${ks.join()}]`, plan);
   }
 
-  const path = plan.getChildByKey('path', false);
-  const seg = plan.getChildByKey('seg', null);
+  const path = plan.getChildByKey('path', false); // false [simple] : must exist
+  const seg = plan.getChildByKey('seg', null); // null: may be existed
 
-  const title = plan.getChildByKey('title', false);
-  const method = plan.getChildByKey('method', false);
-  const res = plan.getChildByKey('res', true);
-  const params = plan.getChildByKey('params', null);
-  const body = plan.getChildByKey('body', null);
+  const title = plan.getChildByKey('title', false); // false [simple]: must exist
+  const method = plan.getChildByKey('method', false); // false [simple]: must exist
+  const res = plan.getChildByKey('res', true); // true [complex]: must exist
+  const params = plan.getChildByKey('params', null); // null: may be existed
+  const body = plan.getChildByKey('body', null); // null: may be existed
+  const headers = plan.getChildByKey('headers', null); // null: may be existed
 
   if (!path || func.type(path.origin) !== JsonType.String) {
     return func.unreachableError('path must exist and is an string', plan);
@@ -91,11 +93,9 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
     return func.assertError('res must exist and is an object', plan);
   }
 
-  // use plan.origin for check params when null or []
+  // use [plan].origin for check params when null or []
   if (plan.origin.hasOwnProperty('params')) {
     if (
-      // !(params instanceof Json2classBase.Complex) ||
-      // params.array.length ||
       func.type(plan.origin.params) !== JsonType.Object ||
       Object.values(plan.origin.params).filter(e => func.type(e) !== JsonType.String).length
     ) {
@@ -108,9 +108,13 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
 
   let schemaBody: SchemaBody | undefined;
 
-  if (body) {
-    if (!(body instanceof Json2classBase.Complex) || body.array.length || func.type(body.origin) !== JsonType.Object) {
+  // use [plan].origin for check body when null or []
+  if (plan.origin.hasOwnProperty('body')) {
+    if (func.type(plan.origin.body) !== JsonType.Object) {
       return func.assertError('body must be an object', plan);
+    }
+    if (!body || !(body instanceof Json2classBase.Complex)) {
+      return func.unreachableError('unnecessary check just for schemaBody static type check', plan);
     }
 
     // when non-type, default is json
@@ -129,9 +133,10 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
         }
         break;
       case 'form':
-        const data = body.getChildByKey('data');
-        const fields = data?.getChildByKey('fields');
-        const files = data?.getChildByKey('files');
+        // both of all are true [complex]: must exist
+        const data = body.getChildByKey('data', true);
+        const fields = data?.getChildByKey('fields', true);
+        const files = data?.getChildByKey('files', true);
         const error = `fields and files in body.form.data must be an map${func.addX('string, string | string[]')}`;
 
         if (
@@ -183,5 +188,23 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
     schemaBody ??= { type, data: body.getChildByKey('data', null) };
   }
 
-  return { path, seg, title, method, res, params, body: schemaBody };
+  // use [plan].origin for check headers when null or []
+  if (plan.origin.hasOwnProperty('headers')) {
+    if (
+      func.type(plan.origin.headers) !== JsonType.Object ||
+      Object.values(plan.origin.headers).filter(e => {
+        if (func.type(e) === JsonType.Array) {
+          return (e as []).find(ee => func.type(ee) !== JsonType.String);
+        }
+        return func.type(e) !== JsonType.String;
+      }).length
+    ) {
+      func.assertError(`headers must be an map${func.addX('string, string | string[]')}`, plan);
+    }
+  }
+  if (headers && !(headers instanceof Json2classBase.Complex)) {
+    return func.unreachableError('unnecessary check just for schemaBody static type check', plan);
+  }
+
+  return { path, seg, title, method, res, params, body: schemaBody, headers };
 };
