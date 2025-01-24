@@ -34,6 +34,7 @@ export class Complex extends Base.Complex {
     return `
 class ${this.decl} extends Json2class {
   ${this.child.map(e => this.lang.toProp(e)).join('')}
+  String preset = '${Base.func.convertWrap(JSON.stringify(this.origin))}';
   ${this.decl} fromJson(dynamic data, {void Function(Option option)? setOption, Option? option}) {
     Option opt = (option ?? this.option ?? Json2class.defaultOption).copy(); setOption?.call(opt);
     ${this.child.map(e => e.toFromJson()).join('')}

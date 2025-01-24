@@ -61,6 +61,19 @@ abstract class Json2class {
 
   Json2class fromJson(dynamic data, {void Function(Option option)? setOption, Option? option});
 
+  // why set origin to the preset and named preset / fromPreset
+  // 1. although json2class.preset contains duplicate data
+  //    to ensure that the mock data created by json2http can all be written into then json file
+  //    and that in the setPlan callback, each level's preset can be modified with the parameters without affecting each other
+  // 2. "preset" represents a "predefined setting," which represents its really meaning
+  //    using "default" is not quite suitable for the mock data scenario in json2http
+  //    and calling it "mock" isn't appropriate for the json2http.header scenario either
+  String preset = '';
+
+  Json2class fromPreset({void Function(Option option)? setOption, Option? option}) {
+    return fromAny(preset, setOption: setOption, option: option);
+  }
+
   Json2class toNew();
 
   Map<String, dynamic> toJson();

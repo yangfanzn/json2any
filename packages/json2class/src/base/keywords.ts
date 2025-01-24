@@ -2,7 +2,8 @@ export default {
   option: 'option',
   fromAny: 'fromAny',
   fromJson: 'fromJson',
-  fromDefault: 'fromDefault',
+  fromPreset: 'fromPreset',
+  preset: 'preset',
   toNew: 'toNew',
   toJson: 'toJson',
 };
