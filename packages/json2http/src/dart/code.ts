@@ -1,4 +1,4 @@
-import { Json2classDart, Json2classBase } from 'json2class';
+import { Json2classDart } from 'json2class';
 import * as Base from '../base';
 
 export class Complex extends Json2classDart.Complex {}
@@ -7,7 +7,7 @@ export class Simple extends Json2classDart.Simple {}
 
 export class Http extends Base.Http<Complex, Simple> {
   toLaunch(plan: Base.SchemaPlan) {
-    const { addX } = Json2classBase.func;
+    const { addX } = Base.func;
 
     const { body } = plan;
 
@@ -85,27 +85,36 @@ Future${addX(this.declPlan)} ${this.launch}(FutureOr${addX('void')} Function(${t
       import: "import 'package:dio/dio.dart' as Dio;",
       code: `
 class DioAgent extends Agent {
-  Dio.Dio dio = Dio.Dio();
-  Dio.Options options = Dio.Options(
+  static Dio.Dio dio = Dio.Dio(Dio.BaseOptions(
     validateStatus: (e) => true,
     receiveDataWhenStatusError: true,
     responseType: Dio.ResponseType.plain,
-  );
-  FutureOr${Json2classBase.func.addX('Reply')} fetch(Plan plan) async {
+  ));
+
+  // ready is the only hook where option can be set
+  late Dio.RequestOptions option;
+
+  Future${Base.func.addX('Reply')} fetch(Plan plan) async {
     var path = plan.path;
     if (plan.seg != null) {
       var seg = plan.seg?.toJson();
       path = path.replaceAllMapped(new RegExp('{(.*?)}'), (match) => seg?[match.group(1)] ?? '');
     }
-    var origin = await dio.request(
+
+    plan.agent.option = Dio.Options(
+      method: plan.method,
+      contentType: plan.body?.contentType,
+      headers: plan.headers,
+    ).compose(
+      dio.options,
       '\${plan.baseURL}\${path}',
-      queryParameters: plan.params?.toJson(),
       data: await body(plan),
-      options: options
-        ..method = plan.method
-        ..contentType = plan.body?.contentType
-        ..headers = plan.headers,
+      queryParameters: plan.params?.toJson(),
+      sourceStackTrace: StackTrace.current,
     );
+    await plan.hook.ready(plan);
+    var origin = await dio.fetch(plan.agent.option);
+
     plan.reply.origin = origin;
     plan.reply.code = origin.statusCode ?? 0;
     plan.reply.message = origin.statusMessage ?? '';
@@ -114,10 +123,15 @@ class DioAgent extends Agent {
     } catch (e) {
       plan.reply.data = origin.data;
     }
+    try {
+      plan.reply.error = await plan.hook.validate(plan);
+    } catch (e) {
+      plan.reply.error = e.toString();
+    }
     return plan.reply;
   }
 
-  dynamic body(Plan plan) {
+  Object? body(Plan plan) {
     var type = plan.body?.type;
     var data = plan.body?.data;
     if (type == null) {
@@ -138,7 +152,7 @@ class DioAgent extends Agent {
   }
 
   static toEntry() {
-    const { addX } = Json2classBase.func;
+    const { addX } = Base.func;
     const { agentConfig } = this;
     return `import 'dart:async';
 import 'dart:typed_data';
@@ -155,7 +169,7 @@ class Reply {
 }
 
 abstract class Agent {
-  FutureOr${addX('Reply')} fetch(Plan plan);
+  Future${addX('Reply')} fetch(Plan plan);
   dynamic body(Plan plan);
 }
 ${agentConfig.code}
@@ -186,16 +200,21 @@ class Body${addX('T')} {
 
 class Hook {
   FutureOr${addX('void')} Function(Plan) before = (Plan plan) {};
-  FutureOr${addX('void')} Function(Plan) after = (Plan plan) {};
-  FutureOr${addX('Reply')} Function(Plan) validate = (Plan plan) {
-    try {
-      if (plan.reply.data['statusCode'] != '0') {
-        plan.reply.error = plan.reply.data['statusMessage'];
-      }
-    } catch (e) {
-      plan.reply.error = e.toString();
+  FutureOr${addX('void')} Function(Plan) ready = (Plan plan) {};
+  FutureOr${addX('String')} Function(Plan) validate = (Plan plan) {
+    if (plan.reply.data['statusCode'] != '0') {
+      return plan.reply.data['statusMessage'];
     }
-    return plan.reply;
+    return '';
+  };
+  FutureOr${addX('void')} Function(Plan) after = (Plan plan) {};
+  FutureOr${addX('void')} Function(Plan) end = (Plan plan) {
+    if (plan.reply.code != 200 && plan.reply.message.isNotEmpty) {
+      throw HttpError(plan: plan);
+    }
+    if (plan.reply.error.isNotEmpty) {
+      throw HttpError(plan: plan);
+    }
   };
 }
 
@@ -237,20 +256,14 @@ class Plan${addX('R extends Json2class, S extends Json2class?, P extends Json2cl
   
   Hook hook = Hook();
 
-  FutureOr${addX('Plan<R, S, P, B>')} Function(Plan${addX('R, S, P, B')} plan) request = (Plan${addX(
+  Future${addX('Plan<R, S, P, B>')} Function(Plan${addX('R, S, P, B')} plan) request = (Plan${addX(
       'R, S, P, B',
     )} plan) async {
     await plan.hook.before(plan);
     plan.reply = await plan.agent.fetch(plan);
-    plan.reply = await plan.hook.validate(plan);
-    plan.res.fromAny(plan.reply.data);
     await plan.hook.after(plan);
-    if (plan.reply.code != 200 && plan.reply.message.isNotEmpty) {
-      throw HttpError(plan: plan);
-    }
-    if (plan.reply.error.isNotEmpty) {
-      throw HttpError(plan: plan);
-    }
+    plan.res.fromAny(plan.reply.data);
+    await plan.hook.end(plan);
     return plan;
   };
 }
