@@ -112,7 +112,7 @@ class DioAgent extends Agent {
       queryParameters: plan.params?.toJson(),
       sourceStackTrace: StackTrace.current,
     );
-    await plan.hook.ready(plan);
+    await plan.ready?.call();
     var origin = await dio.fetch(plan.agent.option);
 
     plan.reply.origin = origin;
@@ -123,11 +123,7 @@ class DioAgent extends Agent {
     } catch (e) {
       plan.reply.data = origin.data;
     }
-    try {
-      plan.reply.error = await plan.hook.validate(plan);
-    } catch (e) {
-      plan.reply.error = e.toString();
-    }
+    plan.reply.error = await (plan.validate?.call() ?? '');
     return plan.reply;
   }
 
@@ -198,26 +194,6 @@ class Body${addX('T')} {
   }) : contentType = _types[type];
 }
 
-class Hook {
-  FutureOr${addX('void')} Function(Plan) before = (Plan plan) {};
-  FutureOr${addX('void')} Function(Plan) ready = (Plan plan) {};
-  FutureOr${addX('String')} Function(Plan) validate = (Plan plan) {
-    if (plan.reply.data['statusCode'] != '0') {
-      return plan.reply.data['statusMessage'];
-    }
-    return '';
-  };
-  FutureOr${addX('void')} Function(Plan) after = (Plan plan) {};
-  FutureOr${addX('void')} Function(Plan) end = (Plan plan) {
-    if (plan.reply.code != 200 && plan.reply.message.isNotEmpty) {
-      throw HttpError(plan: plan);
-    }
-    if (plan.reply.error.isNotEmpty) {
-      throw HttpError(plan: plan);
-    }
-  };
-}
-
 class HttpError implements Exception {
   final Plan plan;
   HttpError({required this.plan});
@@ -237,7 +213,7 @@ class Plan${addX('R extends Json2class, S extends Json2class?, P extends Json2cl
   P params;
   B body;
   
-  Map${addX('String, dynamic')}? headers;
+  Map${addX('String, dynamic')} headers;
 
   Plan({
     required this.path,
@@ -247,25 +223,36 @@ class Plan${addX('R extends Json2class, S extends Json2class?, P extends Json2cl
     required this.res,
     required this.params,
     required this.body,
-    required this.headers,
-  });
+    Map${addX('String, dynamic')}? headers,
+  }) : headers = headers ?? {};
 
   ${agentConfig.name} agent = ${agentConfig.name}();
 
   Reply reply = Reply();
-  
-  Hook hook = Hook();
 
-  Future${addX('Plan<R, S, P, B>')} Function(Plan${addX('R, S, P, B')} plan) request = (Plan${addX(
-      'R, S, P, B',
-    )} plan) async {
-    await plan.hook.before(plan);
+  Future${addX('Plan<R,S,P,B>')} Function(Plan${addX('R,S,P,B')} plan) request = (plan) async {
+    await plan.before?.call();
     plan.reply = await plan.agent.fetch(plan);
-    await plan.hook.after(plan);
+    await plan.after?.call();
     plan.res.fromAny(plan.reply.data);
-    await plan.hook.end(plan);
+    await (plan.end ?? plan.abort)();
     return plan;
   };
+  
+  abort() {
+    if (this.reply.code != 200 && this.reply.message.isNotEmpty) {
+      throw HttpError(plan: this);
+    }
+    if (this.reply.error.isNotEmpty) {
+      throw HttpError(plan: this);
+    }
+  }
+  
+  FutureOr${addX('void')} Function()? before;
+  FutureOr${addX('void')} Function()? ready;
+  FutureOr${addX('String')} Function()? validate;
+  FutureOr${addX('void')} Function()? after;
+  FutureOr${addX('void')} Function()? end;
 }
 
 @aliases@
