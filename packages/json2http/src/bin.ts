@@ -15,17 +15,14 @@ export class Bin extends Json2classBin.Bin {
   http2file(jsons: { key: string; file: string; json: any }[]) {
     const { func, env } = Base;
 
-    let toEntry = '';
-
     const request = [] as string[];
     const deps = [] as string[];
     const plans = [] as string[];
 
     Array.from(jsons)
       .map(({ key, json, file }) => json2http(key, json, file))
-      .forEach(({ http, Http }) => {
-        toEntry ||= Http.toEntry();
-        const { code, dep, plan } = http.toCode();
+      .forEach(cur => {
+        const { code, dep, plan } = cur.toCode();
         request.push(code);
         deps.push(...dep.map(e => e.code));
         plans.push(plan);
@@ -37,7 +34,8 @@ export class Bin extends Json2classBin.Bin {
       `json2http.${ext}`,
       [
         func.addCopyRight('json2http'),
-        toEntry
+        json2http()
+          .toEntry()
           .replace(
             /@json2class@/,
             func.clearComment(
