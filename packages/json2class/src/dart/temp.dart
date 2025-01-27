@@ -24,14 +24,14 @@ enum MoreIndex { Fill, Drop, Null }
 // Skip: 多余的坑位不做处理，保留坑位值
 enum MissIndex { Fill, Drop, Null, Skip }
 
-class Option {
+class Rule {
   MissKey missKey = MissKey.Null;
   DiffType diffType = DiffType.Null;
   MoreIndex moreIndex = MoreIndex.Fill;
   MissIndex missIndex = MissIndex.Skip;
 
   copy() {
-    return Option()
+    return Rule()
       ..missKey = missKey
       ..diffType = diffType
       ..moreIndex = moreIndex
@@ -54,15 +54,15 @@ class Json2classError implements Exception {
 }
 
 abstract class Json2class {
-  static final Option defaultOption = Option();
+  static final Rule defaultRule = Rule();
 
-  // to resolve fromAny do not have option argument in plan.request
-  // must be read and write option out of plan.request
-  // in most cases, Json2class's data is empty where in plan.request, does no need option
-  // so, here option set to optional, let it follow to the default option to avoid instantiation
-  Option? option;
+  // to resolve fromAny do not have rule argument in plan.request
+  // must be read and write rule out of plan.request
+  // in most cases, Json2class's data is empty where in plan.request, does no need rule
+  // so, here rule set to optional, let it follow to the default rule to avoid instantiation
+  Rule? rule;
 
-  Json2class fromAny(dynamic data, {void Function(Option option)? setOption, Option? option}) {
+  Json2class fromAny(dynamic data, {void Function(Rule rule)? setRule, Rule? rule}) {
     try {
       if (data is! Map) {
         data = Convert.jsonDecode('$data');
@@ -70,10 +70,10 @@ abstract class Json2class {
     } catch (e) {
       return this;
     }
-    return fromJson(data, setOption: setOption, option: option);
+    return fromJson(data, setRule: setRule, rule: rule);
   }
 
-  Json2class fromJson(dynamic data, {void Function(Option option)? setOption, Option? option});
+  Json2class fromJson(dynamic data, {void Function(Rule rule)? setRule, Rule? rule});
 
   // why set origin to the preset and named preset / fromPreset
   // 1. although json2class.preset contains duplicate data
@@ -84,8 +84,8 @@ abstract class Json2class {
   //    and calling it "mock" isn't appropriate for the json2http.header scenario either
   String preset = '';
 
-  Json2class fromPreset({void Function(Option option)? setOption, Option? option}) {
-    return fromAny(preset, setOption: setOption, option: option);
+  Json2class fromPreset({void Function(Rule rule)? setRule, Rule? rule}) {
+    return fromAny(preset, setRule: setRule, rule: rule);
   }
 
   Json2class toNew();
@@ -186,7 +186,7 @@ abstract class Json2class {
     throw new Json2classError('supports up to three-dimensional arrays');
   }
 
-  _nArray<T>(List data, String key, List<bool> array, bool optional, List cur, dynamic def, int level, Option option) {
+  _nArray<T>(List data, String key, List<bool> array, bool optional, List cur, dynamic def, int level, Rule rule) {
     dynamic t = _nList<T>(array, array.length - level + 1);
     for (int i = 0; i < data.length; i++) {
       bool isExist = cur.length > i; // 当前输入数据是否有空位落
@@ -196,10 +196,10 @@ abstract class Json2class {
         // 到达数据层
         if (def is Json2class) {
           if (!isExist) {
-            if (option.moreIndex == MoreIndex.Null && array[level - 1]) {
+            if (rule.moreIndex == MoreIndex.Null && array[level - 1]) {
               t.add(null);
             } else {
-              if (option.moreIndex == MoreIndex.Drop) {
+              if (rule.moreIndex == MoreIndex.Drop) {
                 // 丢弃，如果是 MissKey.Null，又不是可选字段，默认行为是 Fill
               } else {
                 // 填充
@@ -210,7 +210,7 @@ abstract class Json2class {
                       'the current value of a non-empty array should match the type of the provided default value',
                     );
                   }
-                  t.add((_cur ?? def.toNew()).fromJson(_data, option: option));
+                  t.add((_cur ?? def.toNew()).fromJson(_data, rule: rule));
                 } else if (array[level - 1]) {
                   t.add(null);
                 } else {
@@ -227,22 +227,22 @@ abstract class Json2class {
                 'the current value of a non-empty array should match the type of the provided default value',
               );
             }
-            t.add((_cur ?? def.toNew()).fromJson(_data, option: option));
+            t.add((_cur ?? def.toNew()).fromJson(_data, rule: rule));
           } else if (array[level - 1] && _data == null) {
             t.add(null);
           } else {
-            if (option.diffType == DiffType.Null && array[level - 1]) {
+            if (rule.diffType == DiffType.Null && array[level - 1]) {
               t.add(null);
             } else {
-              t.add(option.diffType == DiffType.Keep ? _cur : def.toNew());
+              t.add(rule.diffType == DiffType.Keep ? _cur : def.toNew());
             }
           }
         } else {
           if (!isExist) {
-            if (option.moreIndex == MoreIndex.Null && array[level - 1]) {
+            if (rule.moreIndex == MoreIndex.Null && array[level - 1]) {
               t.add(null);
             } else {
-              if (option.moreIndex == MoreIndex.Drop) {
+              if (rule.moreIndex == MoreIndex.Drop) {
                 // 丢弃，如果是 MissKey.Null，又不是可选字段，默认行为是 Fill
               } else {
                 // 填充
@@ -262,19 +262,19 @@ abstract class Json2class {
           } else if (array[level - 1] && _data == null) {
             t.add(null);
           } else {
-            if (option.diffType == DiffType.Null && array[level - 1]) {
+            if (rule.diffType == DiffType.Null && array[level - 1]) {
               t.add(null);
             } else {
-              t.add(option.diffType == DiffType.Keep ? _cur : def);
+              t.add(rule.diffType == DiffType.Keep ? _cur : def);
             }
           }
         }
       } else {
         if (!isExist) {
-          if (option.moreIndex == MoreIndex.Null && array[level - 1]) {
+          if (rule.moreIndex == MoreIndex.Null && array[level - 1]) {
             t.add(null);
           } else {
-            if (option.moreIndex == MoreIndex.Drop) {
+            if (rule.moreIndex == MoreIndex.Drop) {
               // 丢弃，如果是 MissKey.Null，又不是可选字段，默认行为是 Fill
             } else if (_data is List) {
               // 填充
@@ -286,7 +286,7 @@ abstract class Json2class {
                 _nList<T>(array, array.length - level),
                 def,
                 level + 1,
-                option,
+                rule,
               ));
             } else {
               // 剩下的 Fill 在坑位不存在的情况下，根据是否可选决定填充内容
@@ -302,21 +302,21 @@ abstract class Json2class {
             _cur == null ? _nList<T>(array, array.length - level) : _cur,
             def,
             level + 1,
-            option,
+            rule,
           ));
         } else if (array[level - 1] && _data == null) {
           t.add(null);
         } else {
-          if (option.diffType == DiffType.Null && array[level - 1]) {
+          if (rule.diffType == DiffType.Null && array[level - 1]) {
             t.add(null);
-          } else if (option.diffType == DiffType.Keep) {
+          } else if (rule.diffType == DiffType.Keep) {
             t.add(_cur);
           } else {
             if (cur.length > data.length &&
                 _cur != null &&
-                (option.missIndex == MissIndex.Fill ||
+                (rule.missIndex == MissIndex.Fill ||
                     // 非可选的Null 同 Fill, 小时 Fill 就是默认值
-                    (option.missIndex == MissIndex.Null && !array[level - 1]))) {
+                    (rule.missIndex == MissIndex.Null && !array[level - 1]))) {
               // 弥补下面[小时]循环的不足
               // 当类型不一致时，数组默认值需要递归
               t.add(_nArray<T>(
@@ -327,7 +327,7 @@ abstract class Json2class {
                 _cur,
                 def,
                 level + 1,
-                option,
+                rule,
               ));
             } else {
               t.add(_nList<T>(array, array.length - level));
@@ -338,14 +338,14 @@ abstract class Json2class {
     }
 
     // 下面是可能进入的 MissIndex 的逻辑，输入少，位置多(小时)
-    if (option.missIndex != MissIndex.Drop) {
+    if (rule.missIndex != MissIndex.Drop) {
       // 进不来的就会丢弃多余坑位
       for (int i = 0; i < cur.length - data.length; i++) {
         if (array.length == level) {
           // 到达数据层
-          if (option.missIndex == MissIndex.Null && array[level - 1]) {
+          if (rule.missIndex == MissIndex.Null && array[level - 1]) {
             t.add(null);
-          } else if (option.missIndex == MissIndex.Skip) {
+          } else if (rule.missIndex == MissIndex.Skip) {
             // 保持原始值
             t.add(cur[data.length + i]);
           } else {
@@ -357,9 +357,9 @@ abstract class Json2class {
             }
           }
         } else {
-          if (option.missIndex == MissIndex.Null && array[level - 1]) {
+          if (rule.missIndex == MissIndex.Null && array[level - 1]) {
             t.add(null);
-          } else if (option.missIndex == MissIndex.Skip) {
+          } else if (rule.missIndex == MissIndex.Skip) {
             // 保持原始值
             t.add(cur[data.length + i]);
           } else {
@@ -376,7 +376,7 @@ abstract class Json2class {
                 cur[data.length + i],
                 def,
                 level + 1,
-                option,
+                rule,
               ));
             }
           }
@@ -387,7 +387,7 @@ abstract class Json2class {
     return t;
   }
 
-  _fromJson<T>(dynamic data, String key, List<bool> array, bool optional, dynamic cur, dynamic def, Option option) {
+  _fromJson<T>(dynamic data, String key, List<bool> array, bool optional, dynamic cur, dynamic def, Rule rule) {
     bool isExist = true;
     if (data is! Map) {
       data = {};
@@ -396,58 +396,57 @@ abstract class Json2class {
     data = data[key];
     if (array.length > 0) {
       if (!isExist) {
-        if (option.missKey == MissKey.Null && optional) {
+        if (rule.missKey == MissKey.Null && optional) {
           return null;
         } else {
-          return option.missKey == MissKey.Keep ? cur : _nList<T>(array, array.length);
+          return rule.missKey == MissKey.Keep ? cur : _nList<T>(array, array.length);
         }
       } else if (data is List) {
-        return _nArray<T>(
-            data, key, array, optional, cur == null ? _nList<T>(array, array.length) : cur, def, 1, option);
+        return _nArray<T>(data, key, array, optional, cur == null ? _nList<T>(array, array.length) : cur, def, 1, rule);
       } else if (optional && data == null) {
         return null;
       } else {
-        if (option.diffType == DiffType.Null && optional) {
+        if (rule.diffType == DiffType.Null && optional) {
           return null;
         } else {
-          return option.diffType == DiffType.Keep ? cur : _nList<T>(array, array.length);
+          return rule.diffType == DiffType.Keep ? cur : _nList<T>(array, array.length);
         }
       }
     } else {
       if (def is Json2class) {
         if (!isExist) {
-          if (option.missKey == MissKey.Null && optional) {
+          if (rule.missKey == MissKey.Null && optional) {
             return null;
           } else {
-            return option.missKey == MissKey.Keep ? cur : def.toNew();
+            return rule.missKey == MissKey.Keep ? cur : def.toNew();
           }
         } else if (data is Map) {
-          return (cur ?? def.toNew()).fromJson(data, option: option);
+          return (cur ?? def.toNew()).fromJson(data, rule: rule);
         } else if (optional && data == null) {
           return null;
         } else {
-          if (option.diffType == DiffType.Null && optional) {
+          if (rule.diffType == DiffType.Null && optional) {
             return null;
           } else {
-            return option.diffType == DiffType.Keep ? cur : def.toNew();
+            return rule.diffType == DiffType.Keep ? cur : def.toNew();
           }
         }
       } else {
         if (!isExist) {
-          if (option.missKey == MissKey.Null && optional) {
+          if (rule.missKey == MissKey.Null && optional) {
             return null;
           } else {
-            return option.missKey == MissKey.Keep ? cur : def;
+            return rule.missKey == MissKey.Keep ? cur : def;
           }
         } else if (_isSameSimple(data, def)) {
           return data;
         } else if (optional && data == null) {
           return null;
         } else {
-          if (option.diffType == DiffType.Null && optional) {
+          if (rule.diffType == DiffType.Null && optional) {
             return null;
           } else {
-            return option.diffType == DiffType.Keep ? cur : def;
+            return rule.diffType == DiffType.Keep ? cur : def;
           }
         }
       }

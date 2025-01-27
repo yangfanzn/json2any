@@ -1,5 +1,5 @@
 export default {
-  option: 'option',
+  rule: 'rule',
   fromAny: 'fromAny',
   fromJson: 'fromJson',
   fromPreset: 'fromPreset',
