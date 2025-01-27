@@ -79,12 +79,14 @@ typedef ${this.declPlan} = Plan${addX(types)};`,
       return {
         name: `Extend.${Base.env.extend.agent}`,
         import: `import '${Base.env.extend.path}' as Extend;`,
+        response: 'dynamic',
         code: '',
       };
     }
     return {
       name: 'DioAgent',
       import: "import 'package:dio/dio.dart' as Dio;",
+      response: 'Dio.Response',
       code: `
 class DioAgent extends Agent {
   static Dio.Dio dio = Dio.Dio(Dio.BaseOptions(
@@ -94,7 +96,7 @@ class DioAgent extends Agent {
   ));
 
   // ready is the only hook where option can be set
-  late Dio.RequestOptions option;
+  Dio.RequestOptions? option;
 
   Future${Base.func.addX('Reply')} fetch(Plan plan) async {
     var path = plan.path;
@@ -103,7 +105,7 @@ class DioAgent extends Agent {
       path = path.replaceAllMapped(new RegExp('{(.*?)}'), (match) => seg?[match.group(1)] ?? '');
     }
 
-    plan.agent.option = Dio.Options(
+    var option = plan.agent.option = Dio.Options(
       method: plan.method,
       contentType: plan.body?.contentType,
       headers: plan.headers,
@@ -115,7 +117,7 @@ class DioAgent extends Agent {
       sourceStackTrace: StackTrace.current,
     );
     await plan.ready?.call();
-    var origin = await dio.fetch(plan.agent.option);
+    var origin = await dio.fetch(option);
 
     plan.reply.origin = origin;
     plan.reply.code = origin.statusCode ?? 0;
@@ -161,7 +163,7 @@ class Reply {
   String message = '';
   String error = '';
   Object? data;
-  dynamic origin;
+  ${agentConfig.response}? origin;
 }
 abstract class Agent {
   Future${addX('Reply')} fetch(Plan plan);
