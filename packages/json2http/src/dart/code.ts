@@ -32,7 +32,7 @@ export class Http extends Base.Http<Complex, Simple> {
         bodyDecl = `Body${addX(body.data.decl)}`;
         bodyDef = `Body(type: '${body.type}', data: ${body.data.def})`;
       } else {
-        bodyDef = `Body(type: '${body.type}', data: null)`;
+        Base.func.unreachableError(`[${plan.path.origin}] unknown body type parsing`);
       }
     }
 
@@ -66,9 +66,11 @@ Future${addX(this.declPlan)} ${this.launch}(FutureOr${addX('void')} Function(${t
   var plan = Plan(${args});
   await Json2http.setPlan(plan);
   await setPlan(plan);
-  return plan.request(plan);
+  await (plan.start ?? plan.request)();
+  return plan;
 }`,
-      alias: `typedef ${this.declPlan} = Plan${addX(types)};`,
+      plan: `
+typedef ${this.declPlan} = Plan${addX(types)};`,
     };
   }
 
@@ -123,7 +125,7 @@ class DioAgent extends Agent {
     } catch (e) {
       plan.reply.data = origin.data;
     }
-    plan.reply.error = await (plan.validate?.call() ?? '');
+    plan.reply.error = (await plan.validate?.call(plan.reply.data) ?? '');
     return plan.reply;
   }
 
@@ -142,8 +144,7 @@ class DioAgent extends Agent {
       return data;
     }
   }
-}  
-`,
+}`,
     };
   }
 
@@ -155,20 +156,17 @@ import 'dart:typed_data';
 ${agentConfig.import}
 
 @json2class@
-
 class Reply {
   int code = 0;
   String message = '';
   String error = '';
-  dynamic data;
+  Object? data;
   dynamic origin;
 }
-
 abstract class Agent {
   Future${addX('Reply')} fetch(Plan plan);
   dynamic body(Plan plan);
-}
-${agentConfig.code}
+}${agentConfig.code}
 class BodyForm${addX('T extends Json2class, K extends Json2class')} {
   T fields;
   K files;
@@ -177,7 +175,6 @@ class BodyForm${addX('T extends Json2class, K extends Json2class')} {
     required this.files,
   });
 }
-
 class Body${addX('T')} {
   static Map${addX('String, String')} _types = {${Base.bodyTypes
       .map(k => `'${k}': '${(Base.contentTypes as Record<string, string>)[k]}'`)
@@ -193,7 +190,6 @@ class Body${addX('T')} {
     required this.data,
   }) : contentType = _types[type];
 }
-
 class HttpError implements Exception {
   final Plan plan;
   HttpError({required this.plan});
@@ -230,15 +226,6 @@ class Plan${addX('R extends Json2class, S extends Json2class?, P extends Json2cl
 
   Reply reply = Reply();
 
-  Future${addX('Plan<R,S,P,B>')} Function(Plan${addX('R,S,P,B')} plan) request = (plan) async {
-    await plan.before?.call();
-    plan.reply = await plan.agent.fetch(plan);
-    await plan.after?.call();
-    plan.res.fromAny(plan.reply.data);
-    await (plan.end ?? plan.abort)();
-    return plan;
-  };
-  
   abort() {
     if (this.reply.code != 200 && this.reply.message.isNotEmpty) {
       throw HttpError(plan: this);
@@ -248,24 +235,29 @@ class Plan${addX('R extends Json2class, S extends Json2class?, P extends Json2cl
     }
   }
   
+  Future${addX('void')} request() async {
+    await this.before?.call();
+    this.reply = await this.agent.fetch(this);
+    await this.after?.call();
+    this.res.fromAny(this.reply.data);
+    await (this.end ?? this.abort)();
+  }
+
+  FutureOr${addX('void')} Function()? start;
   FutureOr${addX('void')} Function()? before;
   FutureOr${addX('void')} Function()? ready;
-  FutureOr${addX('String')} Function()? validate;
+  FutureOr${addX('String?')} Function(Object?)? validate;
   FutureOr${addX('void')} Function()? after;
   FutureOr${addX('void')} Function()? end;
 }
-
 @aliases@
-
 @deps@
 
 class Json2http {
   Json2http._();
   static Json2http single = Json2http._();
   static FutureOr${addX('void')} Function(Plan plan) setPlan = (Plan plan) {};
-
 @request@
-
 }
 `;
   }

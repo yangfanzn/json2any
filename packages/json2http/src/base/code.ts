@@ -51,17 +51,17 @@ export abstract class Http<C extends Json2classBase.Complex, S extends Json2clas
     this.launch = func.convertLaunch(key);
   }
 
-  abstract toLaunch(plan: SchemaPlan): { code: string; alias: string };
+  abstract toLaunch(plan: SchemaPlan): { code: string; plan: string };
 
   toCode() {
     Json2classBase.Complex.refsResolve();
 
     const plan = validate(this.plan);
-    const { code, alias } = this.toLaunch(plan);
+    const { code, plan: code2 } = this.toLaunch(plan);
     return {
       context: this as typeof this,
       code,
-      alias,
+      plan: code2,
       dep: [
         plan.res,
         plan.seg,

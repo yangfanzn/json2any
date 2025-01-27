@@ -19,16 +19,16 @@ export class Bin extends Json2classBin.Bin {
 
     const request = [] as string[];
     const deps = [] as string[];
-    const aliases = [] as string[];
+    const plans = [] as string[];
 
     Array.from(jsons)
       .map(({ key, json, file }) => json2http(key, json, file))
       .forEach(({ http, Http }) => {
         toEntry ||= Http.toEntry();
-        const { code, dep, alias } = http.toCode();
+        const { code, dep, plan } = http.toCode();
         request.push(code);
         deps.push(...dep.map(e => e.code));
-        aliases.push(alias);
+        plans.push(plan);
       });
 
     const { ext, desc } = func.language(env.language);
@@ -44,7 +44,7 @@ export class Bin extends Json2classBin.Bin {
               Fs.readFileSync(Path.resolve(__dirname, `../../json2class/src/${desc}/temp.${ext}`)).toString(),
             ),
           )
-          .replace(/@aliases@/, aliases.join(''))
+          .replace(/@aliases@/, plans.join(''))
           .replace(/@deps@/, deps.join(''))
           .replace(/@request@/, request.join('')),
       ].join(''),

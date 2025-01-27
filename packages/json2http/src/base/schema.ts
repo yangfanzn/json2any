@@ -71,7 +71,6 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
   if (seg) {
     if (
       !(seg instanceof Json2classBase.Complex) ||
-      // func.type(seg.origin) !== JsonType.Object ||
       Object.values(seg.origin).filter(e => func.type(e) !== JsonType.String).length
     ) {
       return func.unreachableError(`seg must be an map${func.addX('string, string')}`, plan);
@@ -176,7 +175,7 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
         }
         break;
       case 'json':
-        if (body.origin.data === null || body.origin.data === undefined) {
+        if (!body.getChildByKey('data', null)) {
           func.assertError('body.json.data must exist and cannot be null', plan);
         }
         break;
