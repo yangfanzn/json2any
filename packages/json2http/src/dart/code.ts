@@ -192,9 +192,9 @@ class Body${addX('T')} {
     required this.data,
   }) : contentType = _types[type];
 }
-class HttpError implements Exception {
+class Json2httpError implements Exception {
   final Plan plan;
-  HttpError({required this.plan});
+  Json2httpError(this.plan);
   String toString() => plan.reply.error.isNotEmpty ? plan.reply.error : plan.reply.message;
 }
 
@@ -230,10 +230,10 @@ class Plan${addX('R extends Json2class, S extends Json2class?, P extends Json2cl
 
   abort() {
     if (this.reply.code != 200 && this.reply.message.isNotEmpty) {
-      throw HttpError(plan: this);
+      throw Json2httpError(this);
     }
     if (this.reply.error.isNotEmpty) {
-      throw HttpError(plan: this);
+      throw Json2httpError(this);
     }
   }
   

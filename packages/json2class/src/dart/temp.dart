@@ -39,6 +39,20 @@ class Option {
   }
 }
 
+class Json2classError implements Exception {
+  final String message;
+
+  Json2classError(this.message);
+
+  String toString() {
+    return [
+      'Json2classError: $message',
+      'the occurrence of this error indicates an unexpected situation in the program,',
+      'please report this error to the author[yangfanzn@gmail.com]. Thank you very much!',
+    ].join('\n');
+  }
+}
+
 abstract class Json2class {
   static final Option defaultOption = Option();
 
@@ -168,8 +182,8 @@ abstract class Json2class {
         return <List<List<T>>>[];
     }
 
-    // 无法动态创建 N 维数组类型
-    throw '最大支持三维数组';
+    // cannot dynamically create n-dimensional array types
+    throw new Json2classError('supports up to three-dimensional arrays');
   }
 
   _nArray<T>(List data, String key, List<bool> array, bool optional, List cur, dynamic def, int level, Option option) {
@@ -191,7 +205,10 @@ abstract class Json2class {
                 // 填充
                 if (_data is Map) {
                   if (_cur != null && _cur is! Json2class) {
-                    throw '不可能出现: 不为空的数组当前值应该与传入的默认值类型一致';
+                    throw new Json2classError(
+                      // 不为空的数组当前值应该与传入的默认值类型一致
+                      'the current value of a non-empty array should match the type of the provided default value',
+                    );
                   }
                   t.add((_cur ?? def.toNew()).fromJson(_data, option: option));
                 } else if (array[level - 1]) {
@@ -205,7 +222,10 @@ abstract class Json2class {
             }
           } else if (_data is Map) {
             if (_cur != null && _cur is! Json2class) {
-              throw '不可能出现: 不为空的数组当前值应该与传入的默认值类型一致';
+              throw new Json2classError(
+                // 不为空的数组当前值应该与传入的默认值类型一致
+                'the current value of a non-empty array should match the type of the provided default value',
+              );
             }
             t.add((_cur ?? def.toNew()).fromJson(_data, option: option));
           } else if (array[level - 1] && _data == null) {
