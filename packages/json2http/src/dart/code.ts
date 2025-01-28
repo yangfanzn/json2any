@@ -37,19 +37,20 @@ export class Http extends Base.Http<Complex, Simple> {
     }
 
     const types = [
-      plan.res.decl,
-      plan.seg ? plan.seg.decl : 'Null',
-      plan.params ? plan.params.decl : 'Null',
+      // if res is null in plan, also can set with "Json2class"
+      plan.res?.decl ?? 'Json2class?',
+      plan.seg?.decl ?? 'Null',
+      plan.params?.decl ?? 'Null',
       bodyDecl,
     ].join(', ');
 
     const args = [
       `path: '${plan.path.origin}'`,
-      `seg: ${plan.seg ? plan.seg.def : 'null'}`,
+      `seg: ${plan.seg?.def ?? 'null'}`,
       `title: '${plan.title.origin}'`,
       `method: '${plan.method.origin}'`,
-      `res: ${plan.res.def}`,
-      `params: ${plan.params ? plan.params.def : 'null'}`,
+      `res: ${plan.res?.def ?? 'null'}`,
+      `params: ${plan.params?.def ?? 'null'}`,
       `body: ${bodyDef}`,
       // why use Convert.jsonDecode even if then value is Map<String, dynamic>
       //    the important reason is headers like body.files both support String and List<String>
@@ -63,7 +64,7 @@ export class Http extends Base.Http<Complex, Simple> {
     return {
       code: `
 Future${addX(this.declPlan)} ${this.launch}(FutureOr${addX('void')} Function(${this.declPlan} plan) setPlan) async {
-  var plan = Plan(${args});
+  ${this.declPlan} plan = Plan(${args});
   await Json2http.setPlan(plan);
   await setPlan(plan);
   await (plan.start ?? plan.request)();
@@ -127,7 +128,7 @@ class DioAgent extends Agent {
     } catch (e) {
       plan.reply.data = origin.data;
     }
-    plan.reply.error = (await plan.validate?.call(plan.reply.data) ?? '');
+    plan.reply.error = (await plan.process?.call(plan.reply.data) ?? '');
     return plan.reply;
   }
 
@@ -198,7 +199,7 @@ class Json2httpError implements Exception {
   String toString() => plan.reply.error.isNotEmpty ? plan.reply.error : plan.reply.message;
 }
 
-class Plan${addX('R extends Json2class, S extends Json2class?, P extends Json2class?, B extends Body?')} {
+class Plan${addX('R extends Json2class?, S extends Json2class?, P extends Json2class?, B extends Body?')} {
   String baseURL = '';
 
   String path;
@@ -241,14 +242,14 @@ class Plan${addX('R extends Json2class, S extends Json2class?, P extends Json2cl
     await this.before?.call();
     this.reply = await this.agent.fetch(this);
     await this.after?.call();
-    this.res.fromAny(this.reply.data);
+    this.res?.fromAny(this.reply.data);
     await (this.end ?? this.abort)();
   }
 
   FutureOr${addX('void')} Function()? start;
   FutureOr${addX('void')} Function()? before;
   FutureOr${addX('void')} Function()? ready;
-  FutureOr${addX('String?')} Function(Object?)? validate;
+  FutureOr${addX('String?')} Function(Object?)? process;
   FutureOr${addX('void')} Function()? after;
   FutureOr${addX('void')} Function()? end;
 }

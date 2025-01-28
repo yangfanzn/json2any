@@ -15,7 +15,7 @@ export interface SchemaPlan {
   seg?: Json2classBase.Complex;
   title: Json2classBase.Simple<Json2classBase.Complex>;
   method: Json2classBase.Simple<Json2classBase.Complex>;
-  res: Json2classBase.Complex;
+  res?: Json2classBase.Complex;
   params?: Json2classBase.Complex;
   body?: SchemaBody;
   headers?: Json2classBase.Complex;
@@ -56,7 +56,7 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
 
   const title = plan.getChildByKey('title', false); // false [simple]: must exist
   const method = plan.getChildByKey('method', false); // false [simple]: must exist
-  const res = plan.getChildByKey('res', true); // true [complex]: must exist
+  const res = plan.getChildByKey('res', null); // null: may be existed
   const params = plan.getChildByKey('params', null); // null: may be existed
   const body = plan.getChildByKey('body', null); // null: may be existed
   const headers = plan.getChildByKey('headers', null); // null: may be existed
@@ -88,8 +88,14 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
     func.assertError(`method = ${method.origin} is out of the enums[${methodTypes}] range`, plan);
   }
 
-  if (!res || res.array.length) {
-    return func.assertError('res must exist and is an object', plan);
+  // use [plan].origin for check res when null or []
+  if (plan.origin.hasOwnProperty('res')) {
+    if (func.type(plan.origin.res) !== JsonType.Object) {
+      func.assertError('res must be an object', plan);
+    }
+  }
+  if (res && !(res instanceof Json2classBase.Complex)) {
+    return func.unreachableError('unnecessary check just for schemaBody.res static type check', plan);
   }
 
   // use [plan].origin for check params when null or []
@@ -102,7 +108,7 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
     }
   }
   if (params && !(params instanceof Json2classBase.Complex)) {
-    return func.unreachableError('unnecessary check just for schemaBody static type check', plan);
+    return func.unreachableError('unnecessary check just for schemaBody.params static type check', plan);
   }
 
   let schemaBody: SchemaBody | undefined;
@@ -113,7 +119,7 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
       return func.assertError('body must be an object', plan);
     }
     if (!body || !(body instanceof Json2classBase.Complex)) {
-      return func.unreachableError('unnecessary check just for schemaBody static type check', plan);
+      return func.unreachableError('unnecessary check just for schemaBody.body static type check', plan);
     }
 
     // when non-type, default is json
@@ -202,7 +208,7 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
     }
   }
   if (headers && !(headers instanceof Json2classBase.Complex)) {
-    return func.unreachableError('unnecessary check just for schemaBody static type check', plan);
+    return func.unreachableError('unnecessary check just for schemaBody.headers static type check', plan);
   }
 
   return { path, seg, title, method, res, params, body: schemaBody, headers };
