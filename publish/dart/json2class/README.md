@@ -2,7 +2,7 @@
 
 json2class is a command-line tool designed to convert specified JSON files into class objects, which are equipped with serialization and deserialization capabilities.
 
-English | [简体中文](README.zh-CN.md)
+English | [简体中文](https://github.com/yangfanzn/json2any/blob/main/packages/json2class/README.zh-CN.md)
 
 ## Supported Languages
 ### Currently Supported
