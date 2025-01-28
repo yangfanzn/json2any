@@ -14,7 +14,7 @@ json2class 是一个命令行工具，可以将指定的 json 文件转换成 cl
 
 ## 安装
 
-### javaScript、typescript 前端技术栈开发者
+### javascript、typescript 前端技术栈开发者
 ```sh
 npx json2class build -h
 ```
@@ -54,10 +54,10 @@ npx json2class build -l dart@3
   }
 }
 ```
-生成的类名将根据层级结构逐层拼接，上面这个示例中的 level2 将生成如下类名，
-这样的拼接方式，将可能发生重名的风险，如果真的发生了，构建时会抛出错误，需要使用者自行规避。
+生成的类名将根据层级结构逐层拼接，上面这个示例中的 `level2` 将生成如下类名，
+这样的拼接方式，将可能发生重名的风险，如果真的发生了，构建时会抛出错误，改变 json 文件名既可规避类名冲突。
 ```dart
-class rootlevel1level2 {
+class rootlevel1level2 extends json2class {
   num test = 0;
 }
 ```
@@ -77,6 +77,7 @@ json 配置的值是什么不重要，值的类型很重要，将决定 class �
 }
 ```
 
+<a id="defaultValue"></a>
 ### 默认值
 为了避免在使用时繁琐的对 null 进行非空判断，生成 class 属性会根据其类型设置一个默认值。
 
@@ -89,7 +90,7 @@ json 配置的值是什么不重要，值的类型很重要，将决定 class �
 | 对象  | 该对象实例 |
 
 
-如果不想设置默认值，可以在 json 字段末尾设置 `?`，那么该属性将会被设置成 null。
+如果不想设置默认值，可以在 json 字段末尾设置 `?`，那么该属性将会被设置成 `null`。
 ```json5
 {
   'test?': 1
@@ -159,79 +160,63 @@ json 文件是可以使用文件夹来组织的，最多支持三层，引用时
 }
 ```
 
-### 不支持的情形
-json 文件中不能是一个简单类型，如下情形，在构建时会抛出错误：
-
-`AssertError: simple must have a parent type`
-
-```json5
-// test.json
-1
-```
-```json5
-// test.json
-"test"
-```
-```json5
-// test.json
-true
-```
-```json5
-// test.json
-[true]
-```
-
-引用时必须引用一个对象类型，引用一个简单类型会在构建时抛出错误：
-
-`AssertError: the reference address does not exist`
-```json5
-// test.json
-{
-  x: 1,
-  test: {
-    "$ref": '/test#/x'
-  }
-}
-```
-
-禁止引用自身
-```json5
-// test.json
-{
-  self: {
-    "$ref": '/test#/self'
-  }
-}
-```
-
-禁止引用一个"引用"
-```json5
-// test.json
-{
-  ref1: { test: 123 },
-  ref2: {
-    "$ref": "/test#/ref1"
-  },
-  ref3: {
-    "$ref": '/test#/ref2'
-  }
-}
-```
-
-
-
-
-
 ## 生成代码的使用
+### 核心方法
+| 方法名        | 参数  | 返回值  | 说明                             |
+|------------|-----|------|--------------------------------|
+| fromJson   | Map | 当前对象 | 将 Map 数据按数据类型填充到当前对象中          |
+| fromAny    | 任意值 | 当前对象 | 将任意数据尝试解析成 Map 后调用 `fromJson`  |
+| fromPreset | -   | 当前对象 | 读取配置 json 文件中的预设数据调用 `fromAny` |
+| toJson     | -   | Map  | 将当前对象中的数据转换成 Map               |
+| toNew      | -   | 新对象  | 创建当前对象的全新实例                    |
+
+### 数据填充规则
+- **DiffType** 输入字段类型不一致
+
+| 枚举值     | 效果                     |
+|---------|------------------------|
+| Keep    | 保持原值                   |
+| Default | 设置[默认值](#defaultValue) |
+| Null    | 设置 `null`（必选字段设置默认值）   |
+
+- **MissKey** 输入字段不存在
+
+| 枚举值     | 效果                     |
+|---------|------------------------|
+| Keep    | 保持原值                   |
+| Default | 设置[默认值](#defaultValue) |
+| Null    | 设置 `null`（必选字段设置默认值）   |
+
+- **MoreIndex** 输入数组长度 > 原数组
+
+| 枚举值  | 效果                                                     |
+|------|--------------------------------------------------------|
+| Fill | 按输入值插入，类型不一致时，根据字段是否可选，设置[默认值](#defaultValue) / `null` |
+| Drop | 丢弃多余的输入数据，数组长度与原数组长度一致                                 |
+| Null | 多出的数据填充为 `null` 值（非可选字段强制 `Null` 等同 `Fill`）            |
+
+- **MissIndex** 数组数组长度 < 原数组
+
+| 枚举值  | 效果                                          |
+|------|---------------------------------------------|
+| Fill | 填充默认值，多维数组会递归填充                             |
+| Drop | 丢弃多余的原始数据，数组长度与输入数组长度一致                     |
+| Null | 多出的数据填充为 `null` 值（非可选字段强制 `Null` 等同 `Fill`） |
+| Skip | 原数组中多余的数据不做处理，保留原值                          |
 
 
 ## 命令行其他选项
-### 指定 json 配置文件的查找目录
+### -l --language，指定需要构建的语言
+```sh
+npx json2class build -l dart@3
+```
+
+### -s, --search，指定 json 配置文件的查找目录
 ```sh
 npx json2class build -l dart@3 -s ~/projects/test/
 ```
 
-### 指定 class 文件生成目录
+### -o, --output，指定构建文件生成目录
 默认会在 json 配置的查找目录下生成 class 文件
 ```sh
 cd ~/projects/test/

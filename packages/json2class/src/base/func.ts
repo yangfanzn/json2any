@@ -187,7 +187,7 @@ export class Func {
     list.push(
       ...[
         'the occurrence of this error indicates an unexpected situation in the program,',
-        'please report this error to the author[yangfanzn@gmail.com]. Thank you very much!\n',
+        'please add --debug option and report the error to the author[yangfanzn@gmail.com]. Thank you very much!\n',
       ],
     );
     throw new UnreachableError(list.join('\n'));
