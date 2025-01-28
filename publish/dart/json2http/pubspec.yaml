@@ -1,0 +1,16 @@
+name: json2http
+description: "json2http"
+version: 0.0.1
+
+keywords:
+  - json
+
+homepage: https://github.com/yangfanzn/json2any
+repository: https://github.com/yangfanzn/json2any
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+
+dev_dependencies:

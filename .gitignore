@@ -1,3 +1,9 @@
+publish/**/*.lock
+publish/**/.dart_tool
+publish/**/*.iml
+publish/**/.metadata
+publish/**/.idea
+
 json2any_test
-lib
+packages/**/lib/
 types
