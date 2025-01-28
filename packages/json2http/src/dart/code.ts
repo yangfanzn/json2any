@@ -38,7 +38,8 @@ export class Http extends Base.Http<Complex, Simple> {
 
     const types = [
       // if res is null in plan, also can set with "Json2class"
-      plan.res?.decl ?? 'Json2class?',
+      // but I am think is not necessary, so replace it to Null
+      plan.res?.decl ?? 'Null', // Json2class?
       plan.seg?.decl ?? 'Null',
       plan.params?.decl ?? 'Null',
       bodyDecl,
