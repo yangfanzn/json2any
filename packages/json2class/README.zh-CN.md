@@ -20,6 +20,7 @@ npx json2class build -h
 ```
 
 ### 其他技术栈开发者
+[GitHub Release 下载](https://github.com/yangfanzn/json2any/releases)
 
 ## 快速开始
 json 文件支持 json 和 json5。

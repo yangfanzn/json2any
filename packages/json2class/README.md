@@ -19,6 +19,7 @@ npx json2class build -h
 ```
 
 ### For Developers Using Other Tech Stacks
+[GitHub Release Download](https://github.com/yangfanzn/json2any/releases)
 
 ## Quick Start
 The tool supports both JSON and JSON5 files.

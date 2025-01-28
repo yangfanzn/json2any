@@ -9,7 +9,7 @@ const description = [
   `currently supported languages: ${Object.values(Base.Language)}`,
 ].join('\n');
 
-program.description(description).version('0.0.1', '-v --version', 'current version');
+program.description(description).version('0.0.2', '-v --version', 'current version');
 
 program
   .description(description)
