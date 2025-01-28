@@ -6,7 +6,6 @@ Publisher: "Yang Fan<yangfanzn@gmail.com>"
 keywords:
   - json
 
-publish_to: https://pub.dartlang.org
 homepage: https://github.com/yangfanzn/json2any
 repository: https://github.com/yangfanzn/json2any
 

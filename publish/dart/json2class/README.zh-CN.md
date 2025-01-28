@@ -99,7 +99,7 @@ json 配置的值是什么不重要，值的类型很重要，将决定 class �
 ```
 
 ### 引用
-可以使用 `{ "$ref": "/filename#/yyy" }` 引用一个已经定义的结构。
+可以使用 `{ "$meta": { "ref": "/filename#/yyy" } }` 引用一个已经定义的结构。
 
 通过引用自身的父级，可以生成递归类型。
 ```json5
@@ -109,7 +109,9 @@ json 配置的值是什么不重要，值的类型很重要，将决定 class �
     t1: 1,
     t2: "a",
     child: {
-      "$ref": "/filename#/test"
+      "$meta": {
+        "ref": "/filename#/test"
+      }
     }
   }
 }
@@ -132,7 +134,7 @@ json 配置的值是什么不重要，值的类型很重要，将决定 class �
     t1: 1,
     t2: "a",
     child: {
-      "$ref": "/filename1#/test"
+      "$meta": { ref: "/filename1#/test" }
     }
   }
 }
@@ -155,7 +157,7 @@ json 文件是可以使用文件夹来组织的，最多支持三层，引用时
     t1: 1,
     t2: "a",
     child: {
-      "$ref": "/dir1/filename#/test"
+      "$meta": { ref: "/dir1/filename#/test" }
     }
   }
 }

@@ -2,7 +2,7 @@
 
 json2class is a command-line tool designed to convert specified JSON files into class objects, which are equipped with serialization and deserialization capabilities.
 
-[简体中文](README.zh-CN.md) | English
+English | [简体中文](README.zh-CN.md)
 
 ## Supported Languages
 ### Currently Supported
@@ -96,7 +96,7 @@ If you do not want to set a default value, you can append `?` to the JSON field,
 ```
 
 ### References
-You can use `{ "$ref": "/filename#/yyy" }` to reference a predefined structure.
+You can use `{ "$meta": { "ref": "/filename#/yyy" } }` to reference a predefined structure.
 
 By referencing its parent, you can create recursive types.
 ```json5
@@ -106,7 +106,9 @@ By referencing its parent, you can create recursive types.
     t1: 1,
     t2: "a",
     child: {
-      "$ref": "/filename#/test"
+      "$meta": {
+        "ref": "/filename#/test"
+      }
     }
   }
 }
@@ -129,7 +131,9 @@ You can also reference a structure from another JSON file.
     t1: 1,
     t2: "a",
     child: {
-      "$ref": "/filename1#/test"
+      "$meta": {
+        "ref": "/filename1#/test"
+      }
     }
   }
 }
@@ -152,7 +156,9 @@ JSON files can be organized into folders, with a maximum depth of three levels. 
     t1: 1,
     t2: "a",
     child: {
-      "$ref": "/dir1/filename#/test"
+      "$meta": {
+        "ref": "/dir1/filename#/test"
+      }
     }
   }
 }
