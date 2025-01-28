@@ -26,6 +26,6 @@
     "version": "lerna version --force-publish --no-git-tag-version --exact",
     "publish": "lerna publish from-package",
     "registry": "npm --registry https://registry.npmjs.org",
-    "publihs dart": "flutter pub publish --server=https://pub.dartlang.org"
+    "publihs dart": "flutter pub publish"
   }
 }

@@ -1,6 +1,7 @@
 name: json2class
 description: "json2class is a command-line tool designed to convert specified JSON files into class objects, which are equipped with serialization and deserialization capabilities."
 version: 0.0.1
+Publisher: "Yang Fan<yangfanzn@gmail.com>"
 
 keywords:
   - json
@@ -10,6 +11,7 @@ keywords:
   - serialization
   - deserialization
 
+publish_to: https://pub.dartlang.org
 homepage: https://github.com/yangfanzn/json2any
 repository: https://github.com/yangfanzn/json2any
 
