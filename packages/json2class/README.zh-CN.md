@@ -204,6 +204,32 @@ json 文件是可以使用文件夹来组织的，最多支持三层，引用时
 | Null | 多出的数据填充为 `null` 值（非可选字段强制 `Null` 等同 `Fill`） |
 | Skip | 原数组中多余的数据不做处理，保留原值                          |
 
+### 如何设置规则
+- **全局设置**
+```
+Json2class.defaultRule.missKey = MissKey.Null;
+```
+
+- **默认全局配置**
+
+| 枚举类型      | 默认值            |
+|-----------|----------------|
+| DiffType  | DiffType.Null  |
+| MissKey   | MissKey.Null   |
+| MoreIndex | MoreIndex.Fill |
+| MissIndex | MissIndex.Skip |
+
+- **当前实例设置**
+```
+obj.rule = new Rule();
+```
+
+- **当前转换的设置**
+```
+Json2class fromAny(dynamic data, {void Function(Rule rule)? setRule, Rule? rule})
+Json2class fromJson(dynamic data, {void Function(Rule rule)? setRule, Rule? rule})
+Json2class fromPreset({void Function(Rule rule)? setRule, Rule? rule})
+```
 
 ## 命令行其他选项
 ### -l --language，指定需要构建的语言

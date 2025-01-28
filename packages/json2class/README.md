@@ -201,6 +201,33 @@ JSON files can be organized into folders, with a maximum depth of three levels. 
 | Null       | Fills excess data with `null` (non-optional fields forced to `Null` behave like `Fill`). |
 | Skip       | Leaves excess data in the original array unchanged.                                      |
 
+### How to Set Rules
+- **Global Settings**
+```
+Json2class.defaultRule.missKey = MissKey.Null;
+```
+
+- **Default Global Configuration**
+
+| Enum Type   | Default Value     |
+|-------------|-------------------|
+| DiffType    | DiffType.Null     |
+| MissKey     | MissKey.Null      |
+| MoreIndex   | MoreIndex.Fill    |
+| MissIndex   | MissIndex.Skip    |
+
+- **Instance-Level Settings**
+```
+obj.rule = new Rule();
+```
+
+- **Settings for the Current Conversion**
+```
+Json2class fromAny(dynamic data, {void Function(Rule rule)? setRule, Rule? rule})
+Json2class fromJson(dynamic data, {void Function(Rule rule)? setRule, Rule? rule})
+Json2class fromPreset({void Function(Rule rule)? setRule, Rule? rule})
+```
+
 ## Additional Command-Line Options
 ### -l, --language: Specifies the target language for the build.
 ```sh
