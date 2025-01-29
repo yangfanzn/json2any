@@ -9,3 +9,5 @@
 ## 0.0.3
 - publish test
 
+## 0.0.4
+- read template bugfix
