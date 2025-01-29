@@ -70,7 +70,7 @@ program
         bin.fileIsExit(extend);
       } catch (e) {
         if (options.extend === undefined) {
-          Fs.writeFileSync(extend, Fs.readFileSync(Path.resolve(__dirname, `../src/${desc}/extend`)));
+          Fs.writeFileSync(extend, require(`./src/${desc}/extend.txt`).default);
         } else {
           throw e;
         }

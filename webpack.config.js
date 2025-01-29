@@ -30,6 +30,10 @@ module.exports = {
         use: 'ts-loader',
         exclude: new RegExp(`node_modules${type === Type.Json2http ? `|${Type.Json2class}` : ''}`),
       },
+      {
+        test: /\.(txt|dart|ets)$/,
+        use: 'raw-loader',
+      },
     ],
   },
   plugins: [

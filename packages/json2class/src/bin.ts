@@ -101,7 +101,7 @@ export class Bin {
       `json2class.${ext}`,
       [
         func.addCopyRight('json2class'),
-        func.clearComment(Fs.readFileSync(Path.resolve(__dirname, `../src/${desc}/temp.${ext}`)).toString()),
+        func.clearComment(require(`./${desc}/temp.${ext}`).default),
         ...Array.from(jsons)
           // key is file
           .map(([key, json]) => json2class(key, json))
