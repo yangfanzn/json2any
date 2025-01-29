@@ -3,9 +3,15 @@
   "version": "0.0.2",
   "description": "json2class",
   "keywords": [
-    "json2class"
+    "json2class",
+    "json",
+    "transform",
+    "generator code",
+    "build code",
+    "serialization",
+    "deserialization"
   ],
-  "author": "yangfanzn <yangfanzn@gmail.com>",
+  "author": "Yang Fan<yangfanzn@gmail.com>",
   "license": "ISC",
   "scripts": {
     "build": "webpack",

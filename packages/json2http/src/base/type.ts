@@ -18,6 +18,8 @@ Object.values(Language).forEach((e: string) => {
 });
 
 export const env = {
+  version: '',
+  author: '',
   debug: false,
   language: Language.Dart3,
   defaultAgent: DefaultAgent.Dart_Dio5,

@@ -3,9 +3,16 @@
   "version": "0.0.1",
   "description": "json2http",
   "keywords": [
-    "json2http"
+    "json2http",
+    "json",
+    "transform",
+    "generator code",
+    "build code",
+    "serialization",
+    "deserialization",
+    "http request"
   ],
-  "author": "yangfanzn <yangfanzn@gmail.com>",
+  "author": "Yang Fan<yangfanzn@gmail.com>",
   "license": "ISC",
   "scripts": {
     "build": "webpack",

@@ -1,4 +1,0 @@
-# json2http
-
-## 0.0.1
-- init

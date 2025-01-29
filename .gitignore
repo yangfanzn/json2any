@@ -3,6 +3,9 @@ publish/**/.dart_tool
 publish/**/*.iml
 publish/**/.metadata
 publish/**/.idea
+publish/**/CHANGELOG.md
+publish/**/README.*
+publish/**/LICENSE
 
 json2any_test
 packages/**/lib/

@@ -4,12 +4,17 @@ import Fs from 'fs';
 import { bin } from './src/bin';
 import * as Base from './src/base';
 
+import { version, author } from './package.json';
+
+Base.env.version = version;
+Base.env.author = author;
+
 const description = [
   'generate class entity type based on json config',
   `currently supported languages: ${Object.values(Base.Language)}`,
 ].join('\n');
 
-program.description(description).version('0.0.2', '-v --version', 'current version');
+program.description(description).version(version, '-v --version', 'current version');
 
 program
   .description(description)

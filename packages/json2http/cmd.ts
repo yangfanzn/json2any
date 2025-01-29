@@ -4,14 +4,19 @@ import Fs from 'fs';
 import { bin } from './src/bin';
 import * as Base from './src/base';
 
-import { Json2classBase } from 'json2class/bin';
+import { Json2classBase as Json2classBase_Bin } from 'json2class/bin';
+import { Json2classBase } from 'json2class';
+
+import { version, author } from './package.json';
+Base.env.version = Json2classBase.env.version = Json2classBase_Bin.env.version = version;
+Base.env.author = Json2classBase.env.author = Json2classBase_Bin.env.author = author;
 
 const description = [
   'generate http request function based on JSON configuration',
   `currently supported languages: ${Object.values(Base.Language)}`,
 ].join('\n');
 
-program.description(description).version('0.0.1', '-v --version', 'current version');
+program.description(description).version(version, '-v --version', 'current version');
 
 program
   .description(description)
@@ -53,8 +58,8 @@ program
     const output = Path.resolve(options.output || search);
     bin.dirIsExist(output);
 
-    env.debug = Json2classBase.env.debug = !!options.debug;
-    env.language = Json2classBase.env.language = options.language;
+    env.debug = Json2classBase.env.debug = Json2classBase_Bin.env.debug = !!options.debug;
+    env.language = Json2classBase.env.language = Json2classBase_Bin.env.language = options.language;
     const { desc, ext } = func.language(env.language);
     const extend =
       options.extend === ''
@@ -72,7 +77,7 @@ program
       }
     }
 
-    env.search = Json2classBase.env.search = search;
+    env.search = Json2classBase.env.search = Json2classBase_Bin.env.search = search;
     env.output = output;
     env.extend = bin.parseExtend(output, extend);
     let defaultAgent = options.defaultAgent;

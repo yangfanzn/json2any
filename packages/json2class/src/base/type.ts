@@ -42,6 +42,8 @@ export class AssertError extends Err {
 }
 
 export const env = {
+  version: '',
+  author: '',
   debug: false,
   language: Language.Dart3,
   search: '',
