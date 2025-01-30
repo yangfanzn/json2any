@@ -23,13 +23,13 @@ export class Lang extends Base.Lang {
   toProp(key: Base.Key) {
     if (key.array.length) {
       if (key.optional) {
-        return `${this.arrayType(key.array, key.decl)}? ${key.prop};`;
+        return `${key.prop}: ${this.arrayType(key.array, key.decl)} | null = null;`;
       } else {
-        return `${this.arrayType(key.array, key.decl)} ${key.prop} = [];`;
+        return `${key.prop}: ${this.arrayType(key.array, key.decl)} = [];`;
       }
     } else {
       if (key.optional) {
-        return `${key.prop}?: ${key.decl};`;
+        return `${key.prop}: ${key.decl} | null = null;`;
       } else {
         return `${key.prop}: ${key.decl} = ${key.def};`;
       }
@@ -37,7 +37,7 @@ export class Lang extends Base.Lang {
   }
 
   toFromJson(key: Base.Key): string {
-    return super.toFromJson(key).replace(/;$/, `as ${key.decl};`);
+    return super.toFromJson(key).replace(/;$/, `as ${this.arrayType(key.array, key.decl)};`);
   }
 }
 
@@ -57,7 +57,7 @@ export class ${this.decl} extends Json2class {
   toNew() {
     return ${this.def};
   }
-  toJson(): Record${Base.func.addX('string, Object')} {
+  toJson(): Record${Base.func.addX('string, Any')} {
     return {${this.child.map(e => `'${e.jsonKey}':this._toJson(this.${e.prop})`)}};
   }
 }`;

@@ -64,12 +64,8 @@ abstract class Json2class {
 
   Json2class fromAny(dynamic data, {void Function(Rule rule)? setRule, Rule? rule}) {
     try {
-      if (data is! Map) {
-        data = Convert.jsonDecode('$data');
-      }
-    } catch (e) {
-      return this;
-    }
+      data = Convert.jsonDecode(data);
+    } catch (e) {}
     return fromJson(data, setRule: setRule, rule: rule);
   }
 
