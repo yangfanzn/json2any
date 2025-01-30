@@ -31,7 +31,7 @@ module.exports = {
         exclude: new RegExp(`node_modules${type === Type.Json2http ? `|${Type.Json2class}` : ''}`),
       },
       {
-        test: /\.(txt|dart|ets)$/,
+        test: /\.(txt|dart|ets\.ts)$/,
         use: 'raw-loader',
       },
     ],

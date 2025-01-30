@@ -101,7 +101,7 @@ export class Bin {
       `json2class.${ext}`,
       [
         func.addCopyRight('json2class'),
-        func.clearComment(require(`./${desc}/temp.${ext}`).default),
+        func.clearComment(require(`./${desc}/temp.${env.language === Base.Language.ArkTs0 ? 'ets.ts' : ext}`).default),
         ...Array.from(jsons)
           // key is file
           .map(([key, json]) => json2class(key, json))

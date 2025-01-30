@@ -3,28 +3,6 @@ import { keywords } from './keywords';
 
 export class Lang extends Base.Lang {
   keywords = keywords;
-
-  arrayType(array: boolean[], type: string): string {
-    return array.reduce((v, e) => {
-      return `List${Base.func.addX(`${v}${e ? '?' : ''}`)}`;
-    }, type);
-  }
-
-  toProp(key: Base.Key) {
-    if (key.array.length) {
-      if (key.optional) {
-        return `${this.arrayType(key.array, key.decl)}? ${key.prop};`;
-      } else {
-        return `${this.arrayType(key.array, key.decl)} ${key.prop} = [];`;
-      }
-    } else {
-      if (key.optional) {
-        return `${key.decl}? ${key.prop};`;
-      } else {
-        return `${key.decl} ${key.prop} = ${key.def};`;
-      }
-    }
-  }
 }
 
 export class Complex extends Base.Complex {
@@ -37,7 +15,7 @@ class ${this.decl} extends Json2class {
   String preset = '${Base.func.convertWrap(JSON.stringify(this.origin))}';
   ${this.decl} fromJson(dynamic data, {void Function(Rule rule)? setRule, Rule? rule}) {
     var r = (rule ?? this.rule ?? Json2class.defaultRule).copy(); setRule?.call(r);
-    ${this.child.map(e => e.toFromJson()).join('')}
+    ${this.child.map(e => e.lang.toFromJson(e)).join('')}
     return this;
   }
   toNew() => ${this.def};
@@ -50,10 +28,4 @@ class ${this.decl} extends Json2class {
 
 export class Simple extends Base.Simple<Complex> {
   lang = new Lang();
-
-  baseDef = {
-    [Base.BaseType.String]: { decl: 'String', def: "''" },
-    [Base.BaseType.Number]: { decl: 'num', def: '0' },
-    [Base.BaseType.Boolean]: { decl: 'bool', def: 'false' },
-  };
 }

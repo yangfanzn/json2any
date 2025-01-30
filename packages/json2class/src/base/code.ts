@@ -5,12 +5,42 @@ import { BaseType } from './type';
 export class Lang {
   keywords: Record<string, string> = {};
 
-  arrayType(array: boolean[], type: string) {
-    return '';
+  baseDef = {
+    [BaseType.String]: { decl: 'String', def: "''" },
+    [BaseType.Number]: { decl: 'num', def: '0' },
+    [BaseType.Boolean]: { decl: 'bool', def: 'false' },
+  };
+
+  arrayValue(value: boolean[]) {
+    return `${func.addX('bool')}[${value}]`;
+  }
+
+  arrayType(array: boolean[], type: string): string {
+    return array.reduce((v, e) => {
+      return `List${func.addX(`${v}${e ? '?' : ''}`)}`;
+    }, type);
   }
 
   toProp(key: Key) {
-    return '';
+    if (key.array.length) {
+      if (key.optional) {
+        return `${this.arrayType(key.array, key.decl)}? ${key.prop};`;
+      } else {
+        return `${this.arrayType(key.array, key.decl)} ${key.prop} = [];`;
+      }
+    } else {
+      if (key.optional) {
+        return `${key.decl}? ${key.prop};`;
+      } else {
+        return `${key.decl} ${key.prop} = ${key.def};`;
+      }
+    }
+  }
+
+  toFromJson(key: Key) {
+    return `this.${key.prop} = this._fromJson<${key.decl}>(data, '${key.jsonKey}', ${this.arrayValue(key.array)}, ${
+      key.optional
+    }, this.${key.prop}, ${key.def}, r);`;
   }
 }
 
@@ -43,9 +73,6 @@ export abstract class Key {
     return func.convertWrap(this.key);
   }
 
-  toFromJson() {
-    return `this.${this.prop} = _fromJson<${this.decl}>(data, '${this.jsonKey}', <bool>[${this.array}], ${this.optional}, this.${this.prop}, ${this.def}, r);`;
-  }
   abstract toDecl2Def(type?: string): { decl: string; def: string };
 
   getRoot() {
@@ -236,8 +263,7 @@ export abstract class Simple<C extends Complex> extends Key {
     return this.toDecl2Def(this.type).def;
   }
 
-  abstract get baseDef(): Record<BaseType, { decl: string; def: string }>;
   toDecl2Def(type: BaseType) {
-    return this.baseDef[type];
+    return this.lang.baseDef[type];
   }
 }

@@ -203,7 +203,7 @@ export class Func {
   language(language: Language) {
     const languages: Record<Language, { ext: string; desc: string }> = {
       [Language.Dart3]: { ext: 'dart', desc: 'dart' },
-      // [Language.ArkTs5]: { ext: 'ets', desc: 'arkTs' },
+      [Language.ArkTs0]: { ext: 'ets', desc: 'arkTs' },
     };
     return languages[language];
   }
