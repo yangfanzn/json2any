@@ -11,3 +11,6 @@
 
 ## 0.0.4
 - read template bugfix
+
+## 0.0.5
+- arkTs supported

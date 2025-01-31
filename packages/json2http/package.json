@@ -3,17 +3,29 @@
   "version": "0.0.1",
   "description": "json2http",
   "keywords": [
+    "http request",
+    "http",
+    "https",
     "json2http",
+    "json2class",
     "json",
+    "json5",
+    "class",
+    "cli",
+    "config",
     "transform",
-    "generator code",
-    "build code",
+    "code generation",
+    "code build",
     "serialization",
     "deserialization",
-    "http request"
+    "typescript",
+    "dart",
+    "arkTs"
   ],
   "author": "Yang Fan<yangfanzn@gmail.com>",
   "license": "ISC",
+  "repository": "https://github.com/yangfanzn/json2any",
+  "homepage": "https://github.com/yangfanzn/json2any/tree/main/packages/json2http",
   "scripts": {
     "build": "webpack",
     "dev": "webpack --watch"

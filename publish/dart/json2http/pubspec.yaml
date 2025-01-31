@@ -3,16 +3,26 @@ description: "json2http"
 version: 0.0.1
 
 keywords:
+  - http request
+  - http
+  - https
   - json2http
+  - json2class
   - json
+  - json5
+  - class
+  - cli
+  - config
   - transform
-  - generator code
-  - build code
+  - code generator
+  - code build
   - serialization
   - deserialization
-  - http request
+  - typescript
+  - dart
+  - arkTs
 
-homepage: https://github.com/yangfanzn/json2any
+homepage: https://github.com/yangfanzn/json2any/tree/main/packages/json2http
 repository: https://github.com/yangfanzn/json2any
 
 environment:
