@@ -46,6 +46,15 @@ module.exports = {
             Fs.writeFileSync(bin, `#!/usr/bin/env node\n${content}`);
           }
           Fs.chmodSync(bin, '755');
+
+          // add license copyright
+          const p = Path.resolve('./LICENSE');
+          Fs.writeFileSync(
+            p,
+            Fs.readFileSync(p)
+              .toString()
+              .replace(/^Copyright.*?$/m, `Copyright (c) 2024-present ${require('./package.json').author}, China`),
+          );
           callback();
         });
       },

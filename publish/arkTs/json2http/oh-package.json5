@@ -1,0 +1,19 @@
+{
+  name: 'json2http',
+  modelVersion: '0.0.1',
+  description: 'json2http',
+  keywords: [
+    'json2http',
+    'json',
+    'transform',
+    'generator code',
+    'build code',
+    'serialization',
+    'deserialization',
+    'http request',
+  ],
+  author: 'Yang Fan<yangfanzn@gmail.com>',
+  license: 'ISC',
+  dependencies: {},
+  devDependencies: {},
+}

@@ -1,0 +1,10 @@
+{
+  name: 'json2class',
+  modelVersion: '0.0.4',
+  description: 'json2class is a command-line tool designed to convert specified JSON files into class objects, which are equipped with serialization and deserialization capabilities.',
+  keywords: ['json2class', 'json', 'transform', 'generator code', 'build code', 'serialization', 'deserialization'],
+  author: 'Yang Fan<yangfanzn@gmail.com>',
+  license: 'ISC',
+  dependencies: {},
+  devDependencies: {},
+}

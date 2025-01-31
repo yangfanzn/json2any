@@ -48,13 +48,13 @@ class Json2classError implements Exception {
     return [
       'Json2classError: $message',
       'the occurrence of this error indicates an unexpected situation in the program,',
-      'please report this error to the author[yangfanzn@gmail.com]. Thank you very much!',
+      'please report this error to the @author@. Thank you very much!',
     ].join('\n');
   }
 }
 
 abstract class Json2class {
-  static final Rule defaultRule = Rule();
+  static Rule defaultRule = Rule();
 
   // to resolve fromAny do not have rule argument in plan.request
   // must be read and write rule out of plan.request

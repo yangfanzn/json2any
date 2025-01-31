@@ -51,7 +51,7 @@ export class Json2classError implements Error {
     return [
       `${this.name}: ${this.message}`,
       'the occurrence of this error indicates an unexpected situation in the program,',
-      'please report this error to the author[yangfanzn@gmail.com]. Thank you very much!',
+      'please report this error to the @author@. Thank you very much!',
     ].join('\n');
   }
 }
