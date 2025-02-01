@@ -1,6 +1,6 @@
 {
   name: 'json2http',
-  modelVersion: '0.0.1',
+  version: '0.0.1',
   description: 'json2http',
   keywords: [
     'http request',
@@ -22,7 +22,7 @@
     'dart',
     'arkTs',
   ],
-  author: 'Yang Fan<yangfanzn@gmail.com>',
+  author: { name: 'Yang Fan', email: 'yangfanzn@gmail.com' },
   license: 'ISC',
   repository: 'https://github.com/yangfanzn/json2any',
   homepage: 'https://github.com/yangfanzn/json2any/tree/main/packages/json2http',
