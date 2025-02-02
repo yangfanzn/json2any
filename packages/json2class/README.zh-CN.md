@@ -6,7 +6,7 @@ json2class 是一个命令行工具，可以将指定的 json 文件转换成 cl
 
 ## 支持的语言
 ### 已支持
-| [arkTs](https://developer.huawei.com/consumer/cn/arkts/) | [dart@3](https://dart.dev/) |
+| [arkTs@0](https://developer.huawei.com/consumer/cn/arkts/) | [dart@3](https://dart.dev/) |
 
 ### 将会支持
 | [typescript](https://www.typescriptlang.org/) | [其他语言陆续支持]() |

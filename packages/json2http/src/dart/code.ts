@@ -66,7 +66,7 @@ export class Http extends Base.Http<Complex, Simple> {
       code: `
 Future${addX(this.declPlan)} ${this.launch}(FutureOr${addX('void')} Function(${this.declPlan} plan) setPlan) async {
   ${this.declPlan} plan = Plan(${args});
-  await Json2http.setPlan(plan);
+  await Json2http.setPlan?.call(plan);
   await setPlan(plan);
   await (plan.start ?? plan.request)();
   return plan;
@@ -77,11 +77,13 @@ typedef ${this.declPlan} = Plan${addX(types)};`,
   }
 
   static get agentConfig() {
+    const { addX } = Base.func;
     if (Base.env.extend.agent) {
       return {
         name: `Extend.${Base.env.extend.agent}`,
         import: `import '${Base.env.extend.path}' as Extend;`,
-        response: 'dynamic',
+        response: 'Object',
+        exception: 'Object',
         code: '',
       };
     }
@@ -89,47 +91,61 @@ typedef ${this.declPlan} = Plan${addX(types)};`,
       name: 'DioAgent',
       import: "import 'package:dio/dio.dart' as Dio;",
       response: 'Dio.Response',
+      exception: 'Dio.DioException',
       code: `
 class DioAgent extends Agent {
-  static Dio.Dio dio = Dio.Dio(Dio.BaseOptions(
+  static Dio.Dio _session = Dio.Dio(Dio.BaseOptions(
     validateStatus: (e) => true,
     receiveDataWhenStatusError: true,
     responseType: Dio.ResponseType.plain,
   ));
-
+  
+  Dio.Dio? session;
   // ready is the only hook where option can be set
   Dio.RequestOptions? option;
 
-  Future${Base.func.addX('Reply')} fetch(Plan plan) async {
+  Future${addX('Reply')} fetch(Plan plan) async {
+    var session = this.session ?? _session;
+
     var path = plan.path;
     if (plan.seg != null) {
       var seg = plan.seg?.toJson();
       path = path.replaceAllMapped(new RegExp('{(.*?)}'), (match) => seg?[match.group(1)] ?? '');
     }
 
-    var option = plan.agent.option = Dio.Options(
+    var option = this.option = Dio.Options(
       method: plan.method,
       contentType: plan.body?.contentType,
       headers: plan.headers,
     ).compose(
-      dio.options,
+      session.options,
       '\${plan.baseURL}\${path}',
       data: await body(plan),
       queryParameters: plan.params?.toJson(),
       sourceStackTrace: StackTrace.current,
     );
-    await plan.ready?.call();
-    var origin = await dio.fetch(option);
 
-    plan.reply.origin = origin;
-    plan.reply.code = origin.statusCode ?? 0;
-    plan.reply.message = origin.statusMessage ?? '';
+    await plan.ready?.call();
+
     try {
-      plan.reply.data = Convert.jsonDecode(origin.data);
-    } catch (e) {
-      plan.reply.data = origin.data;
+      plan.reply.response = await session.fetch(option).whenComplete(() => this.session?.close());
+    } on Dio.DioException catch (e) {
+      plan.reply.exception = e;
     }
-    plan.reply.error = (await plan.process?.call(plan.reply.data) ?? '');
+
+    var response = plan.reply.response;
+    plan.reply.code = response?.statusCode;
+    plan.reply.message = response?.statusMessage ?? code2message[plan.reply.code];
+    plan.reply.error = plan.reply.exception?.message;
+
+    try {
+      plan.reply.data = Convert.jsonDecode(response?.data);
+    } catch (e) {
+      plan.reply.data = response?.data;
+    }
+    
+    await plan.process?.call(plan.reply);
+    
     return plan.reply;
   }
 
@@ -161,15 +177,16 @@ ${agentConfig.import}
 
 @json2class@
 class Reply {
-  int code = 0;
-  String message = '';
-  String error = '';
+  int? code;
+  String? message;
+  String? error;
   Object? data;
-  ${agentConfig.response}? origin;
+  ${agentConfig.response}? response;
+  ${agentConfig.exception}? exception;
 }
 abstract class Agent {
   Future${addX('Reply')} fetch(Plan plan);
-  dynamic body(Plan plan);
+  FutureOr${addX('Object?')} body(Plan plan);
 }${agentConfig.code}
 class BodyForm${addX('T extends Json2class, K extends Json2class')} {
   T fields;
@@ -197,7 +214,7 @@ class Body${addX('T')} {
 class Json2httpError implements Exception {
   final Plan plan;
   Json2httpError(this.plan);
-  String toString() => plan.reply.error.isNotEmpty ? plan.reply.error : plan.reply.message;
+  String toString() => plan.reply.error ?? plan.reply.message ?? 'unknown';
 }
 
 class Plan${addX('R extends Json2class?, S extends Json2class?, P extends Json2class?, B extends Body?')} {
@@ -231,10 +248,10 @@ class Plan${addX('R extends Json2class?, S extends Json2class?, P extends Json2c
   Reply reply = Reply();
 
   abort() {
-    if (this.reply.code != 200 && this.reply.message.isNotEmpty) {
+    if (this.reply.code != 200 && (this.reply.message?.isNotEmpty ?? false)) {
       throw Json2httpError(this);
     }
-    if (this.reply.error.isNotEmpty) {
+    if (this.reply.error?.isNotEmpty ?? false) {
       throw Json2httpError(this);
     }
   }
@@ -250,7 +267,7 @@ class Plan${addX('R extends Json2class?, S extends Json2class?, P extends Json2c
   FutureOr${addX('void')} Function()? start;
   FutureOr${addX('void')} Function()? before;
   FutureOr${addX('void')} Function()? ready;
-  FutureOr${addX('String?')} Function(Object?)? process;
+  FutureOr${addX('void')} Function(Reply)? process;
   FutureOr${addX('void')} Function()? after;
   FutureOr${addX('void')} Function()? end;
 }
@@ -260,9 +277,11 @@ class Plan${addX('R extends Json2class?, S extends Json2class?, P extends Json2c
 class Json2http {
   Json2http._();
   static Json2http single = Json2http._();
-  static FutureOr${addX('void')} Function(Plan plan) setPlan = (Plan plan) {};
+  static FutureOr${addX('void')} Function(Plan plan)? setPlan;
 @request@
 }
+
+final code2message = Convert.jsonDecode('${Base.func.convertWrap(JSON.stringify(Base.code2message))}');
 `;
   }
 }

@@ -86,9 +86,9 @@ program
         case Language.Dart3:
           defaultAgent = DefaultAgent.Dart_Dio5;
           break;
-        // case Language.ArkTs5:
-        //   defaultAgent = DefaultAgent.ArkTs_Http5;
-        //   break;
+        case Language.ArkTs0:
+          defaultAgent = DefaultAgent.ArkTs_Rcp0;
+          break;
       }
     }
 

@@ -1,1 +1,17 @@
-//
+import 'json2http.dart';
+
+setJson2http() {
+  Json2http.setPlan = (plan) {
+    // public configuration.
+    plan.baseURL = 'http://localhost:3000';
+    // other plan configurations.
+    // if (plan is planxxxyyyzzz) {
+    //
+    // }
+  };
+}
+
+main() {
+  // execute it in the app entry point
+  setJson2http();
+}

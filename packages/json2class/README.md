@@ -6,7 +6,7 @@ English | [简体中文](https://github.com/yangfanzn/json2any/blob/main/package
 
 ## Supported Languages
 ### Currently Supported
-| [arkTs](https://developer.huawei.com/consumer/cn/arkts/) | [dart@3](https://dart.dev/) |
+| [arkTs@0](https://developer.huawei.com/consumer/cn/arkts/) | [dart@3](https://dart.dev/) |
 
 ### Planned Support
 | [typescript](https://www.typescriptlang.org/) | [Other languages to be supported]() |

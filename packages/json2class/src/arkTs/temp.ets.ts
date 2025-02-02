@@ -41,9 +41,10 @@ export class Rule {
 }
 
 export class Json2classError implements Error {
-  name = 'Json2classError';
-  message = '';
+  readonly name: string;
+  readonly message: string;
   constructor(message: string) {
+    this.name = 'Json2classError';
     this.message = message;
   }
 
