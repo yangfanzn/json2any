@@ -63,7 +63,6 @@ export class ${this.declPlan} extends Plan { ${types} }`,
         name: `Extend.${Base.env.extend.agent}`,
         import: `import '${Base.env.extend.path}' as Extend;`,
         response: 'Object',
-        exception: 'Object',
         code: '',
       };
     }
@@ -73,7 +72,6 @@ export class ${this.declPlan} extends Plan { ${types} }`,
 import { BusinessError } from '@kit.BasicServicesKit';
 import url from '@ohos.url';`,
       response: 'rcp.Response',
-      exception: 'BusinessError',
       code: `
 export class RcpAgent extends Agent {
   private static session = rcp.createSession();
@@ -84,44 +82,34 @@ export class RcpAgent extends Agent {
 
   async fetch(plan: Plan): Promise${addX('Reply')}  {
     const session = this.session ?? RcpAgent.session;
-  
+
     let path = plan.path;
     if (plan.seg) {
       const seg = plan.seg?.toJson();
       path = path.replace(/{(.*?)}/g, (_, k: string) => seg?.[k]?.toString() ?? '');
     }
-    
-    const uri = url.URL.parseURL(plan.path, plan.baseURL);
-    uri.search = (new url.URLParams((plan.params?.toJson() ?? {}) as Record${addX('string, string')})).toString();
+    path = \`\${plan.baseURL}\${path}\`;
+    const q = obj2get(plan.params?.toJson() ?? {});
+    path = \`\${path}\${q ? (path.includes('?') ? '&' : '?') : ''}\${q}\`;
+
     if (plan.body?.contentType) {
       plan.headers['content-type'] = plan.body.contentType;
     }
-    const option = this.option = new rcp.Request(uri.toString(),
-      plan.method,
-      plan.headers as rcp.RequestHeaders,
-      await this.body(plan) ?? undefined
-    );
+
+    const option = this.option =
+      new rcp.Request(path, plan.method, plan.headers as rcp.RequestHeaders, await this.body(plan) ?? undefined);
 
     await plan.ready?.();
 
-    try {
-      plan.reply.response = await session.fetch(option).finally(() => this.session?.close());
-    } catch (e) {
-      plan.reply.exception = e;
-    }
-
-    const response = plan.reply.response;
-    plan.reply.code = response?.statusCode ?? null;
-    plan.reply.message = code2message[plan.reply.code ?? 0];
-    plan.reply.error = plan.reply.exception?.message ?? null;
+    const response = plan.reply.response = await session.fetch(option).finally(() => this.session?.close());
+    plan.reply.code = response.statusCode;
+    plan.reply.message = code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;;
 
     try {
-      plan.reply.data = response?.toJSON() ?? null;
+      plan.reply.data = response.toJSON();
     } catch (e) {
-      plan.reply.data = response?.body ?? null;
+      plan.reply.data = response.body ?? null;
     }
-
-    await plan.process?.(plan.reply);
 
     return plan.reply;
   }
@@ -132,9 +120,13 @@ export class RcpAgent extends Agent {
     if (type == null) {
       return null;
     } else if (type == 'json') {
-      return JSON.stringify(data);
+      return JSON.stringify(
+        data instanceof Array ? 
+          data.map((e: Any) => e instanceof Json2class ? e.toJson() : e) : 
+          (data instanceof Json2class ? data.toJson() : data)
+      );
     } else if (type == 'map' && data instanceof Json2class) {
-      return data.toJson();
+      return obj2get(data.toJson());
     } else if (type == 'form' && data instanceof BodyForm) {
       const t: rcp.MultipartFormFields = {};
       const fields = (data as BodyForm).fields.toJson();
@@ -142,6 +134,8 @@ export class RcpAgent extends Agent {
       Object.keys(fields).forEach(k => t[k] = fields[k] as rcp.MultipartFormFieldValue);
       Object.keys(files).forEach(k => t[k] = files[k] as rcp.MultipartFormFieldValue);
       return new rcp.MultipartForm(t);
+    } else if (data instanceof Uint8Array) {
+      return data.buffer;
     } else {
       return data;
     }
@@ -157,13 +151,24 @@ export class RcpAgent extends Agent {
 ${agentConfig.import}
 
 @json2class@
+
+function obj2get(obj: Record${addX('string, Any')}) {
+  return Object.keys(obj).reduce((v, k) => {
+    obj[k] !== null && v.push(\`\${encodeURIComponent(k)}=\${encodeURIComponent(\`\${obj[k]}\`)}\`);
+    return v;
+  }, [] as string[]).join('&');
+}
 export class Reply {
   code: number | null = null;
-  message: string | null = null;
+  message = '';
   error: string | null = null;
   data: Any = null;
   response: ${agentConfig.response} | null = null;
-  exception: ${agentConfig.exception} | null = null;
+  exception: Any = null;
+  reset(): void {
+    this.code = this.error = this.data = this.response = this.exception = null;
+    this.message = '';
+  }
 }
 export abstract class Agent {
   abstract fetch(plan: Plan): Promise${addX('Reply')};
@@ -203,7 +208,7 @@ export class Json2httpError implements Error {
     this.message = this.toString();
   }
   toString(): string {
-    return this.plan.reply.error ?? this.plan.reply.message ?? 'unknown';
+    return this.plan.reply.error || this.plan.reply.message;
   }
 }
 
@@ -226,22 +231,33 @@ export abstract class Plan {
 
   reply = new Reply();
 
-  abort() {
-    if (this.reply.code !== 200 && !this.reply.message) {
+  readonly abort = (): void => {
+    if (this.reply.code !== 200 && this.reply.message) {
       throw new Json2httpError(this);
     }
-    if (!this.reply.error) {
+    if (this.reply.error) {
       throw new Json2httpError(this);
     }
-  }
-  
-  async request(): Promise${addX('void')} {
+  };
+
+  readonly fetch = async (): Promise${addX('void')} => {
+    this.reply.reset();
+    this.reply = await this.agent.fetch(this).catch((e: Error) => {
+      this.reply.exception = e;
+      this.reply.error = JSON.stringify(e);
+      return this.reply;
+    }).finally(async () => {
+      await this.process?.(this.reply);
+    });
+  };
+
+  readonly request = async (): Promise${addX('void')} => {
     await this.before?.();
-    this.reply = await this.agent.fetch(this);
+    await this.fetch();
     await this.after?.();
     this.res?.fromAny(this.reply.data);
     await (this.end ?? this.abort)();
-  }
+  };
 
   start?: () => void;
   before?: () => void;

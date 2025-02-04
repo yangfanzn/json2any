@@ -1,4 +1,4 @@
-type Any = Object | null;
+export type Any = Object | null;
 function isMapLike(x: Any) {
   return x !== null && !(x instanceof Array) && typeof x === 'object';
 }

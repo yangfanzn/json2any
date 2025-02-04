@@ -83,7 +83,6 @@ typedef ${this.declPlan} = Plan${addX(types)};`,
         name: `Extend.${Base.env.extend.agent}`,
         import: `import '${Base.env.extend.path}' as Extend;`,
         response: 'Object',
-        exception: 'Object',
         code: '',
       };
     }
@@ -91,7 +90,6 @@ typedef ${this.declPlan} = Plan${addX(types)};`,
       name: 'DioAgent',
       import: "import 'package:dio/dio.dart' as Dio;",
       response: 'Dio.Response',
-      exception: 'Dio.DioException',
       code: `
 class DioAgent extends Agent {
   static Dio.Dio _session = Dio.Dio(Dio.BaseOptions(
@@ -127,24 +125,15 @@ class DioAgent extends Agent {
 
     await plan.ready?.call();
 
-    try {
-      plan.reply.response = await session.fetch(option).whenComplete(() => this.session?.close());
-    } on Dio.DioException catch (e) {
-      plan.reply.exception = e;
-    }
-
-    var response = plan.reply.response;
-    plan.reply.code = response?.statusCode;
-    plan.reply.message = response?.statusMessage ?? code2message[plan.reply.code];
-    plan.reply.error = plan.reply.exception?.message;
+    var response = plan.reply.response = await session.fetch(option).whenComplete(() => this.session?.close());
+    plan.reply.code = response.statusCode;
+    plan.reply.message = response.statusMessage ?? code2message[plan.reply.code.toString()] ?? 'unknown http code \${plan.reply.code}';
 
     try {
-      plan.reply.data = Convert.jsonDecode(response?.data);
+      plan.reply.data = Convert.jsonDecode(response.data);
     } catch (e) {
-      plan.reply.data = response?.data;
+      plan.reply.data = response.data;
     }
-    
-    await plan.process?.call(plan.reply);
     
     return plan.reply;
   }
@@ -178,11 +167,15 @@ ${agentConfig.import}
 @json2class@
 class Reply {
   int? code;
-  String? message;
+  String message = '';
   String? error;
   Object? data;
   ${agentConfig.response}? response;
-  ${agentConfig.exception}? exception;
+  Exception? exception;
+  void reset() {
+    code = error = data = response = exception = null;
+    message = '';
+  }
 }
 abstract class Agent {
   Future${addX('Reply')} fetch(Plan plan);
@@ -214,7 +207,7 @@ class Body${addX('T')} {
 class Json2httpError implements Exception {
   final Plan plan;
   Json2httpError(this.plan);
-  String toString() => plan.reply.error ?? plan.reply.message ?? 'unknown';
+  String toString() => (plan.reply.error?.isNotEmpty ?? false) ? plan.reply.error! : plan.reply.message;
 }
 
 class Plan${addX('R extends Json2class?, S extends Json2class?, P extends Json2class?, B extends Body?')} {
@@ -247,18 +240,32 @@ class Plan${addX('R extends Json2class?, S extends Json2class?, P extends Json2c
 
   Reply reply = Reply();
 
-  abort() {
-    if (this.reply.code != 200 && (this.reply.message?.isNotEmpty ?? false)) {
+  FutureOr${addX('void')} abort() {
+    if (this.reply.code != 200 && this.reply.message.isNotEmpty) {
       throw Json2httpError(this);
     }
     if (this.reply.error?.isNotEmpty ?? false) {
       throw Json2httpError(this);
     }
   }
-  
+
+  Future${addX('void')} fetch() async {
+    this.reply.reset();
+    this.reply = await this.agent.fetch(this).catchError((e) {
+      if (e is Exception) {
+        this.reply.exception = e;
+        this.reply.error = e.toString();
+        return this.reply;
+      }
+      throw e;
+    }).whenComplete(() async {
+      await this.process?.call(this.reply);
+    });
+  }
+
   Future${addX('void')} request() async {
     await this.before?.call();
-    this.reply = await this.agent.fetch(this);
+    await this.fetch();
     await this.after?.call();
     this.res?.fromAny(this.reply.data);
     await (this.end ?? this.abort)();
