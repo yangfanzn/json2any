@@ -168,7 +168,8 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
         ) {
           func.assertError(error, plan);
         } else if (conflict) {
-          func.assertError(`fields and files in body.form.data has conflict field name of ${conflict}`, plan);
+          // 2025-02-06 body.form.data fields and files can use same key
+          // func.assertError(`fields and files in body.form.data has conflict field name of ${conflict}`, plan);
         }
 
         schemaBody = { type, data: { fields, files } };

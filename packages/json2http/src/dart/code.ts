@@ -148,7 +148,20 @@ class DioAgent extends Agent {
     } else if (type == 'map' && data is Json2class) {
       return data.toJson();
     } else if (type == 'form' && data is BodyForm) {
-      return Dio.FormData.fromMap({ ...data.fields.toJson(), ...data.files.toJson() });
+      final map = ${addX(`String, List${addX('dynamic')}`)}{};
+      final cb = (String k, dynamic v) {
+        if (!map.containsKey(k)) {
+          map[k] = [];
+        }
+        if (v is List) {
+          map[k]?.addAll(v);
+        } else {
+          map[k]?.add(v);
+        }
+      };
+      data.fields.toJson().forEach(cb);
+      data.files.toJson().forEach(cb);
+      return Dio.FormData.fromMap(map);
     } else {
       return data;
     }

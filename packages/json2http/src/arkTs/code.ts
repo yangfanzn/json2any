@@ -127,12 +127,24 @@ export class RcpAgent extends Agent {
     } else if (type === 'map' && data instanceof Json2class) {
       return obj2get(data.toJson());
     } else if (type === 'form' && data instanceof BodyForm) {
-      const t: rcp.MultipartFormFields = {};
-      const fields = (data as BodyForm).fields.toJson();
-      const files = (data as BodyForm).files.toJson();
-      Object.keys(fields).forEach(k => t[k] = fields[k] as rcp.MultipartFormFieldValue);
-      Object.keys(files).forEach(k => t[k] = files[k] as rcp.MultipartFormFieldValue);
-      return new rcp.MultipartForm(t);
+      const map: rcp.MultipartFormFields = {};
+      type V = rcp.MultipartFormFieldValue;
+      const cb = (data: Record${addX('string, Any')}) => {
+        Object.keys(data).forEach(k => {
+          const v = data[k];
+          if (map[k] === undefined) {
+            map[k] = [];
+          }
+          if (v instanceof Array) {
+            (map[k] as Array${addX('V')}).push(...v);
+          } else {
+            (map[k] as Array${addX('V')}).push(v as V);
+          }
+        });
+      };
+      cb((data as BodyForm).fields.toJson());
+      cb((data as BodyForm).files.toJson());
+      return new rcp.MultipartForm(map);
     } else if (data instanceof Uint8Array) {
       return data.buffer;
     } else {
