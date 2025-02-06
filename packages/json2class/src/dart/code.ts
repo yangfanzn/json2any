@@ -14,7 +14,7 @@ class ${this.decl} extends Json2class {
   ${this.child.map(e => this.lang.toProp(e)).join('')}
   String preset = '${Base.func.convertWrap(JSON.stringify(this.origin))}';
   ${this.decl} fromJson(dynamic data, {void Function(Rule rule)? setRule, Rule? rule}) {
-    var r = (rule ?? this.rule ?? Json2class.defaultRule).copy(); setRule?.call(r);
+    final r = (rule ?? this.rule ?? Json2class.defaultRule).copy(); setRule?.call(r);
     ${this.child.map(e => e.lang.toFromJson(e)).join('')}
     return this;
   }

@@ -103,15 +103,15 @@ class DioAgent extends Agent {
   Dio.RequestOptions? option;
 
   Future${addX('Reply')} fetch(Plan plan) async {
-    var session = this.session ?? _session;
+    final session = this.session ?? _session;
 
     var path = plan.path;
     if (plan.seg != null) {
-      var seg = plan.seg?.toJson();
+      final seg = plan.seg?.toJson();
       path = path.replaceAllMapped(new RegExp('{(.*?)}'), (match) => seg?[match.group(1)] ?? '');
     }
 
-    var option = this.option = Dio.Options(
+    final option = this.option = Dio.Options(
       method: plan.method,
       contentType: plan.body?.contentType,
       headers: plan.headers,
@@ -125,7 +125,7 @@ class DioAgent extends Agent {
 
     await plan.ready?.call();
 
-    var response = plan.reply.response = await session.fetch(option).whenComplete(() => this.session?.close());
+    final response = plan.reply.response = await session.fetch(option).whenComplete(() => this.session?.close());
     plan.reply.code = response.statusCode;
     plan.reply.message = response.statusMessage ?? code2message[plan.reply.code.toString()] ?? 'unknown http code \${plan.reply.code}';
 
@@ -139,8 +139,8 @@ class DioAgent extends Agent {
   }
 
   Object? body(Plan plan) {
-    var type = plan.body?.type;
-    var data = plan.body?.data;
+    final type = plan.body?.type;
+    final data = plan.body?.data;
     if (type == null) {
       return null;
     } else if (type == 'json') {
