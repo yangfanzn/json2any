@@ -116,17 +116,17 @@ export class RcpAgent extends Agent {
   body(plan: Plan): Any {
     const type = plan.body?.type ?? null;
     const data = plan.body?.data ?? null;
-    if (type == null) {
+    if (type === null) {
       return null;
-    } else if (type == 'json') {
+    } else if (type === 'json') {
       return JSON.stringify(
         data instanceof Array ? 
           data.map((e: Any) => e instanceof Json2class ? e.toJson() : e) : 
           (data instanceof Json2class ? data.toJson() : data)
       );
-    } else if (type == 'map' && data instanceof Json2class) {
+    } else if (type === 'map' && data instanceof Json2class) {
       return obj2get(data.toJson());
-    } else if (type == 'form' && data instanceof BodyForm) {
+    } else if (type === 'form' && data instanceof BodyForm) {
       const t: rcp.MultipartFormFields = {};
       const fields = (data as BodyForm).fields.toJson();
       const files = (data as BodyForm).files.toJson();
