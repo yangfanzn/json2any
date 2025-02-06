@@ -102,7 +102,7 @@ export class Bin {
       [
         func.addCopyRight('json2class'),
         func.clearComment(
-          require(`./${desc}/temp.${env.language === Base.Language.ArkTs0 ? 'ets.ts' : ext}`).default.replace(
+          require(`./${desc}/temp.${env.language === Base.Language.ArkTs12 ? 'ets.ts' : ext}`).default.replace(
             '@author@',
             env.author,
           ),

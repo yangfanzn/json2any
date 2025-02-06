@@ -79,15 +79,15 @@ program
 
     env.search = Json2classBase.env.search = Json2classBase_Bin.env.search = search;
     env.output = output;
-    env.extend = bin.parseExtend(output, extend);
+    env.extend = bin.parseExtend(output, extend, env.language);
     let defaultAgent = options.defaultAgent;
     if (!defaultAgent) {
       switch (env.language) {
         case Language.Dart3:
           defaultAgent = DefaultAgent.Dart_Dio5;
           break;
-        case Language.ArkTs0:
-          defaultAgent = DefaultAgent.ArkTs_Rcp0;
+        case Language.ArkTs12:
+          defaultAgent = DefaultAgent.ArkTs_Rcp12;
           break;
       }
     }

@@ -58,10 +58,9 @@ export class ${this.declPlan} extends Plan { ${types} }`,
   static get agentConfig() {
     const { addX } = Base.func;
     if (Base.env.extend.agent) {
-      // todo: 未实现
       return {
         name: `Extend.${Base.env.extend.agent}`,
-        import: `import '${Base.env.extend.path}' as Extend;`,
+        import: `import * as Extend from '${Base.env.extend.path.slice(0, -4)}';`,
         response: 'Object',
         code: '',
       };

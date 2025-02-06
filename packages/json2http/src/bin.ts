@@ -46,17 +46,25 @@ export class Bin extends Json2classBin.Bin {
     return files;
   }
 
-  parseExtend(outputPath: string, extendPath: string) {
+  parseExtend(outputPath: string, extendPath: string, language: Base.Language) {
+    const { export: exp } = Base.func.language(language);
     const extend = { path: '', agent: '' };
     if (extendPath) {
       const file = `${Fs.readFileSync(extendPath)}`;
       const [, disabled, , name] =
         file.match(/(\/\/\s+@json2http-disabled(\s+))?class\s+(\w+)\s+extends\s+Agent\s+/) ?? [];
       extend.path = Path.relative(outputPath, extendPath);
+      if (!extend.path.startsWith('./')) {
+        extend.path = `./${extend.path}`;
+      }
       extend.agent = disabled ? '' : name ?? '';
       if (extend.agent) {
         if (!/class\s+MultipartFile\b/.test(file)) {
-          Fs.appendFileSync(extendPath, '\nclass MultipartFile {}');
+          Fs.appendFileSync(
+            extendPath,
+            `
+${exp} class MultipartFile {}`,
+          );
         }
       }
     }
