@@ -41,14 +41,11 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
 
   plan = plan.getReal();
 
-  const ks = plan.child
-    .map(e => {
-      const key = e.key;
-      return ['path', 'seg', 'title', 'method', 'res', 'params', 'body', 'headers'].includes(key) ? '' : key;
-    })
+  let ks = plan.child
+    .map(e => (['path', 'seg', 'title', 'method', 'res', 'params', 'body', 'headers'].includes(e.key) ? '' : e.key))
     .filter(Boolean);
   if (ks.length) {
-    func.assertError(`configured unsupported field [${ks.join()}]`, plan);
+    func.assertError(`configured unsupported plan field [${ks.join()}]`, plan);
   }
 
   const path = plan.getChildByKey('path', false); // false [simple] : must exist
@@ -60,6 +57,8 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
   const params = plan.getChildByKey('params', null); // null: may be existed
   const body = plan.getChildByKey('body', null); // null: may be existed
   const headers = plan.getChildByKey('headers', null); // null: may be existed
+
+  const optionals: (Json2classBase.Key | undefined)[] = [];
 
   if (!path || func.type(path.origin) !== JsonType.String) {
     return func.unreachableError('path must exist and is an string', plan);
@@ -122,11 +121,17 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
       return func.unreachableError('unnecessary check just for schemaBody.body static type check', plan);
     }
 
+    ks = body.child.map(e => (['type', 'data'].includes(e.key) ? '' : e.key)).filter(Boolean);
+    if (ks.length) {
+      func.assertError(`configured unsupported body field [${ks.join()}]`, plan);
+    }
+
     // when non-type, default is json
     const type = body.origin.hasOwnProperty('type') ? body.origin.type : 'json';
     if (!bodyTypes.includes(type)) {
       func.assertError(`body.type = ${type} is out of the enums[${bodyTypes}] range`, plan);
     }
+    optionals.push(body.getChildByKey('type', null));
 
     switch (type) {
       case 'map':
@@ -171,6 +176,12 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
           return func.assertError(error, plan);
         }
 
+        ks = data.child.map(e => (['fields', 'files'].includes(e.key) ? '' : e.key)).filter(Boolean);
+        if (ks.length) {
+          func.assertError(`configured unsupported body.form.data field [${ks.join()}]`, plan);
+        }
+
+        optionals.push(data, fields, files);
         schemaBody = { type, data: { fields, files } };
 
         break;
@@ -209,6 +220,12 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
   }
   if (headers && !(headers instanceof Json2classBase.Complex)) {
     return func.unreachableError('unnecessary check just for schemaBody.headers static type check', plan);
+  }
+
+  optionals.push(...[path, seg, title, method, res, params, headers, body]);
+  ks = optionals.filter(e => e?.optional).map(e => e?.key ?? '');
+  if (ks.length) {
+    func.assertError(`cannot set as optional [${ks.join()}]`, plan);
   }
 
   return { path, seg, title, method, res, params, body: schemaBody, headers };
