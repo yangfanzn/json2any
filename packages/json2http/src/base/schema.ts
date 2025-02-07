@@ -144,32 +144,31 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
         const files = data?.getChildByKey('files', true);
         const error = `fields and files in body.form.data must be an map${func.addX('string, string | string[]')}`;
 
+        const check = (data: any) => {
+          // data has been checked is object
+          const c = (e: any) => ![JsonType.String, JsonType.Null].includes(func.type(e) as Json2classBase.JsonType);
+          return (
+            Object.keys(data).findIndex(k => {
+              const e = data[k];
+              if (func.type(e) === JsonType.Array) {
+                return (e as []).findIndex(ee => c(ee)) >= 0;
+              }
+              return c(e);
+            }) >= 0
+          );
+        };
+
         if (
           !data ||
           !fields ||
           !files ||
           func.type(data.origin) !== JsonType.Object ||
           func.type(fields.origin) !== JsonType.Object ||
-          func.type(files.origin) !== JsonType.Object
+          func.type(files.origin) !== JsonType.Object ||
+          check(fields.origin) ||
+          check(files.origin)
         ) {
           return func.assertError(error, plan);
-        }
-        const keys = Object.assign({}, fields.origin, files.origin);
-        let conflict = '';
-        if (
-          Object.keys(keys).filter(k => {
-            conflict = fields.origin.hasOwnProperty(k) && files.origin.hasOwnProperty(k) ? k : '';
-            const e = keys[k];
-            if (func.type(e) === JsonType.Array) {
-              return (e as []).find(ee => func.type(ee) !== JsonType.String);
-            }
-            return func.type(e) !== JsonType.String;
-          }).length
-        ) {
-          func.assertError(error, plan);
-        } else if (conflict) {
-          // 2025-02-06 body.form.data fields and files can use same key
-          // func.assertError(`fields and files in body.form.data has conflict field name of ${conflict}`, plan);
         }
 
         schemaBody = { type, data: { fields, files } };

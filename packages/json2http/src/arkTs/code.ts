@@ -67,9 +67,7 @@ export class ${this.declPlan} extends Plan { ${types} }`,
     }
     return {
       name: 'RcpAgent',
-      import: `import { rcp } from '@kit.RemoteCommunicationKit';
-import { BusinessError } from '@kit.BasicServicesKit';
-import url from '@ohos.url';`,
+      import: `import { rcp } from '@kit.RemoteCommunicationKit';`,
       response: 'rcp.Response',
       code: `
 export class RcpAgent extends Agent {
@@ -136,8 +134,8 @@ export class RcpAgent extends Agent {
             map[k] = [];
           }
           if (v instanceof Array) {
-            (map[k] as Array${addX('V')}).push(...v);
-          } else {
+            (map[k] as Array${addX('V')}).push(...v.filter((e: Any) => e !== null));
+          } else if (v !== null) {
             (map[k] as Array${addX('V')}).push(v as V);
           }
         });
@@ -253,9 +251,10 @@ export abstract class Plan {
 
   readonly fetch = async (): Promise${addX('void')} => {
     this.reply.reset();
-    this.reply = await this.agent.fetch(this).catch((e: Error) => {
+    this.reply = await this.agent.fetch(this).catch((e: Any) => {
       this.reply.exception = e;
-      this.reply.error = JSON.stringify(e);
+      const t = e as Record${addX('string, string')};
+      this.reply.error = t['message'] || t['data'] || JSON.stringify(e);
       return this.reply;
     }).finally(async () => {
       await this.process?.(this.reply);

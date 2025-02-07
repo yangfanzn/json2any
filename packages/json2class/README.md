@@ -94,6 +94,14 @@ If you do not want to set a default value, you can append `?` to the JSON field,
   'test?': 1
 }
 ```
+For an array type, `test?` indicates whether the `test` property can be set to `null`. 
+The first element in the array denotes the type of the array, and the second element,
+if set to `null`, marks whether array elements can be set to `null`.
+```json5
+{
+  'test?': ['', null]
+}
+```
 
 ### References
 You can use `{ "$meta": { "ref": "/filename#/yyy" } }` to reference a predefined structure.

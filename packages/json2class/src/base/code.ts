@@ -257,13 +257,13 @@ export abstract class Simple<C extends Complex> extends Key {
   child = undefined;
 
   get decl() {
-    return this.toDecl2Def(this.type).decl;
+    return this.toDecl2Def().decl;
   }
   get def() {
-    return this.toDecl2Def(this.type).def;
+    return this.toDecl2Def().def;
   }
 
-  toDecl2Def(type: BaseType) {
-    return this.lang.baseDef[type];
+  toDecl2Def() {
+    return this.lang.baseDef[this.type];
   }
 }

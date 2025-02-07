@@ -154,8 +154,8 @@ class DioAgent extends Agent {
           map[k] = [];
         }
         if (v is List) {
-          map[k]?.addAll(v);
-        } else {
+          map[k]?.addAll(v.where((e) => e != null));
+        } else if (v != null) {
           map[k]?.add(v);
         }
       };

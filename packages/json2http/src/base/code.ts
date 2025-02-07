@@ -17,46 +17,36 @@ Object.defineProperty(Json2classBase.Key.prototype, 'prop', {
   },
 });
 
-// todo: 增加统一代理机制
-(() => {
-  const simpleToDecl2Def = Json2classDart.Simple.prototype.toDecl2Def;
-  Json2classDart.Simple.prototype.toDecl2Def = function () {
-    if (func.isBodyFiles(this)) {
-      return { decl: env.extend.agent ? 'Extend.MultipartFile' : 'Dio.MultipartFile', def: 'null' };
-    }
-    return simpleToDecl2Def.call(this, this.type);
-  };
-  const complexToClass = Json2classDart.Complex.prototype.toClass;
-  Json2classDart.Complex.prototype.toClass = function () {
-    if (func.isBodyFiles(this)) {
-      this.child.forEach(e => {
-        e.optional = true;
-        e.array = e.array.map(() => true);
-      });
-    }
-    return complexToClass.call(this);
-  };
-})();
+[
+  { type: Json2classDart, agent: 'Dio.MultipartFile' },
+  { type: Json2classArkTs, agent: 'rcp.FormFieldFileValue' },
+].forEach(e => {
+  const simple = e.type.Simple.prototype;
+  const complex = e.type.Complex.prototype;
 
-(() => {
-  const simpleToDecl2Def = Json2classArkTs.Simple.prototype.toDecl2Def;
-  Json2classArkTs.Simple.prototype.toDecl2Def = function () {
+  // why here must be use simple?
+  // 1. boyd.files.key is string or string[], so is must be simple
+  // 2. func.isBodyFiles check this is body.files.key by parents type, if it uses complex, body.files check wrong
+  const simpleToDecl2Def = simple.toDecl2Def;
+  simple.toDecl2Def = function () {
     if (func.isBodyFiles(this)) {
-      return { decl: env.extend.agent ? 'Extend.MultipartFile' : 'rcp.FormFieldFileValue', def: 'null' };
+      return { decl: env.extend.agent ? 'Extend.MultipartFile' : e.agent, def: 'null' };
     }
-    return simpleToDecl2Def.call(this, this.type);
+    return simpleToDecl2Def.call(this);
   };
-  const complexToClass = Json2classArkTs.Complex.prototype.toClass;
-  Json2classArkTs.Complex.prototype.toClass = function () {
+
+  const complexToClass = complex.toClass;
+  complex.toClass = function () {
     if (func.isBodyFiles(this)) {
       this.child.forEach(e => {
-        e.optional = true;
-        e.array = e.array.map(() => true);
+        if (!e.array.length) {
+          e.optional = true;
+        }
       });
     }
     return complexToClass.call(this);
   };
-})();
+});
 
 export abstract class Http<C extends Json2classBase.Complex, S extends Json2classBase.Simple<Json2classBase.Complex>> {
   static toEntry() {
