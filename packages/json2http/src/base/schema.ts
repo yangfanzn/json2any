@@ -63,7 +63,7 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
   if (!path || func.type(path.origin) !== JsonType.String) {
     return func.unreachableError('path must exist and is an string', plan);
   }
-  if (!path.origin.startsWith('/')) {
+  if (!(path.origin as string).startsWith('/')) {
     func.assertError('path must start with /', plan);
   }
 
@@ -83,13 +83,13 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
   if (!method || method.array.length || func.type(method.origin) !== JsonType.String) {
     return func.assertError('method must exist and is an string', plan);
   }
-  if (!methodTypes.includes(method.origin)) {
+  if (!methodTypes.includes(method.origin as 'GET')) {
     func.assertError(`method = ${method.origin} is out of the enums[${methodTypes}] range`, plan);
   }
 
   // use [plan].origin for check res when null or []
   if (plan.origin.hasOwnProperty('res')) {
-    if (func.type(plan.origin.res) !== JsonType.Object) {
+    if (func.type(plan.origin['res']) !== JsonType.Object) {
       func.assertError('res must be an object', plan);
     }
   }
@@ -100,8 +100,8 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
   // use [plan].origin for check params when null or []
   if (plan.origin.hasOwnProperty('params')) {
     if (
-      func.type(plan.origin.params) !== JsonType.Object ||
-      Object.values(plan.origin.params).filter(e => func.type(e) !== JsonType.String).length
+      func.type(plan.origin['params']) !== JsonType.Object ||
+      Object.values(plan.origin['params']).filter(e => func.type(e) !== JsonType.String).length
     ) {
       func.assertError(`params must be an map${func.addX('string, string')}`, plan);
     }
@@ -114,7 +114,7 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
 
   // use [plan].origin for check body when null or []
   if (plan.origin.hasOwnProperty('body')) {
-    if (func.type(plan.origin.body) !== JsonType.Object) {
+    if (func.type(plan.origin['body']) !== JsonType.Object) {
       return func.assertError('body must be an object', plan);
     }
     if (!body || !(body instanceof Json2classBase.Complex)) {
@@ -127,7 +127,7 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
     }
 
     // when non-type, default is json
-    const type = body.origin.hasOwnProperty('type') ? body.origin.type : 'json';
+    const type = body.origin.hasOwnProperty('type') ? body.origin['type'] : 'json';
     if (!bodyTypes.includes(type)) {
       func.assertError(`body.type = ${type} is out of the enums[${bodyTypes}] range`, plan);
     }
@@ -136,8 +136,8 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
     switch (type) {
       case 'map':
         if (
-          func.type(body.origin.data) !== JsonType.Object ||
-          Object.values(body.origin.data).filter(e => func.type(e) !== JsonType.String).length
+          func.type(body.origin['data']) !== JsonType.Object ||
+          Object.values(body.origin['data']).filter(e => func.type(e) !== JsonType.String).length
         ) {
           func.assertError(`body.map.data must be an map${func.addX('string, string')}`, plan);
         }
@@ -207,8 +207,8 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
   // use [plan].origin for check headers when null or []
   if (plan.origin.hasOwnProperty('headers')) {
     if (
-      func.type(plan.origin.headers) !== JsonType.Object ||
-      Object.values(plan.origin.headers).filter(e => {
+      func.type(plan.origin['headers']) !== JsonType.Object ||
+      Object.values(plan.origin['headers']).filter(e => {
         if (func.type(e) === JsonType.Array) {
           return (e as []).find(ee => func.type(ee) !== JsonType.String);
         }

@@ -12,7 +12,11 @@ export const validate = (e: Complex) => {
   // must use Object.prototype.hasOwnProperty, json.hasOwnProperty maybe is true in json
   // use json.hasOwnProperty('$meta') will throw error
   if (Object.prototype.hasOwnProperty.call(json, '$meta')) {
-    const meta = json.$meta;
+    if (Object.keys(json).length !== 1) {
+      func.assertError('$meta must be a unique field under its parent', e);
+    }
+
+    const meta = json['$meta'];
 
     if (func.type(meta) !== JsonType.Object) {
       func.assertError('$meta must be an object', e);

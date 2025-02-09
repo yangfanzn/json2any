@@ -1,6 +1,6 @@
 import { func } from './func';
 import { validate } from './schema';
-import { BaseType } from './type';
+import { BaseType, JsonType } from './type';
 
 export class Lang {
   keywords: Record<string, string> = {};
@@ -85,72 +85,180 @@ export abstract class Key {
 }
 
 export abstract class Complex extends Key {
+  private static origin2preset(origin: Record<string, any>, keys: string[], rootKey?: string) {
+    return Object.keys(origin).reduce<Record<string, any>>((preset, key) => {
+      const rKey = `${(rootKey ?? key).split('#').shift()}#`;
+      const k = key.endsWith('?') ? key.slice(0, -1) : key;
+
+      let item = preset[key];
+      const array: boolean[] = [];
+      while (Array.isArray(item)) {
+        if (item[1] === null) {
+          item.splice(1, 1);
+        }
+        array.push(true);
+        item = item[0];
+      }
+
+      let resolved;
+      if (item && item['$meta'] && item['$meta'].ref) {
+        let ref: string = item['$meta'].ref;
+        ref = ref.startsWith('/') ? ref : `${rKey}${ref.slice(1)}`;
+
+        // must use stringify to get new object, or test12 has cross-reference issue occurs
+        const refVal = JSON.parse(JSON.stringify(this.refs.origin[ref]));
+
+        if (!refVal) {
+          func.unreachableError('reference search for type entity failed', [ref]);
+        }
+
+        if (keys.includes(ref)) {
+          // resolved = null;
+        } else {
+          const x = `k${Date.now()}`;
+          const y = `${ref.split('#').shift()}#`;
+          resolved = this.origin2preset({ [x]: refVal }, [...keys, ref], y)[x];
+        }
+      } else {
+        resolved = func.type(item) === JsonType.Object ? this.origin2preset(item, [...keys], rKey) : item;
+      }
+
+      // use eval for quick reference array index data
+      eval(`preset[key]${array.map(e => `[0]`).join('')} = resolved;`);
+
+      if (key !== k) {
+        switch (func.type(preset[key])) {
+          case JsonType.Object:
+            preset[k] = { ...preset[key] };
+            break;
+          case JsonType.Array:
+            preset[k] = [...preset[key]];
+            break;
+          default:
+            preset[k] = preset[key];
+        }
+        // must mark new data can be deleted
+        delete preset[key];
+      }
+
+      if (resolved === undefined) {
+        if (array.length) {
+          array.pop();
+          eval(`preset[k]${array.map(e => `[0]`).join('')}.splice(0,1);`);
+        } else {
+          eval('delete preset[k];');
+        }
+      }
+
+      return preset;
+    }, origin);
+  }
+
   private static refs = {
-    data: {} as Record<string, Complex>,
+    unique: {} as Record<string, true>,
+    index: {} as Record<string, Complex>,
+    origin: {} as Record<string, any>,
+    preset: {} as Record<string, any>,
     resolved: false,
   };
+
   public static refsReset() {
-    this.refs.data = {};
+    this.refs.unique = {};
+    this.refs.index = {};
+    this.refs.origin = {};
+    this.refs.preset = {};
     this.refs.resolved = false;
   }
   public static refsResolve() {
     if (this.refs.resolved) {
       return;
+    } else {
+      this.refs.resolved = true;
     }
-    this.refs.resolved = true;
 
-    const roots: Complex[] = [];
-    for (const path in this.refs.data) {
-      const e = this.refs.data[path];
+    const origin: Record<string, any> = {};
+    const optional: Complex[] = [];
+
+    for (const index in this.refs.index) {
+      const e = this.refs.index[index];
       if (!e) {
         // just for static type check
         continue;
       }
 
-      // search root for class name unique check
+      // search root origin to parse preset
       if (!e.parent) {
-        roots.push(e);
+        const { index } = e;
+        origin[index] = this.refs.origin[index];
+        if (!origin[index]) {
+          return func.unreachableError('reference search for complex.origin failed', e);
+        }
       }
 
-      const index = validate(e);
-      if (!index) {
+      const refIndex = validate(e);
+      if (!refIndex) {
         continue;
       }
-      const ref = this.refs.data[index];
+      const ref = this.refs.index[refIndex];
       if (!ref) {
         return func.assertError('the reference address does not exist', e);
       }
-      e.refSet(ref);
+
+      e.ref = ref;
+      optional.push(e);
     }
 
-    // class name unique check
-    const unique: Record<string, boolean> = {};
-    for (const e of roots) {
-      if (!e.ref) {
-        if (unique[e.decl]) {
-          func.assertError(`the class prefix already exists`, e);
+    // get all relation real class by ref, to avoid instantiation deadlock
+    const relation = (c: Complex, cs: Complex[]) => {
+      c = c.getReal();
+      return c.child
+        .filter(e => e instanceof Complex)
+        .reduce<Complex[]>(
+          (a, e) => {
+            if (!cs.includes(e)) {
+              a.push(...relation(e, [...cs, e]));
+            }
+            return a;
+          },
+          [c],
+        );
+    };
+
+    // get ref optional, to avoid instantiation deadlock
+    optional.forEach(e => {
+      let p = e.parent;
+      const decls = relation(e, []).map(e => e.decl);
+      if (!e.array.length) {
+        while (p) {
+          if (decls.includes(p.decl)) {
+            e.optional = true;
+            break;
+          }
+          p = p.parent;
         }
-        unique[e.decl] = true;
       }
+    });
+
+    // root preset resolved
+    // must use stringify to get new object, or inner origin2preset use this.refs.origin will issue occurs
+    this.refs.preset = this.origin2preset(JSON.parse(JSON.stringify(this.refs.origin)), []);
+
+    // set preset complex
+    for (const index in this.refs.index) {
+      const e = this.refs.index[index];
+      if (!e) {
+        // just for static type check
+        continue;
+      }
+      const preset = this.refs.preset[index];
+      if (!preset) {
+        func.unreachableError('reference search for complex.preset failed', e);
+      }
+      e.preset = preset;
     }
   }
 
   private ref?: typeof this;
-  private refSet(ref: typeof this) {
-    this.ref = ref;
-    let p = this.parent;
-    if (!this.array.length) {
-      const { decl } = ref;
-      while (p) {
-        if (p.decl === decl) {
-          // avoid instantiation deadlock
-          this.optional = true;
-          break;
-        }
-        p = p.parent;
-      }
-    }
-  }
 
   get index(): string {
     return `${this.parent ? `${this.parent.index}/` : ''}${this.key}${this.parent ? '' : '#'}`;
@@ -160,25 +268,41 @@ export abstract class Complex extends Key {
     public key: string,
     public array: boolean[],
     public optional: boolean,
-    public origin: any,
+    public origin: Record<string, any>,
     parent?: Complex,
     public file?: string,
   ) {
     super();
-    this.parent = parent as typeof this;
 
-    const index = this.index;
-    if (Complex.refs.data[index]) {
-      func.assertError('the type structure already exists', this);
-    }
     if (Complex.refs.resolved) {
       func.unreachableError('refs has been resolved', this);
     }
-    Complex.refs.data[index] = this;
+
+    this.parent = parent as typeof this;
+
+    const { index, decl } = this;
+
+    if (Complex.refs.index[index]) {
+      func.assertError('the type structure already exists', this);
+    } else {
+      Complex.refs.index[index] = this;
+    }
+
+    if (Complex.refs.unique[decl]) {
+      func.assertError('the class name already exists', this);
+    } else {
+      Complex.refs.unique[decl] = true;
+    }
+
+    // JSON.stringify to deep copy
+    Complex.refs.origin[index] = JSON.parse(JSON.stringify(this.origin));
   }
 
   child: (typeof this | Simple<typeof this>)[] = [];
   parent?: typeof this;
+
+  // late set by refsResolve
+  preset: Record<string, any> = {};
 
   abstract toClass(): string;
 
@@ -247,7 +371,7 @@ export abstract class Simple<C extends Complex> extends Key {
     public key: string,
     public array: boolean[],
     public optional: boolean,
-    public origin: any,
+    public origin: string | number | boolean,
     public parent: C,
     public type: BaseType,
   ) {

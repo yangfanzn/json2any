@@ -12,7 +12,7 @@ export class Complex extends Base.Complex {
     return `
 class ${this.decl} extends Json2class {
   ${this.child.map(e => this.lang.toProp(e)).join('')}
-  String preset = '${Base.func.convertWrap(JSON.stringify(this.origin))}';
+  String preset = '${Base.func.convertWrap(JSON.stringify(this.preset))}';
   ${this.decl} fromJson(dynamic data, {void Function(Rule rule)? setRule, Rule? rule}) {
     final r = (rule ?? this.rule ?? Json2class.defaultRule).copy(); setRule?.call(r);
     ${this.child.map(e => e.lang.toFromJson(e)).join('')}
