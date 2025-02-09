@@ -14,3 +14,6 @@
 
 ## 0.0.5
 - arkTs supported
+
+## 0.0.6
+- preset data bug fixed
