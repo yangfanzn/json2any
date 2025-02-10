@@ -6,7 +6,7 @@ English | [简体中文](https://github.com/yangfanzn/json2any/blob/main/package
 
 ## Supported Languages
 ### Currently Supported
-| [arkTs@0](https://developer.huawei.com/consumer/cn/arkts/) | [dart@3](https://dart.dev/) |
+| [arkTs@12](https://developer.huawei.com/consumer/cn/arkts/) | [dart@3](https://dart.dev/) |
 
 ### Planned Support
 | [typescript](https://www.typescriptlang.org/) | [Other languages to be supported]() |
@@ -15,8 +15,10 @@ English | [简体中文](https://github.com/yangfanzn/json2any/blob/main/package
 
 ### For JavaScript/TypeScript Frontend Developers
 ```sh
+# npx requires a Node environment. Please install Node first.
 npx json2class build -h
 ```
+<!-- ohpm install json2class -->
 
 ### For Developers Using Other Tech Stacks
 [GitHub Release Download](https://github.com/yangfanzn/json2any/releases)

@@ -6,7 +6,7 @@ json2class 是一个命令行工具，可以将指定的 json 文件转换成 cl
 
 ## 支持的语言
 ### 已支持
-| [arkTs@0](https://developer.huawei.com/consumer/cn/arkts/) | [dart@3](https://dart.dev/) |
+| [arkTs@12](https://developer.huawei.com/consumer/cn/arkts/) | [dart@3](https://dart.dev/) |
 
 ### 将会支持
 | [typescript](https://www.typescriptlang.org/) | [其他语言陆续支持]() |
@@ -16,8 +16,10 @@ json2class 是一个命令行工具，可以将指定的 json 文件转换成 cl
 
 ### javascript、typescript 前端技术栈开发者
 ```sh
+# npx 需要 node 环境，请先安装 node。
 npx json2class build -h
 ```
+<!-- ohpm install json2class -->
 
 ### 其他技术栈开发者
 [GitHub Release 下载](https://github.com/yangfanzn/json2any/releases)
