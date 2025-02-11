@@ -48,15 +48,14 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
     func.assertError(`configured unsupported plan field [${ks.join()}]`, plan);
   }
 
-  const path = plan.getChildByKey('path', false); // false [simple] : must exist
-  const seg = plan.getChildByKey('seg', null); // null: may be existed
-
-  const title = plan.getChildByKey('title', false); // false [simple]: must exist
-  const method = plan.getChildByKey('method', false); // false [simple]: must exist
-  const res = plan.getChildByKey('res', null); // null: may be existed
-  const params = plan.getChildByKey('params', null); // null: may be existed
-  const body = plan.getChildByKey('body', null); // null: may be existed
-  const headers = plan.getChildByKey('headers', null); // null: may be existed
+  const path = plan.getChildByKey('path', true, false);
+  const seg = plan.getChildByKey('seg', true, null);
+  const title = plan.getChildByKey('title', true, false);
+  const method = plan.getChildByKey('method', true, false);
+  const res = plan.getChildByKey('res', true, null);
+  const params = plan.getChildByKey('params', true, null);
+  const body = plan.getChildByKey('body', true, null);
+  const headers = plan.getChildByKey('headers', true, null);
 
   const optionals: (Json2classBase.Key | undefined)[] = [];
 
@@ -131,7 +130,7 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
     if (!bodyTypes.includes(type)) {
       func.assertError(`body.type = ${type} is out of the enums[${bodyTypes}] range`, plan);
     }
-    optionals.push(body.getChildByKey('type', null));
+    optionals.push(body.getChildByKey('type', true, null));
 
     switch (type) {
       case 'map':
@@ -144,9 +143,9 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
         break;
       case 'form':
         // both of all are true [complex]: must exist
-        const data = body.getChildByKey('data', true);
-        const fields = data?.getChildByKey('fields', true);
-        const files = data?.getChildByKey('files', true);
+        const data = body.getChildByKey('data', true, true);
+        const fields = data?.getChildByKey('fields', true, true);
+        const files = data?.getChildByKey('files', true, true);
         const error = `fields and files in body.form.data must be an map${func.addX('string, string | string[]')}`;
 
         const check = (data: any) => {
@@ -192,7 +191,7 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
         }
         break;
       case 'json':
-        if (!body.getChildByKey('data', null)) {
+        if (!body.getChildByKey('data', true, null)) {
           func.assertError('body.json.data must exist and cannot be null', plan);
         }
         break;
@@ -201,7 +200,7 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
         break;
     }
 
-    schemaBody ??= { type, data: body.getChildByKey('data', null) };
+    schemaBody ??= { type, data: body.getChildByKey('data', true, null) };
   }
 
   // use [plan].origin for check headers when null or []

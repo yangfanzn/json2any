@@ -283,7 +283,7 @@ export abstract class Complex extends Key {
     const { index, decl } = this;
 
     if (Complex.refs.index[index]) {
-      func.assertError('the type structure already exists', this);
+      func.assertError('the ref index already exists', this);
     } else {
       Complex.refs.index[index] = this;
     }
@@ -343,12 +343,12 @@ export abstract class Complex extends Key {
       );
   }
 
-  getChildByKey(key: string, C: false): Simple<typeof this> | undefined;
-  getChildByKey(key: string, C: null): typeof this | Simple<typeof this> | undefined;
-  getChildByKey(key: string, C?: true): typeof this | undefined;
-  getChildByKey(key: string, C: boolean | null = true): typeof this | Simple<typeof this> | undefined {
+  getChildByKey(key: string, real: boolean, C: false): Simple<typeof this> | undefined;
+  getChildByKey(key: string, real: boolean, C: true): typeof this | undefined;
+  getChildByKey(key: string, real: boolean, C: null): typeof this | Simple<typeof this> | undefined;
+  getChildByKey(key: string, real: boolean, C: boolean | null): typeof this | Simple<typeof this> | undefined {
     let t = this.child.find(e => e.key === key && (C === null || e instanceof (C ? Complex : Simple)));
-    if (t instanceof Complex) {
+    if (t instanceof Complex && real) {
       t = t.getReal();
     }
     return t;
