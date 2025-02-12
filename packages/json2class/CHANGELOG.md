@@ -21,3 +21,6 @@
 ## 0.0.7
 - fix Windows system path slash issue
 - json2class can be executed through the dart command line
+
+## 0.0.8
+- delete excess test logs
