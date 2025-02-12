@@ -13,12 +13,21 @@ English | [简体中文](https://github.com/yangfanzn/json2any/blob/main/package
 
 ## Installation
 
+<!-- ohpm install json2class -->
 ### For JavaScript/TypeScript Frontend Developers
 ```sh
 # npx requires a Node environment. Please install Node first.
 npx json2class build -h
 ```
-<!-- ohpm install json2class -->
+
+### Flutter、Dart Developers
+```yaml
+dev_dependencies:
+  json2class: ^0.0.7
+```
+```sh
+flutter pub run json2class
+```
 
 ### For Developers Using Other Tech Stacks
 [GitHub Release Download](https://github.com/yangfanzn/json2any/releases)

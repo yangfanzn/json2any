@@ -37,10 +37,13 @@ program
   .action(async options => {
     const { env } = Base;
 
-    const search = Path.resolve(options.search);
+    // todo: 关于 win 路径反斜杠问题，统一考虑
+    const search = Path.resolve(options.search).replace(/\\/g, '/');
+    console.log('search', search);
     bin.dirIsExist(search);
 
-    const output = Path.resolve(options.output || search);
+    const output = Path.resolve(options.output || search).replace(/\\/g, '/');
+    console.log('output', output);
     bin.dirIsExist(output);
 
     env.debug = !!options.debug;

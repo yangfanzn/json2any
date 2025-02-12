@@ -14,12 +14,21 @@ json2class 是一个命令行工具，可以将指定的 json 文件转换成 cl
 
 ## 安装
 
+<!-- ohpm install json2class -->
 ### javascript、typescript 前端技术栈开发者
 ```sh
 # npx 需要 node 环境，请先安装 node。
-npx json2class build -h
+npx json2class
 ```
-<!-- ohpm install json2class -->
+
+### Flutter、Dart 技术栈开发者
+```yaml
+dev_dependencies:
+  json2class: ^0.0.7
+```
+```sh
+flutter pub run json2class
+```
 
 ### 其他技术栈开发者
 [GitHub Release 下载](https://github.com/yangfanzn/json2any/releases)
