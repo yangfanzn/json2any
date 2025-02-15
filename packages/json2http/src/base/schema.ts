@@ -132,7 +132,7 @@ const schemaPlan: Json2classBase.SchemaItem = {
             },
           ],
           [
-            { key: 'data', required: true, optional: false, array: null, origin: null, child: [] },
+            { key: 'data', required: true, optional: true, array: null, origin: null, child: [] },
             null,
             null,
             { key: 'data', required: true, optional: false, array: false, origin: 'Record.String', child: null },

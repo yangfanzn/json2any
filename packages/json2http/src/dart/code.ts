@@ -21,15 +21,15 @@ export class Http extends Base.Http<Complex, Simple> {
       } else if (body.data?.array.length) {
         bodyDecl = plan.title.lang.arrayType(body.data.array, body.data.decl);
         bodyDef = `Body(type: '${body.type}', data: ${bodyDecl}.empty())`;
-        bodyDecl = `Body${addX(bodyDecl)}`;
+        bodyDecl = `Body${addX(`${bodyDecl}${body.data.optional ? '?' : ''}`)}`;
       } else if (body.type === 'plain') {
-        bodyDecl = `Body${addX('String')}`;
+        bodyDecl = `Body${addX('String?')}`;
         bodyDef = `Body(type: '${body.type}', data: '')`;
       } else if (body.type === 'byte') {
-        bodyDecl = `Body${addX('Uint8List')}`;
+        bodyDecl = `Body${addX('Uint8List?')}`;
         bodyDef = `Body(type: '${body.type}', data: Uint8List(0))`;
       } else if (body.data) {
-        bodyDecl = `Body${addX(body.data.decl)}`;
+        bodyDecl = `Body${addX(`${body.data.decl}${body.data.optional ? '?' : ''}`)}`;
         bodyDef = `Body(type: '${body.type}', data: ${body.data.def})`;
       } else {
         Base.func.unreachableError(`[${plan.path.origin}] unknown body type parsing`);

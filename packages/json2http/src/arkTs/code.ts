@@ -16,13 +16,17 @@ export class Http extends Base.Http<Complex, Simple> {
       if (body.type === 'form') {
         bodyDef = `new Body('${body.type}', new BodyForm(${body.data.fields.def}, ${body.data.files.def}))`;
       } else if (body.data?.array.length) {
-        bodyDef = `new Body('${body.type}', [] as ${plan.title.lang.arrayType(body.data.array, body.data.decl)})`;
+        bodyDef = `new Body${addX(
+          `${plan.title.lang.arrayType(body.data.array, body.data.decl)}${body.data.optional ? ' | null' : ''}`,
+        )}('${body.type}', [])`;
       } else if (body.type === 'plain') {
-        bodyDef = `new Body('${body.type}', '')`;
+        bodyDef = `new Body${addX('string | null')}('${body.type}', '')`;
       } else if (body.type === 'byte') {
-        bodyDef = `new Body('${body.type}', new Uint8Array(0))`;
+        bodyDef = `new Body${addX('Uint8Array | null')}('${body.type}', new Uint8Array(0))`;
       } else if (body.data) {
-        bodyDef = `new Body('${body.type}', ${body.data.def})`;
+        bodyDef = `new Body${addX(`${body.data.decl}${body.data.optional ? ' | null' : ''}`)}('${body.type}', ${
+          body.data.def
+        })`;
       } else {
         Base.func.unreachableError(`[${plan.path.origin}] unknown body type parsing`);
       }
