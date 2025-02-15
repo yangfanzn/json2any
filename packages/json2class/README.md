@@ -14,7 +14,7 @@ English | [简体中文](https://github.com/yangfanzn/json2any/blob/main/package
 ## Installation
 
 <!-- ohpm install json2class -->
-### `Recommend`For JavaScript/TypeScript Frontend Developers
+### `Recommend` For JavaScript/TypeScript Frontend Developers
 ```sh
 # npx requires a Node environment. Please install Node first.
 npx json2class build

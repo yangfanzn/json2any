@@ -24,3 +24,6 @@
 
 ## 0.0.8
 - delete excess test logs
+
+## 0.0.9
+- 2025-02-15 json configuration format check optimization
