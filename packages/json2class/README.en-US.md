@@ -12,7 +12,7 @@ If you encounter any issues or have suggestions for improvement,
 please feel free to provide feedback through the following channels:
 
 - Submit issues or suggestions on [GitHub Issues](https://github.com/yangfanzn/json2any/issues)
-- Send an email to [Yang Fan<yangfanzn@gmail.com>](mailto:yangfanzn@gmail.com)
+- Send an email to Yang Fan<[yangfanzn@gmail.com](mailto:yangfanzn@gmail.com)>
 
 Your feedback is extremely important to us. Thank you very much!
 

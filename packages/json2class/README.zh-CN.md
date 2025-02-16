@@ -10,7 +10,7 @@ json2class 是一个命令行工具，可以将指定的 json 文件转换成 cl
 如果您在使用过程中遇到问题，或者有任何改进的建议，欢迎通过如下方式反馈：
 
 - 在 [GitHub Issues](https://github.com/yangfanzn/json2any/issues) 提交问题的或建议
-- 发送邮件至 [Yang Fan<yangfanzn@gmail.com>](mailto:yangfanzn@gmail.com)
+- 发送邮件至 Yang Fan<[yangfanzn@gmail.com](mailto:yangfanzn@gmail.com)>
 
 您的反馈对我们非常重要，非常感谢！
 
