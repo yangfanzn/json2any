@@ -2,7 +2,17 @@
 
 json2class 是一个命令行工具，可以将指定的 json 文件转换成 class 对象，该 class 对象具备序列化与反序列化能力。
 
-简体中文 | [English](README.md)
+简体中文 | [English](https://github.com/yangfanzn/json2any/blob/main/packages/json2class/README.en-US.md)
+
+
+## 反馈与改进
+感谢您使用本工具，为了尽快完善并发布 **1.0.0 正式版本**，我们希望听到您的意见和建议。
+如果您在使用过程中遇到问题，或者有任何改进的建议，欢迎通过如下方式反馈：
+
+- 在 [GitHub Issues](https://github.com/yangfanzn/json2any/issues) 提交问题的或建议
+- 发送邮件至 [Yang Fan<yangfanzn@gmail.com>](mailto:yangfanzn@gmail.com)
+
+您的反馈对我们非常重要，非常感谢！
 
 ## 支持的语言
 ### 已支持
@@ -11,23 +21,21 @@ json2class 是一个命令行工具，可以将指定的 json 文件转换成 cl
 ### 将会支持
 | [typescript](https://www.typescriptlang.org/) | [其他语言陆续支持]() |
 
-
 ## 安装
 
-<!-- ohpm install json2class -->
-### `推荐` javascript、typescript 前端技术栈开发者
+### `✅ 推荐` javascript、typescript 前端技术栈开发者
+npx 需要 node 环境，请先安装 node。
 ```sh
-# npx 需要 node 环境，请先安装 node。
 npx json2class
 ```
 
+<!-- ohpm install json2class -->
+_如果您是鸿蒙开发环境，可以使用 `ohpm`，可以通过 `ohpm config list` 查看自动的 `node` 及 `npx` 路径_
+
 ### Flutter、Dart 技术栈开发者
-```yaml
-dev_dependencies:
-  json2class: ^0.0.7
-```
 ```sh
-flutter pub run json2class
+dart pub add dev:json2class
+dart run json2class
 ```
 
 ### 其他技术栈开发者
