@@ -1,9 +1,8 @@
 # json2class
 
-json2class is a CLI tool to generate class objects from JSON or JSON5, supporting serialization and deserialization.
-
 English | [简体中文](https://github.com/yangfanzn/json2any/blob/main/packages/json2class/README.zh-CN.md)
 
+json2class is a CLI tool to generate class objects from JSON or JSON5, supporting serialization and deserialization.
 
 ## Feedback & Improvement
 Thank you for using this tool! In order to quickly improve and release **version 1.0.0**,
@@ -289,4 +288,3 @@ Specifying the `-o` parameter allows you to define an output directory. It is re
 ~/projects/cache/
 json2class.*
 ```
-

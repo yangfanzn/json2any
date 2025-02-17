@@ -1,9 +1,8 @@
 # json2class
 
-json2class 是一个命令行工具，可以将指定的 json 文件转换成 class 对象，该 class 对象具备序列化与反序列化能力。
-
 简体中文 | [English](https://github.com/yangfanzn/json2any/blob/main/packages/json2class/README.en-US.md)
 
+json2class 是一个命令行工具，可以将指定的 json 文件转换成 class 对象，该 class 对象具备序列化与反序列化能力。
 
 ## 反馈与改进
 感谢您使用本工具，为了尽快完善并发布 **1.0.0 正式版本**，我们希望听到您的意见和建议。
