@@ -32,8 +32,8 @@ npx json2class build
 ```
 
 <!-- ohpm install json2class -->
-If you are using the HarmonyOS development environment, you can use `ohpm`. 
-You can check the automatically configured `node` and `npx` paths with: `ohpm config list`
+_If you are working within the HarmonyOS development environment,
+you may utilize `ohpm` to inspect the paths for `node` and `npx` by executing `ohpm config list`._
 
 ### For Flutter、Dart Developers
 ```sh

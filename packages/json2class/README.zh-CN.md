@@ -30,7 +30,7 @@ npx json2class
 ```
 
 <!-- ohpm install json2class -->
-_如果您是鸿蒙开发环境，可以使用 `ohpm`，可以通过 `ohpm config list` 查看自动的 `node` 及 `npx` 路径_
+_如果您是鸿蒙开发环境，可以使用 `ohpm`，通过 `ohpm config list` 查看 `node` 及 `npx` 路径_
 
 ### Flutter、Dart 技术栈开发者
 ```sh
