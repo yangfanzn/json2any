@@ -1,45 +1,5 @@
-# json2class
-
-简体中文 | [English](https://github.com/yangfanzn/json2any/blob/main/packages/json2class/README.en-US.md)
-
-json2class 是一个命令行工具，可以将指定的 JSON(5) 文件转换成 class 对象，该 class 对象具备序列化与反序列化能力。
-
-## 反馈与改进
-感谢您使用本工具，为了尽快完善并发布 **1.0.0 正式版本**，我们希望听到您的意见和建议。
-如果您在使用过程中遇到问题，或者有任何改进的建议，欢迎通过如下方式反馈：
-
-- 在 [GitHub Issues](https://github.com/yangfanzn/json2any/issues) 提交问题的或建议
-- 发送邮件至 Yang Fan<[yangfanzn@gmail.com](mailto:yangfanzn@gmail.com)>
-
-您的反馈对我们非常重要，非常感谢！
-
-## 支持的语言
-### 已支持
-| [arkTs@12](https://developer.huawei.com/consumer/cn/arkts/) | [dart@3](https://dart.dev/) |
-
-### 将会支持
-| [typescript](https://www.typescriptlang.org/) | [其他语言陆续支持]() |
-
-## 安装
-
-### `✅ 推荐` javascript、typescript 前端技术栈开发者
-npx 需要 node 环境，请先安装 node。
-```sh
-npx json2class
-```
-
-<!-- ohpm install json2class -->
-_如果您是鸿蒙开发环境，可以使用 `ohpm`，通过 `ohpm config list` 查看 `node` 及 `npx` 路径_
-
-### Flutter、Dart 技术栈开发者
-```sh
-dart pub add dev:json2class
-dart run json2class
-```
-
-### 其他技术栈开发者
-[GitHub Release 下载](https://github.com/yangfanzn/json2any/releases)
-
+$RM_header
+@RM_desc:json2class 是一个命令行工具，可以将指定的 JSON(5) 文件转换成 class 对象，该 class 对象具备序列化与反序列化能力。@
 ## 快速开始
 json 文件支持 json 和 json5。
 ```json5
@@ -259,26 +219,4 @@ Json2class fromJson(dynamic data, {void Function(Rule rule)? setRule, Rule? rule
 Json2class fromPreset({void Function(Rule rule)? setRule, Rule? rule})
 ```
 
-## 命令行其他选项
-### -l --language，指定需要构建的语言
-```sh
-npx json2class build -l dart@3
-```
-
-### -s, --search，指定 json 配置文件的查找目录
-```sh
-npx json2class build -l dart@3 -s ~/projects/test/
-```
-
-### -o, --output，指定构建文件生成目录
-默认会在 json 配置的查找目录下生成 class 文件
-```sh
-cd ~/projects/test/
-npx json2class build -l dart@3 -o ../cache/
-```
-指定 -o 参数，可以指定一个输出目录，通常建议将该目录或生成的文件加入 .gitignore
-```gitignore
-# .gitignore
-~/projects/cache/
-json2class.*
-```
+$RM_footer

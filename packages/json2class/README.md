@@ -2,12 +2,12 @@
 
 English | [简体中文](https://github.com/yangfanzn/json2any/blob/main/packages/json2class/README.zh-CN.md)
 
-json2class is a CLI tool to generate class objects from JSON or JSON5, supporting serialization and deserialization.
+json2class is a CLI tool to generate class objects from JSON(5), supporting serialization and deserialization.
 
 ## Feedback & Improvement
 Thank you for using this tool! In order to quickly improve and release **version 1.0.0**,
 we would love to hear your feedback and suggestions.
-If you encounter any issues or have suggestions for improvement, 
+If you encounter any issues or have suggestions for improvement,
 please feel free to provide feedback through the following channels:
 
 - Submit issues or suggestions on [GitHub Issues](https://github.com/yangfanzn/json2any/issues)
@@ -69,9 +69,9 @@ npx json2class build -l dart@3
 ```json5
 // root.json5
 {
-  level1: {
-    level2: {
-      test: 1
+  "level1": {
+    "level2": {
+      "test": 1
     }
   }
 }
@@ -104,7 +104,7 @@ To avoid cumbersome null checks during usage, the generated class properties are
 
 | Type     | Default Value          |
 |----------|------------------------|
-| String   | ''                     |
+| String   | ""                     |
 | Boolean  | false                  |
 | Number   | 0                      |
 | Array    | []                     |
@@ -113,15 +113,15 @@ To avoid cumbersome null checks during usage, the generated class properties are
 If you do not want to set a default value, you can append `?` to the JSON field, and the property will be set to `null`.
 ```json5
 {
-  'test?': 1
+  "test?": 1
 }
 ```
-For an array type, `test?` indicates whether the `test` property can be set to `null`. 
+For an array type, `test?` indicates whether the `test` property can be set to `null`.
 The first element in the array denotes the type of the array, and the second element,
 if set to `null`, marks whether array elements can be set to `null`.
 ```json5
 {
-  'test?': ['', null]
+  "test?": ["", null]
 }
 ```
 
@@ -132,10 +132,10 @@ By referencing its parent, you can create recursive types.
 ```json5
 // filename.json5
 {
-  test: {
-    t1: 1,
-    t2: "a",
-    child: {
+  "test": {
+    "t1": 1,
+    "t2": "a",
+    "child": {
       "$meta": {
         "ref": "/filename#/test"
       }
@@ -148,19 +148,19 @@ You can also reference a structure from another JSON file.
 ```json5
 // filename1.json5
 {
-  test: {
-    t1: 1,
-    t2: "a",
+  "test": {
+    "t1": 1,
+    "t2": "a",
   }
 }
 ```
 ```json5
 // filename2.json5
 {
-  test: {
-    t1: 1,
-    t2: "a",
-    child: {
+  "test": {
+    "t1": 1,
+    "t2": "a",
+    "child": {
       "$meta": {
         "ref": "/filename1#/test"
       }
@@ -173,19 +173,19 @@ JSON files can be organized into folders, with a maximum depth of three levels. 
 ```json5
 // ./dir1/filename.json5
 {
-  test: {
-    t1: 1,
-    t2: "a",
+  "test": {
+    "t1": 1,
+    "t2": "a",
   }
 }
 ```
 ```json5
 // ./dir2/filename.json5
 {
-  test: {
-    t1: 1,
-    t2: "a",
-    child: {
+  "test": {
+    "t1": 1,
+    "t2": "a",
+    "child": {
       "$meta": {
         "ref": "/dir1/filename#/test"
       }

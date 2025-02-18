@@ -1,5 +1,5 @@
 json2any_test
-packages/**/lib/
-packages/**/types/
-packages/**/pkg/
+packages/*/lib/
+packages/*/types/
+packages/*/pkg/
 v-*.zip

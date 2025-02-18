@@ -4,4 +4,4 @@
 
 In preparation for release
 
-<!-- ohpm install json2class -->
+<!-- ohpm install json2http -->
