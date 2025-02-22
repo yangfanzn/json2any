@@ -6,35 +6,21 @@ export class Lang {
   keywords: Record<string, string> = {};
 
   baseDef = {
-    [BaseType.String]: { decl: 'String', def: "''" },
-    [BaseType.Number]: { decl: 'num', def: '0' },
-    [BaseType.Boolean]: { decl: 'bool', def: 'false' },
+    [BaseType.String]: { decl: '', def: "''" },
+    [BaseType.Number]: { decl: '', def: '0' },
+    [BaseType.Boolean]: { decl: '', def: 'false' },
   };
 
   arrayValue(value: boolean[]) {
-    return `${func.addX('bool')}[${value}]`;
+    return '';
   }
 
   arrayType(array: boolean[], type: string): string {
-    return array.reduce((v, e) => {
-      return `List${func.addX(`${v}${e ? '?' : ''}`)}`;
-    }, type);
+    return '';
   }
 
   toProp(key: Key) {
-    if (key.array.length) {
-      if (key.optional) {
-        return `${this.arrayType(key.array, key.decl)}? ${key.prop};`;
-      } else {
-        return `${this.arrayType(key.array, key.decl)} ${key.prop} = [];`;
-      }
-    } else {
-      if (key.optional) {
-        return `${key.decl}? ${key.prop};`;
-      } else {
-        return `${key.decl} ${key.prop} = ${key.def};`;
-      }
-    }
+    return '';
   }
 
   toFromJson(key: Key) {
@@ -292,6 +278,10 @@ export abstract class Complex extends Key {
       func.assertError('the class name already exists', this);
     } else {
       Complex.refs.unique[decl] = true;
+    }
+
+    if (['Rule', 'DiffType', 'MissKey', 'MoreIndex', 'MissIndex', 'Json2class', 'Json2classError'].includes(decl)) {
+      func.assertError('conflict with built-in types', this);
     }
 
     // JSON.stringify to deep copy

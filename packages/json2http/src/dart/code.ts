@@ -58,7 +58,7 @@ export class Http extends Base.Http<Complex, Simple> {
       //    but the dart does not support Map<String, String | List<String>>, if the tools make headers to a special type
       //    is unsuitable，because of headers usually does not change on a special request but need change on a common request with Map
       `headers: ${
-        plan.headers ? `Convert.jsonDecode('${Base.func.convertWrap(JSON.stringify(plan.headers.origin))}')` : 'null'
+        plan.headers ? `_Convert.jsonDecode('${Base.func.convertWrap(JSON.stringify(plan.headers.origin))}')` : 'null'
       }`,
     ].join(', ');
 
@@ -130,7 +130,7 @@ class DioAgent extends Agent {
     plan.reply.message = response.statusMessage ?? code2message[plan.reply.code.toString()] ?? 'unknown http code \${plan.reply.code}';
 
     try {
-      plan.reply.data = Convert.jsonDecode(response.data);
+      plan.reply.data = _Convert.jsonDecode(response.data);
     } catch (e) {
       plan.reply.data = response.data;
     }
@@ -144,7 +144,7 @@ class DioAgent extends Agent {
     if (type == null) {
       return null;
     } else if (type == 'json') {
-      return Convert.jsonEncode(data);
+      return _Convert.jsonEncode(data);
     } else if (type == 'map' && data is Json2class) {
       return data.toJson();
     } else if (type == 'form' && data is BodyForm) {
@@ -301,7 +301,7 @@ class Json2http {
 @request@
 }
 
-final code2message = Convert.jsonDecode('${Base.func.convertWrap(JSON.stringify(Base.code2message))}');
+final code2message = _Convert.jsonDecode('${Base.func.convertWrap(JSON.stringify(Base.code2message))}');
 `;
   }
 }

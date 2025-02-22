@@ -56,7 +56,7 @@ export abstract class Http<C extends Json2classBase.Complex, S extends Json2clas
   launch: string;
 
   get declPlan() {
-    return `plan${this.launch}`;
+    return `${this.launch}plan`;
   }
 
   protected constructor(public key: string, public plan: C) {

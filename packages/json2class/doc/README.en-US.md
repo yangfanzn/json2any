@@ -162,7 +162,7 @@ JSON files can be organized into folders, with a maximum depth of three levels. 
 | toNew       | -          | New object     | Creates a new instance of the current object.                           |
 
 ### Data Population Rules
-- **DiffType**: Input field type mismatch.
+- **DiffType**: Handling when the input field type is inconsistent
 
 | Enum Value | Effect                                                   |
 |------------|----------------------------------------------------------|
@@ -170,7 +170,7 @@ JSON files can be organized into folders, with a maximum depth of three levels. 
 | Default    | Sets the [default value](#defaultValue).                 |
 | Null       | Sets `null` (required fields are set to default values). |
 
-- **MissKey**: Input field does not exist.
+- **MissKey**: Handling when the input field is missing
 
 | Enum Value | Effect                                                   |
 |------------|----------------------------------------------------------|
@@ -178,7 +178,7 @@ JSON files can be organized into folders, with a maximum depth of three levels. 
 | Default    | Sets the [default value](#defaultValue).                 |
 | Null       | Sets `null` (required fields are set to default values). |
 
-- **MoreIndex**: Input array length > original array.
+- **MoreIndex**: Handling when the input array length > original array, determining how to process the extra elements
 
 | Enum Value | Effect                                                                                                                      |
 |------------|-----------------------------------------------------------------------------------------------------------------------------|
@@ -186,7 +186,7 @@ JSON files can be organized into folders, with a maximum depth of three levels. 
 | Drop       | Discards excess input data, keeping the array length consistent with the original.                                          |
 | Null       | Fills excess data with `null` (non-optional fields forced to `Null` behave like `Fill`).                                    |
 
-- **MissIndex**: Input array length < original array.
+- **MissIndex**: Handling when the input array length < original array, determining how to process the missing elements
 
 | Enum Value | Effect                                                                                   |
 |------------|------------------------------------------------------------------------------------------|

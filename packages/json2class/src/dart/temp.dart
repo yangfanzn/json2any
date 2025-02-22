@@ -1,4 +1,4 @@
-import 'dart:convert' as Convert;
+import 'dart:convert' as _Convert;
 
 enum DiffType { Keep, Default, Null }
 
@@ -64,7 +64,7 @@ abstract class Json2class {
 
   Json2class fromAny(dynamic data, {void Function(Rule rule)? setRule, Rule? rule}) {
     try {
-      data = Convert.jsonDecode(data);
+      data = _Convert.jsonDecode(data);
     } catch (e) {}
     return fromJson(data, setRule: setRule, rule: rule);
   }

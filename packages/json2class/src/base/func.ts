@@ -207,6 +207,10 @@ export class Func {
     };
     return languages[language];
   }
+
+  unique() {
+    return `unique_${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
+  }
 }
 
 export const func = new Func();
