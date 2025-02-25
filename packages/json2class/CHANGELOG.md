@@ -28,3 +28,6 @@
 ## 0.0.9
 - 2025-02-15 json configuration format check optimization
 - 2025-02-16 improve README
+
+## 0.0.10
+- 2025-02-22 type conflict issue resolved

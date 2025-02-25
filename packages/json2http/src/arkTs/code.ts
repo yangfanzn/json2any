@@ -72,8 +72,8 @@ export class RcpAgent extends Agent {
   private static session = _Rcp.createSession();
   
   session: _Rcp.Session | null = null;
-  // ready is the only hook where option can be set
   option: _Rcp.Request | null = null;
+  response: _Rcp.Response | null = null;
 
   async fetch(plan: Plan): Promise${func.addX('Reply')}  {
     const session = this.session ?? RcpAgent.session;
@@ -96,8 +96,7 @@ export class RcpAgent extends Agent {
 
     await plan.ready?.();
 
-    const response = await session.fetch(option).finally(() => this.session?.close());
-    plan.reply.response = response as Object;
+    const response = this.response = await session.fetch(option).finally(() => this.session?.close());
     plan.reply.code = response.statusCode;
     plan.reply.message = code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;;
 
@@ -179,10 +178,9 @@ export class Reply {
   message = '';
   error: string | null = null;
   data: Any = null;
-  response: Any = null;
   exception: Any = null;
   reset(): void {
-    this.code = this.error = this.data = this.response = this.exception = null;
+    this.code = this.error = this.data = this.exception = null;
     this.message = '';
   }
 }

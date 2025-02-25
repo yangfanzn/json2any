@@ -93,8 +93,8 @@ class DioAgent extends Agent {
   ));
   
   _Dio.Dio? session;
-  // ready is the only hook where option can be set
   _Dio.RequestOptions? option;
+  _Dio.Response? response;
 
   Future${func.addX('Reply')} fetch(Plan plan) async {
     final session = this.session ?? _session;
@@ -119,7 +119,7 @@ class DioAgent extends Agent {
 
     await plan.ready?.call();
 
-    final response = plan.reply.response = await session.fetch(option).whenComplete(() => this.session?.close());
+    final response = this.response = await session.fetch(option).whenComplete(() => this.session?.close());
     plan.reply.code = response.statusCode;
     plan.reply.message = response.statusMessage ?? code2message[plan.reply.code.toString()] ?? 'unknown http code \${plan.reply.code}';
 
@@ -193,10 +193,9 @@ class Reply {
   String message = '';
   String? error;
   Object? data;
-  Object? response;
   Exception? exception;
   void reset() {
-    code = error = data = response = exception = null;
+    code = error = data = exception = null;
     message = '';
   }
 }
