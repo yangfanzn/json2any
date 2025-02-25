@@ -25,10 +25,6 @@ export const env = {
   defaultAgent: DefaultAgent.Dart_Dio5,
   search: '',
   output: '',
-  extend: {
-    path: '',
-    agent: '',
-  },
 };
 
 export const code2message = {

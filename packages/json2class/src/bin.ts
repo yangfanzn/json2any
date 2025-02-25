@@ -19,14 +19,14 @@ export class Bin {
       dic?: boolean;
       file?: boolean;
       recursion?: boolean | number;
-      ext?: Array<string>;
+      ext?: string[];
       ignore?: RegExp;
       level?: number;
     } = {},
   ) {
     this.dirIsExist(path);
 
-    const files = [] as Array<string>;
+    const files = [] as string[];
     Fs.readdirSync(path).forEach(each => {
       const location = Path.join(path, each).replace(/\\/g, '/');
       if (ignore) {

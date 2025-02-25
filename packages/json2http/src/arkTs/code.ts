@@ -60,28 +60,22 @@ export class ${this.declPlan} extends Plan { ${types} }`,
   }
 
   static get agentConfig() {
-    const { addX } = Base.func;
-    if (Base.env.extend.agent) {
-      return {
-        name: `Extend.${Base.env.extend.agent}`,
-        import: `import * as Extend from '${Base.env.extend.path.slice(0, -4)}';`,
-        response: 'Object',
-        code: '',
-      };
-    }
-    return {
-      name: 'RcpAgent',
-      import: `import { rcp } from '@kit.RemoteCommunicationKit';`,
-      response: 'rcp.Response',
-      code: `
+    const { func, env, DefaultAgent } = Base;
+    switch (env.defaultAgent) {
+      case DefaultAgent.ArkTs_Rcp12:
+        return {
+          name: 'RcpAgent',
+          import: `import { util as _Util } from '@kit.ArkTS';
+import { rcp as _Rcp } from '@kit.RemoteCommunicationKit';`,
+          code: `
 export class RcpAgent extends Agent {
-  private static session = rcp.createSession();
+  private static session = _Rcp.createSession();
   
-  session: rcp.Session | null = null;
+  session: _Rcp.Session | null = null;
   // ready is the only hook where option can be set
-  option: rcp.Request | null = null;
+  option: _Rcp.Request | null = null;
 
-  async fetch(plan: Plan): Promise${addX('Reply')}  {
+  async fetch(plan: Plan): Promise${func.addX('Reply')}  {
     const session = this.session ?? RcpAgent.session;
 
     let path = plan.path;
@@ -98,11 +92,12 @@ export class RcpAgent extends Agent {
     }
 
     const option = this.option =
-      new rcp.Request(path, plan.method, plan.headers as rcp.RequestHeaders, await this.body(plan) ?? undefined);
+      new _Rcp.Request(path, plan.method, plan.headers as _Rcp.RequestHeaders, await this.body(plan) ?? undefined);
 
     await plan.ready?.();
 
-    const response = plan.reply.response = await session.fetch(option).finally(() => this.session?.close());
+    const response = await session.fetch(option).finally(() => this.session?.close());
+    plan.reply.response = response as Object;
     plan.reply.code = response.statusCode;
     plan.reply.message = code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;;
 
@@ -129,24 +124,28 @@ export class RcpAgent extends Agent {
     } else if (type === 'map' && data instanceof Json2class) {
       return obj2get(data.toJson());
     } else if (type === 'form' && data instanceof BodyForm) {
-      const map: rcp.MultipartFormFields = {};
-      type V = rcp.MultipartFormFieldValue;
-      const cb = (data: Record${addX('string, Any')}) => {
-        Object.keys(data).forEach(k => {
-          const v = data[k];
-          if (map[k] === undefined) {
-            map[k] = [];
-          }
-          if (v instanceof Array) {
-            (map[k] as Array${addX('V')}).push(...v.filter((e: Any) => e !== null));
-          } else if (v !== null) {
-            (map[k] as Array${addX('V')}).push(v as V);
-          }
-        });
+      const a2b = (a: BodyFormFile) => {
+        if (a.filepath !== null) {
+          return { contentOrPath: a.filepath, remoteFileName: a.filename, contentType: a.contentType } as _Rcp.FormFieldFileValue;
+        } else if (a.content !== null) {
+          return { contentOrPath: { content: a.content.buffer }, remoteFileName: a.filename, contentType: a.contentType } as _Rcp.FormFieldFileValue
+        }
+        return null;
       };
+      const map: _Rcp.MultipartFormFields = {};
+      type V = _Rcp.MultipartFormFieldValue;
+      const cb = (data: Record${func.addX('string, Any')}) => Object.keys(data).forEach(k => {
+        if (map[k] === undefined) {
+          map[k] = [];
+        }
+        const v = ((data[k] instanceof Array ? data[k] : [data[k]]) as Array${func.addX('Any')})
+          .map(e => e instanceof BodyFormFile ? a2b(e) : e as _Rcp.FormFieldValue)
+          .filter(e => e !== null) as Array${func.addX('V')};
+        (map[k] as Array${func.addX('V')}).push(...v);
+      });
       cb((data as BodyForm).fields.toJson());
       cb((data as BodyForm).files.toJson());
-      return new rcp.MultipartForm(map);
+      return new _Rcp.MultipartForm(map);
     } else if (data instanceof Uint8Array) {
       return data.buffer;
     } else {
@@ -154,7 +153,11 @@ export class RcpAgent extends Agent {
     }
   }
 }`,
-    };
+        };
+      default:
+        func.unreachableError('defaultAgent', [env.defaultAgent]);
+        return { name: '', import: '', code: '' };
+    }
   }
 
   static toEntry() {
@@ -169,14 +172,14 @@ function obj2get(obj: Record${addX('string, Any')}) {
   return Object.keys(obj).reduce((v, k) => {
     obj[k] !== null && v.push(\`\${encodeURIComponent(k)}=\${encodeURIComponent(\`\${obj[k]}\`)}\`);
     return v;
-  }, [] as string[]).join('&');
+  }, [] as Array${addX('string')}).join('&');
 }
 export class Reply {
   code: number | null = null;
   message = '';
   error: string | null = null;
   data: Any = null;
-  response: ${agentConfig.response} | null = null;
+  response: Any = null;
   exception: Any = null;
   reset(): void {
     this.code = this.error = this.data = this.response = this.exception = null;
@@ -187,6 +190,28 @@ export abstract class Agent {
   abstract fetch(plan: Plan): Promise${addX('Reply')};
   abstract body(plan: Plan): Promise${addX('Any')} | Any;
 }${agentConfig.code}
+export class BodyFormFile {
+  readonly content: Uint8Array | null;
+  readonly filepath: string | null;
+  filename: string | null = null;
+  contentType: string | null = null;
+  headers: Record${addX(`string, Array${addX('string')}`)} | null = null;
+
+  private constructor(
+    content: Uint8Array | null,
+    filepath: string | null,
+  ) {
+    this.content = content === null ? null : new Uint8Array(content);
+    this.filepath = filepath;
+    this.contentType = 'application/octet-stream';
+  }
+  static fromFile(filepath: string) {
+    return new BodyFormFile(null, filepath); }
+  static fromString(value: string) {
+    return new BodyFormFile(_Util.TextEncoder.create().encodeInto(value), null); }
+  static fromBytes(value: Array${addX('number')} | Uint8Array) {
+    return new BodyFormFile(new Uint8Array(value), null); }
+}
 export class BodyForm${addX('T extends Json2class = Json2class, K extends Json2class = Json2class')} {
   fields: T;
   files: K;
@@ -240,7 +265,7 @@ export abstract class Plan {
   
   abstract headers: Record${addX('string, Any')};
 
-  agent = new ${agentConfig.name}();
+  agent: Agent = new ${agentConfig.name}();
 
   reply = new Reply();
 

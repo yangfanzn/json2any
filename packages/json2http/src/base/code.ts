@@ -1,7 +1,6 @@
 import { Json2classBase, Json2classDart, Json2classArkTs } from 'json2class';
 import { SchemaPlan, validate } from './schema';
 import { func } from './func';
-import { env } from './type';
 
 Object.defineProperty(Json2classBase.Key.prototype, 'prop', {
   get() {
@@ -17,10 +16,7 @@ Object.defineProperty(Json2classBase.Key.prototype, 'prop', {
   },
 });
 
-[
-  { type: Json2classDart, agent: 'Dio.MultipartFile' },
-  { type: Json2classArkTs, agent: 'rcp.FormFieldFileValue' },
-].forEach(e => {
+[{ type: Json2classDart }, { type: Json2classArkTs }].forEach(e => {
   const simple = e.type.Simple.prototype;
   const complex = e.type.Complex.prototype;
 
@@ -30,7 +26,7 @@ Object.defineProperty(Json2classBase.Key.prototype, 'prop', {
   const simpleToDecl2Def = simple.toDecl2Def;
   simple.toDecl2Def = function () {
     if (func.isBodyFiles(this)) {
-      return { decl: env.extend.agent ? 'Extend.MultipartFile' : e.agent, def: 'null' };
+      return { decl: 'BodyFormFile', def: 'null' };
     }
     return simpleToDecl2Def.call(this);
   };

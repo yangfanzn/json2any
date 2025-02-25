@@ -122,7 +122,7 @@ export class Func {
     // quickHash 算法在 3 位数参数的情况下，针对 10 位字符串的 hash 冲突的概率只有 0.5%
     // 这 0.5% 只有在使用 restore 时，才会触发，如果是单向转换，永远不会有问题
 
-    let x = str.replace(new RegExp(`${splitKey}(\\d+)${splitKey}`, 'g'), (_, e) => String.fromCharCode(e));
+    const x = str.replace(new RegExp(`${splitKey}(\\d+)${splitKey}`, 'g'), (_, e) => String.fromCharCode(e));
     const [, hash] = x.match(new RegExp(`^${startKey}(\\d{${max})`)) ?? [];
     if (hash) {
       const t = x.slice(max + 1);
@@ -201,9 +201,9 @@ export class Func {
   }
 
   language(language: Language) {
-    const languages: Record<Language, { ext: string; desc: string; export: string }> = {
-      [Language.Dart3]: { ext: 'dart', desc: 'dart', export: '' },
-      [Language.ArkTs12]: { ext: 'ets', desc: 'arkTs', export: 'export' },
+    const languages: Record<Language, { ext: string; desc: string }> = {
+      [Language.Dart3]: { ext: 'dart', desc: 'dart' },
+      [Language.ArkTs12]: { ext: 'ets', desc: 'arkTs' },
     };
     return languages[language];
   }

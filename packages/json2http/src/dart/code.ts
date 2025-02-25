@@ -53,10 +53,11 @@ export class Http extends Base.Http<Complex, Simple> {
       `res: ${plan.res?.def ?? 'null'}`,
       `params: ${plan.params?.def ?? 'null'}`,
       `body: ${bodyDef}`,
-      // why use Convert.jsonDecode even if then value is Map<String, dynamic>
-      //    the important reason is headers like body.files both support String and List<String>
-      //    but the dart does not support Map<String, String | List<String>>, if the tools make headers to a special type
-      //    is unsuitable，because of headers usually does not change on a special request but need change on a common request with Map
+      // why use Convert.jsonDecode even if the value is Map<String, "dynamic"> ?
+      //   the important reason is headers like body.files both support String and List<String>,
+      //   but the dart does not support Map<String, String | List<String>>, if the tools make headers to a special type
+      //   is unsuitable，because of headers usually does not change on a special request but need change on a common request with Map.
+      //   finally, if it is hardcoded as xxx, it would also feel strange.
       `headers: ${
         plan.headers ? `_Convert.jsonDecode('${Base.func.convertWrap(JSON.stringify(plan.headers.origin))}')` : 'null'
       }`,
@@ -77,32 +78,25 @@ typedef ${this.declPlan} = Plan${addX(types)};`,
   }
 
   static get agentConfig() {
-    const { addX } = Base.func;
-    if (Base.env.extend.agent) {
-      return {
-        name: `Extend.${Base.env.extend.agent}`,
-        import: `import '${Base.env.extend.path}' as Extend;`,
-        response: 'Object',
-        code: '',
-      };
-    }
-    return {
-      name: 'DioAgent',
-      import: "import 'package:dio/dio.dart' as Dio;",
-      response: 'Dio.Response',
-      code: `
+    const { func, env, DefaultAgent } = Base;
+    switch (env.defaultAgent) {
+      case DefaultAgent.Dart_Dio5:
+        return {
+          name: 'DioAgent',
+          import: "import 'package:dio/dio.dart' as _Dio;",
+          code: `
 class DioAgent extends Agent {
-  static Dio.Dio _session = Dio.Dio(Dio.BaseOptions(
+  static _Dio.Dio _session = _Dio.Dio(_Dio.BaseOptions(
     validateStatus: (e) => true,
     receiveDataWhenStatusError: true,
-    responseType: Dio.ResponseType.plain,
+    responseType: _Dio.ResponseType.plain,
   ));
   
-  Dio.Dio? session;
+  _Dio.Dio? session;
   // ready is the only hook where option can be set
-  Dio.RequestOptions? option;
+  _Dio.RequestOptions? option;
 
-  Future${addX('Reply')} fetch(Plan plan) async {
+  Future${func.addX('Reply')} fetch(Plan plan) async {
     final session = this.session ?? _session;
 
     var path = plan.path;
@@ -111,7 +105,7 @@ class DioAgent extends Agent {
       path = path.replaceAllMapped(new RegExp('{(.*?)}'), (match) => seg?[match.group(1)] ?? '');
     }
 
-    final option = this.option = Dio.Options(
+    final option = this.option = _Dio.Options(
       method: plan.method,
       contentType: plan.body?.contentType,
       headers: plan.headers,
@@ -148,26 +142,41 @@ class DioAgent extends Agent {
     } else if (type == 'map' && data is Json2class) {
       return data.toJson();
     } else if (type == 'form' && data is BodyForm) {
-      final map = ${addX(`String, List${addX('dynamic')}`)}{};
+      final a2b = (BodyFormFile a) {
+        final filepath = a.filepath;
+        final content = a.content;
+        final contentType = a.contentType == null ? null : _Dio.DioMediaType.parse(a.contentType ?? '');
+        if (filepath != null) {
+          return _Dio.MultipartFile.fromFile(filepath,
+            filename: a.filename, contentType: contentType, headers: a.headers);
+        } else if (content != null) {
+          return _Dio.MultipartFile.fromBytes(content,
+            filename: a.filename, contentType: contentType, headers: a.headers);
+        } else {
+          return null;
+        }
+      };
+      final map = ${func.addX(`String, List${func.addX('dynamic')}`)}{};
       final cb = (String k, dynamic v) {
         if (!map.containsKey(k)) {
           map[k] = [];
         }
-        if (v is List) {
-          map[k]?.addAll(v.where((e) => e != null));
-        } else if (v != null) {
-          map[k]?.add(v);
-        }
+        v = (v is List ? v : [v]).map((e) => e is BodyFormFile ? a2b(e) : e).where((e) => e != null);
+        map[k]?.addAll(v);
       };
       data.fields.toJson().forEach(cb);
       data.files.toJson().forEach(cb);
-      return Dio.FormData.fromMap(map);
+      return _Dio.FormData.fromMap(map);
     } else {
       return data;
     }
   }
 }`,
-    };
+        };
+      default:
+        func.unreachableError('defaultAgent', [env.defaultAgent]);
+        return { name: '', import: '', code: '' };
+    }
   }
 
   static toEntry() {
@@ -178,12 +187,13 @@ import 'dart:typed_data';
 ${agentConfig.import}
 
 @json2class@
+
 class Reply {
   int? code;
   String message = '';
   String? error;
   Object? data;
-  ${agentConfig.response}? response;
+  Object? response;
   Exception? exception;
   void reset() {
     code = error = data = response = exception = null;
@@ -194,6 +204,20 @@ abstract class Agent {
   Future${addX('Reply')} fetch(Plan plan);
   FutureOr${addX('Object?')} body(Plan plan);
 }${agentConfig.code}
+class BodyFormFile {
+  final Uint8List? content;
+  final String? filepath;
+  String? filename;
+  String? contentType;
+  Map${addX(`String, List${addX('String')}`)}? headers;
+
+  BodyFormFile.fromFile(this.filepath)
+    : content = null;
+  BodyFormFile.fromString(String value)
+    : filepath = null, content = _Convert.utf8.encode(value);
+  BodyFormFile.fromBytes(List${addX('int')} value)
+    : filepath = null, content = Uint8List.fromList(value);
+}
 class BodyForm${addX('T extends Json2class, K extends Json2class')} {
   T fields;
   K files;
@@ -249,7 +273,7 @@ class Plan${addX('R extends Json2class?, S extends Json2class?, P extends Json2c
     Map${addX('String, dynamic')}? headers,
   }) : headers = headers ?? {};
 
-  ${agentConfig.name} agent = ${agentConfig.name}();
+  Agent agent = ${agentConfig.name}();
 
   Reply reply = Reply();
 

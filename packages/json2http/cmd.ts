@@ -36,10 +36,6 @@ program
     '-o, --output <output>',
     'specify the output directory for build artifacts (defaults to the search directory if not provided)',
   )
-  .option(
-    '-x, --extend <extend>',
-    'specify a path for the extension file (default is the file named `extend` in the output directory)',
-  )
   .addOption(
     new Option(
       '-a, --default-agent <defaultAgent>',
@@ -60,26 +56,8 @@ program
 
     env.debug = Json2classBase.env.debug = Json2classBase_Bin.env.debug = !!options.debug;
     env.language = Json2classBase.env.language = Json2classBase_Bin.env.language = options.language;
-    const { desc, ext } = func.language(env.language);
-    const extend =
-      options.extend === ''
-        ? ''
-        : Path.resolve(options.extend === undefined ? `${output}/extend.${ext}` : options.extend);
-    if (extend) {
-      try {
-        bin.fileIsExit(extend);
-      } catch (e) {
-        if (options.extend === undefined) {
-          Fs.writeFileSync(extend, require(`./src/${desc}/extend.txt`).default);
-        } else {
-          throw e;
-        }
-      }
-    }
-
     env.search = Json2classBase.env.search = Json2classBase_Bin.env.search = search;
     env.output = output;
-    env.extend = bin.parseExtend(output, extend, env.language);
     let defaultAgent = options.defaultAgent;
     if (!defaultAgent) {
       switch (env.language) {
@@ -91,8 +69,7 @@ program
           break;
       }
     }
-
-    if (!defaultAgent.startsWith(`${desc}_`)) {
+    if (!defaultAgent.startsWith(`${func.language(env.language).desc}_`)) {
       func.assertError(`the set language(${env.language}) does not match the agent(${defaultAgent})`);
     }
     env.defaultAgent = defaultAgent;

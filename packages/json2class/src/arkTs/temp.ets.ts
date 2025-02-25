@@ -85,21 +85,21 @@ export abstract class Json2class {
     return typeof source === typeof target;
   }
 
-  _nList<T>(array: boolean[], n: number) {
+  private _nList<T>(array: Array<boolean>, n: number) {
     return [];
   }
 
-  _nArray<T>(
-    data: Any[],
+  private _nArray<T>(
+    data: Array<Any>,
     key: string,
-    array: boolean[],
+    array: Array<boolean>,
     optional: boolean,
-    cur: Any[],
+    cur: Array<Any>,
     def: Any,
     level: number,
     rule: Rule,
   ) {
-    const t: Any[] = this._nList<T>(array, array.length - level + 1);
+    const t: Array<Any> = this._nList<T>(array, array.length - level + 1);
     for (let i = 0; i < data.length; i++) {
       const isExist = cur.length > i;
       const _data = data[i] ?? null;
@@ -200,7 +200,7 @@ export abstract class Json2class {
               key,
               array,
               optional,
-              _cur === null ? this._nList<T>(array, array.length - level) : (_cur as Any[]),
+              _cur === null ? this._nList<T>(array, array.length - level) : (_cur as Array<Any>),
               def,
               level + 1,
               rule,
@@ -225,7 +225,7 @@ export abstract class Json2class {
                   key,
                   array,
                   optional,
-                  _cur as Any[],
+                  _cur as Array<Any>,
                   def,
                   level + 1,
                   rule,
@@ -268,7 +268,7 @@ export abstract class Json2class {
                   key,
                   array,
                   optional,
-                  cur[data.length + i] as Any[],
+                  cur[data.length + i] as Array<Any>,
                   def,
                   level + 1,
                   rule,
@@ -282,9 +282,17 @@ export abstract class Json2class {
     return t;
   }
 
-  _fromJson<T>(data: Any, key: string, array: boolean[], optional: boolean, cur: Any, def: Any, rule: Rule): Any {
+  protected _fromJson<T>(
+    data: Any,
+    key: string,
+    array: Array<boolean>,
+    optional: boolean,
+    cur: Any,
+    def: Any,
+    rule: Rule,
+  ): Any {
     let isExist: boolean;
-    let _data = data as Record<string, Any>;
+    const _data = data as Record<string, Any>;
     try {
       data = _data[key] ?? null;
       isExist = _data[key] !== undefined;
@@ -305,7 +313,7 @@ export abstract class Json2class {
           key,
           array,
           optional,
-          cur === null ? this._nList<T>(array, array.length) : (cur as Any[]),
+          cur === null ? this._nList<T>(array, array.length) : (cur as Array<Any>),
           def,
           1,
           rule,
