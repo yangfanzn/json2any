@@ -37,43 +37,32 @@ export class Http extends Base.Http<Complex, Simple> {
     }
 
     const types = [
-      // if res is null in plan, also can set with "Json2class"
-      // but I am think is not necessary, so replace it to Null
-      plan.res?.decl ?? 'Null', // Json2class?
-      plan.seg?.decl ?? 'Null',
-      plan.params?.decl ?? 'Null',
-      bodyDecl,
-    ].join(', ');
-
-    const args = [
-      `path: '${plan.path.origin}'`,
-      `seg: ${plan.seg?.def ?? 'null'}`,
-      `title: '${plan.title.origin}'`,
-      `method: '${plan.method.origin}'`,
-      `res: ${plan.res?.def ?? 'null'}`,
-      `params: ${plan.params?.def ?? 'null'}`,
-      `body: ${bodyDef}`,
+      `var path = '${plan.path.origin}'`,
+      `covariant ${plan.seg?.decl ?? 'Null'} seg = ${plan.seg?.def ?? 'null'}`,
+      `var title = '${plan.title.origin}'`,
+      `var method = '${plan.method.origin}'`,
+      `covariant ${plan.res?.decl ?? 'Null'} res = ${plan.res?.def ?? 'null'}`,
+      `covariant ${plan.params?.decl ?? 'Null'} params = ${plan.params?.def ?? 'null'}`,
+      `covariant ${bodyDecl} body = ${bodyDef}`,
       // why use Convert.jsonDecode even if the value is Map<String, "dynamic"> ?
       //   the important reason is headers like body.files both support String and List<String>,
       //   but the dart does not support Map<String, String | List<String>>, if the tools make headers to a special type
       //   is unsuitable，because of headers usually does not change on a special request but need change on a common request with Map.
       //   finally, if it is hardcoded as xxx, it would also feel strange.
-      `headers: ${
-        plan.headers ? `_Convert.jsonDecode('${Base.func.convertWrap(JSON.stringify(plan.headers.origin))}')` : 'null'
-      }`,
-    ].join(', ');
+      `var headers = _Convert.jsonDecode('${Base.func.convertWrap(JSON.stringify(plan.headers?.origin ?? {}))}')`,
+    ].join('; ');
 
     return {
       code: `
 Future${addX(this.declPlan)} ${this.launch}(FutureOr${addX('void')} Function(${this.declPlan} plan) setPlan) async {
-  ${this.declPlan} plan = Plan(${args});
+  final plan = ${this.declPlan}();
   await Json2http.setPlan?.call(plan);
   await setPlan(plan);
   await (plan.start ?? plan.request)();
   return plan;
 }`,
       plan: `
-typedef ${this.declPlan} = Plan${addX(types)};`,
+class ${this.declPlan} extends Plan { ${types}; }`,
     };
   }
 
@@ -246,33 +235,22 @@ class Json2httpError implements Exception {
   String toString() => (plan.reply.error?.isNotEmpty ?? false) ? plan.reply.error! : plan.reply.message;
 }
 
-class Plan${addX('R extends Json2class?, S extends Json2class?, P extends Json2class?, B extends Body?')} {
+abstract class Plan {
   String baseURL = '';
 
-  String path;
-  S seg;
+  abstract String path;
+  abstract Json2class? seg;
 
-  String title;
-  String method;
-  R res;
+  abstract String title;
+  abstract String method;
+  abstract Json2class? res;
 
-  P params;
-  B body;
-  
-  Map${addX('String, dynamic')} headers;
+  abstract Json2class? params;
+  abstract Body${addX('Object?')}? body;
 
-  Plan({
-    required this.path,
-    required this.seg,
-    required this.title,
-    required this.method,
-    required this.res,
-    required this.params,
-    required this.body,
-    Map${addX('String, dynamic')}? headers,
-  }) : headers = headers ?? {};
+  abstract Map${addX('String, dynamic')} headers;
 
-  Agent agent = ${agentConfig.name}();
+  Agent agent = DioAgent();
 
   Reply reply = Reply();
 

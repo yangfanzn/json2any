@@ -55,7 +55,7 @@ async ${this.launch}(setPlan: (plan: ${this.declPlan}) => void): Promise${addX(t
   return plan;
 }`,
       plan: `
-export class ${this.declPlan} extends Plan { ${types} }`,
+export class ${this.declPlan} extends Plan { ${types}; }`,
     };
   }
 

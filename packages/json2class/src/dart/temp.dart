@@ -185,7 +185,7 @@ abstract class Json2class {
   _nArray<T>(List data, String key, List<bool> array, bool optional, List cur, dynamic def, int level, Rule rule) {
     final dynamic t = _nList<T>(array, array.length - level + 1);
     for (int i = 0; i < data.length; i++) {
-      final bool isExist = cur.length > i; // 当前输入数据是否有空位落
+      final isExist = cur.length > i; // 当前输入数据是否有空位落
       final dynamic _data = data.elementAtOrNull(i);
       final dynamic _cur = cur.elementAtOrNull(i);
       if (array.length == level) {
