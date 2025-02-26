@@ -207,8 +207,8 @@ class BodyFormFile {
     : filepath = null, content = Uint8List.fromList(value);
 }
 class BodyForm${addX('T extends Json2class, K extends Json2class')} {
-  T fields;
-  K files;
+  final T fields;
+  final K files;
   BodyForm({
     required this.fields,
     required this.files,

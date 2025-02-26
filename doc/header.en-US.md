@@ -4,17 +4,6 @@ English | [简体中文](https://github.com/yangfanzn/json2any/blob/main/package
 
 $RM_desc
 
-## Feedback & Improvement
-Thank you for using this tool! In order to quickly improve and release **version 1.0.0**,
-we would love to hear your feedback and suggestions.
-If you encounter any issues or have suggestions for improvement,
-please feel free to provide feedback through the following channels:
-
-- Submit issues or suggestions on [GitHub Issues](https://github.com/yangfanzn/json2any/issues)
-- Send an email to Yang Fan<[yangfanzn@gmail.com](mailto:yangfanzn@gmail.com)>
-
-Your feedback is extremely important to us. Thank you very much!
-
 ## Supported Languages
 ### Currently Supported
 | [arkTs@12](https://developer.huawei.com/consumer/cn/arkts/) | [dart@3](https://dart.dev/) |

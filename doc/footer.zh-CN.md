@@ -21,3 +21,12 @@ npx $RM_type build -l dart@3 -o ../cache/
 ~/projects/cache/
 $RM_type.*
 ```
+
+## 反馈与改进
+感谢您使用本工具，为了尽快完善并发布 **1.0.0 正式版本**，我们希望听到您的意见和建议。
+如果您在使用过程中遇到问题，或者有任何改进的建议，欢迎通过如下方式反馈：
+
+- 在 [GitHub Issues](https://github.com/yangfanzn/json2any/issues) 提交问题的或建议
+- 发送邮件至 Yang Fan<[yangfanzn@gmail.com](mailto:yangfanzn@gmail.com)>
+
+您的反馈对我们非常重要，非常感谢！

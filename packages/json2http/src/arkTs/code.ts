@@ -213,8 +213,8 @@ export class BodyFormFile {
     return new BodyFormFile(new Uint8Array(value), null); }
 }
 export class BodyForm${addX('T extends Json2class = Json2class, K extends Json2class = Json2class')} {
-  fields: T;
-  files: K;
+  readonly fields: T;
+  readonly files: K;
   constructor(fields: T, files: K) {
     this.fields = fields;
     this.files = files;
