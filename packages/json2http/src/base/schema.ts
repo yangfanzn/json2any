@@ -92,7 +92,7 @@ const schemaPlan: Json2classBase.SchemaItem = {
           [
             {
               key: 'type',
-              required: false,
+              required: true,
               optional: false,
               array: false,
               origin: o => (o === 'json' ? '' : 'is not json'),
@@ -133,8 +133,8 @@ const schemaPlan: Json2classBase.SchemaItem = {
           ],
           [
             { key: 'data', required: true, optional: true, array: null, origin: null, child: [] },
-            null,
-            null,
+            { key: 'data', required: true, optional: true, array: false, origin: 'String', child: null },
+            { key: 'data', required: true, optional: true, array: false, origin: 'String', child: null },
             { key: 'data', required: true, optional: false, array: false, origin: 'Record.String', child: null },
             {
               key: 'data',
@@ -163,6 +163,7 @@ export const validate = (plan: Json2classBase.Complex): SchemaPlan => {
   const t = validateItem([], schemaPlan, plan) as Record<string, any>;
   const body = t['body'];
   if (body) {
+    // already changed to required in schema, keeping it here for now.
     body.type = body.type?.origin ?? 'json';
   }
   // although it is not secure, it should be fine

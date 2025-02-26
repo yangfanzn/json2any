@@ -20,9 +20,11 @@ export class Http extends Base.Http<Complex, Simple> {
           `${plan.title.lang.arrayType(body.data.array, body.data.decl)}${body.data.optional ? ' | null' : ''}`,
         )}('${body.type}', [])`;
       } else if (body.type === 'plain') {
-        bodyDef = `new Body${addX('string | null')}('${body.type}', '')`;
+        bodyDef = `new Body${addX(`string${body.data?.optional ? ' | null' : ''}`)}('${body.type}', '')`;
       } else if (body.type === 'byte') {
-        bodyDef = `new Body${addX('Uint8Array | null')}('${body.type}', new Uint8Array(0))`;
+        bodyDef = `new Body${addX(`Uint8Array${body.data?.optional ? ' | null' : ''}`)}('${
+          body.type
+        }', new Uint8Array(0))`;
       } else if (body.data) {
         bodyDef = `new Body${addX(`${body.data.decl}${body.data.optional ? ' | null' : ''}`)}('${body.type}', ${
           body.data.def
