@@ -37,7 +37,7 @@ export class Http extends Base.Http<Complex, Simple> {
     const types = [
       `path = '${plan.path.origin}'`,
       `seg = ${plan.seg?.def ?? 'null'}`,
-      `title = '${plan.title.origin}'`,
+      `readonly title = '${plan.title.origin}'`,
       `method = '${plan.method.origin}'`,
       `res = ${plan.res?.def ?? 'null'}`,
       `params = ${plan.params?.def ?? 'null'}`,
@@ -213,8 +213,8 @@ export class BodyFormFile {
     return new BodyFormFile(new Uint8Array(value), null); }
 }
 export class BodyForm${addX('T extends Json2class = Json2class, K extends Json2class = Json2class')} {
-  readonly fields: T;
-  readonly files: K;
+  fields: T;
+  files: K;
   constructor(fields: T, files: K) {
     this.fields = fields;
     this.files = files;
@@ -256,7 +256,7 @@ export abstract class Plan {
   abstract path: string;
   abstract seg: Json2class | null;
 
-  abstract title: string;
+  abstract readonly title: string;
   abstract method: string;
   abstract res: Json2class | null;
 

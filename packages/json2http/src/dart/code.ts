@@ -39,7 +39,7 @@ export class Http extends Base.Http<Complex, Simple> {
     const types = [
       `var path = '${plan.path.origin}'`,
       `covariant ${plan.seg?.decl ?? 'Null'} seg = ${plan.seg?.def ?? 'null'}`,
-      `var title = '${plan.title.origin}'`,
+      `final title = '${plan.title.origin}'`,
       `var method = '${plan.method.origin}'`,
       `covariant ${plan.res?.decl ?? 'Null'} res = ${plan.res?.def ?? 'null'}`,
       `covariant ${plan.params?.decl ?? 'Null'} params = ${plan.params?.def ?? 'null'}`,
@@ -207,8 +207,8 @@ class BodyFormFile {
     : filepath = null, content = Uint8List.fromList(value);
 }
 class BodyForm${addX('T extends Json2class, K extends Json2class')} {
-  final T fields;
-  final K files;
+  T fields;
+  K files;
   BodyForm({
     required this.fields,
     required this.files,
@@ -241,7 +241,7 @@ abstract class Plan {
   abstract String path;
   abstract Json2class? seg;
 
-  abstract String title;
+  abstract final String title;
   abstract String method;
   abstract Json2class? res;
 
