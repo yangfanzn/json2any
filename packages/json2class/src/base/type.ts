@@ -17,6 +17,7 @@ export enum BaseType {
 export enum Language {
   Dart3 = 'dart@3',
   ArkTs12 = 'arkTs@12',
+  Typescript5 = 'typescript@5',
 }
 
 export abstract class Err extends Error {

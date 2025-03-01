@@ -69,7 +69,7 @@ program
           break;
       }
     }
-    if (!defaultAgent.startsWith(`${func.language(env.language).desc}_`)) {
+    if (!defaultAgent.startsWith(`${func.language(env.language).language}_`)) {
       func.assertError(`the set language(${env.language}) does not match the agent(${defaultAgent})`);
     }
     env.defaultAgent = defaultAgent;

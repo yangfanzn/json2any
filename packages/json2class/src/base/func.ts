@@ -201,9 +201,25 @@ export class Func {
   }
 
   language(language: Language) {
-    const languages: Record<Language, { ext: string; desc: string }> = {
-      [Language.Dart3]: { ext: 'dart', desc: 'dart' },
-      [Language.ArkTs12]: { ext: 'ets', desc: 'arkTs' },
+    const languages: Record<Language, { ext: string; temp: string; language: string; version: string }> = {
+      [Language.Dart3]: {
+        ext: 'dart',
+        temp: require('../dart/temp.dart').default,
+        language: 'dart',
+        version: '3',
+      },
+      [Language.ArkTs12]: {
+        ext: 'ets',
+        temp: require('../arkTs/temp.ets.ts').default,
+        language: 'arkTs',
+        version: '12',
+      },
+      [Language.Typescript5]: {
+        ext: 'ts',
+        temp: require('../arkTs/temp.ets.ts').default,
+        language: 'typescript',
+        version: '5',
+      },
     };
     return languages[language];
   }

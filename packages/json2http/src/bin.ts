@@ -26,7 +26,7 @@ export class Bin extends Json2classBin.Bin {
         plans.push(plan);
       });
 
-    const { ext, desc } = func.language(env.language);
+    const { ext, temp } = func.language(env.language);
     const files = new Map<string, string>();
     files.set(
       `json2http.${ext}`,
@@ -34,7 +34,7 @@ export class Bin extends Json2classBin.Bin {
         func.addCopyRight('json2http'),
         json2http()
           .toEntry()
-          .replace(/@json2class@/, func.clearComment(require(`../../json2class/src/${desc}/temp.${ext}`).default))
+          .replace(/@json2class@/, func.clearComment(temp))
           .replace(/@author@/, env.author)
           .replace(/@aliases@/, plans.join(''))
           .replace(/@deps@/, deps.join(''))

@@ -95,18 +95,13 @@ export class Bin {
 
   class2file(jsons: Map<string, Record<string, any>>) {
     const { func, env } = Base;
-    const { ext, desc } = func.language(env.language);
+    const { ext, temp } = func.language(env.language);
     const files = new Map<string, string>();
     files.set(
       `json2class.${ext}`,
       [
         func.addCopyRight('json2class'),
-        func.clearComment(
-          require(`./${desc}/temp.${env.language === Base.Language.ArkTs12 ? 'ets.ts' : ext}`).default.replace(
-            '@author@',
-            env.author,
-          ),
-        ),
+        func.clearComment(temp.replace('@author@', env.author)),
         ...Array.from(jsons)
           // key is file
           .map(([key, json]) => json2class(key, json))

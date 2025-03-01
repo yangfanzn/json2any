@@ -7,6 +7,7 @@ export function json2class(key: string, json: Record<string, any>) {
     case Base.Language.Dart3:
       return Base.func.core2class(Dart.Complex, Dart.Simple, key, json);
     case Base.Language.ArkTs12:
+    case Base.Language.Typescript5:
       return Base.func.core2class(ArkTs.Complex, ArkTs.Simple, key, json);
   }
 }
