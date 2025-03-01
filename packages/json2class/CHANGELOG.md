@@ -32,3 +32,6 @@
 ## 0.0.10
 - 2025-02-22 type conflict issue resolved
 - 2025-02-28 add HarmonyOS development environment installation method.
+
+## 0.0.11
+- 2025-03-01 type conflict issue resolved

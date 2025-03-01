@@ -63,7 +63,9 @@ export class Complex extends Base.Complex {
         a.decls.push(e.decl);
         return a;
       },
-      { keys: [] as string[], decls: [] as string[] },
+      // preset => String 、 toJson => Map
+      // they are both attributes and also need to be converted
+      { keys: [] as string[], decls: ['String', 'Map'] as string[] },
     );
     // Use typedef to define an alias for a type to avoid naming conflicts caused by omitting this in Dart
     // This data will be passed to the toProp and toFromJson functions for use.
@@ -75,9 +77,13 @@ export class Complex extends Base.Complex {
     }, {} as Record<string, string>);
 
     const declString = typedef['String'] ?? 'String';
+    const declMap = typedef['Map'] ?? 'Map';
     return `
 ${Object.keys(typedef)
-  .map(k => `typedef ${typedef[k]} = ${k};`)
+  .map(k => {
+    const generic = k === 'Map' ? Base.func.addX('A,B') : '';
+    return `typedef ${typedef[k]}${generic} = ${k}${generic};`;
+  })
   .join('')}
 class ${this.decl} extends Json2class {
   ${this.child.map(e => this.lang.toProp(e, typedef)).join('')}
@@ -88,7 +94,7 @@ class ${this.decl} extends Json2class {
     return this;
   }
   toNew() => ${this.def};
-  Map${Base.func.addX(`${declString}, dynamic`)} toJson() {
+  ${declMap}${Base.func.addX(`${declString}, dynamic`)} toJson() {
     return {${this.child.map(e => `'${e.jsonKey}':_toJson(${e.prop})`)}};
   }
 }`;
