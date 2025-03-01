@@ -11,12 +11,12 @@ const type = Path.basename(Path.resolve('.')) || Type.Json2class;
 module.exports = {
   entry: {
     bin: './bin.ts',
-    cmd: './cmd.ts',
+    [type]: './cmd.ts',
     index: './index.ts',
   },
   output: {
     path: Path.resolve('./', 'lib'),
-    filename: '[name].js',
+    filename: context => (context.chunk.name === type ? type : '[name].js'),
     libraryTarget: 'commonjs2',
   },
   target: 'node',
@@ -40,12 +40,12 @@ module.exports = {
     {
       apply: compiler => {
         compiler.hooks.afterEmit.tapAsync('AddShebangPlugin', (compilation, callback) => {
-          const bin = Path.resolve('./lib/cmd.js');
-          const content = Fs.readFileSync(bin, 'utf8').toString();
+          const cmd = Path.resolve(`./lib/${type}`);
+          const content = Fs.readFileSync(cmd, 'utf8').toString();
           if (!content.startsWith('#!')) {
-            Fs.writeFileSync(bin, `#!/usr/bin/env node\n${content}`);
+            Fs.writeFileSync(cmd, `#!/usr/bin/env node\n${content}`);
           }
-          Fs.chmodSync(bin, '755');
+          Fs.chmodSync(cmd, '755');
 
           // add license copyright
           const p = Path.resolve('./LICENSE');

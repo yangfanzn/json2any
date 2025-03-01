@@ -13,23 +13,35 @@ json2class 是一个命令行工具，可以将指定的 JSON(5) 文件转换成
 
 ## 安装
 
-### `✅ 推荐` javascript、typescript 前端技术栈开发者
-npx 需要 node 环境，请先安装 node。
+### `✅ 推荐` node npm npx 开发环境
+npx 需要 node 环境，请先安装 node
 ```sh
-npx json2class
+npx json2class build -l dart@3
 ```
 
-<!-- ohpm install json2class -->
-_如果您是鸿蒙开发环境，可以使用 `ohpm`，通过 `ohpm config list` 查看 `node` 及 `npx` 路径_
-
-### Flutter、Dart 技术栈开发者
+### Flutter、Dart 开发环境
 ```sh
 dart pub add dev:json2class
-dart run json2class
+dart run json2class build -l dart@3
 ```
 
-### 其他技术栈开发者
-[GitHub Release 下载](https://github.com/yangfanzn/json2any/releases)
+### 鸿蒙开发环境
+将如下配置写入 oh-package.json5
+```json5
+{
+  "scripts": {
+    // windows 系统
+    "json2class": "./oh_modules/json2class/src/main/resources/rawfile/json2class-win.exe build -l arkTs@12",
+    // macOS 系统
+    "json2class": "./oh_modules/json2class/src/main/resources/rawfile/json2class-macos build -l arkTs@12"
+  }
+}
+```
+执行如下命令进行安装
+```sh
+ohpm install json2class --save-dev
+ohpm run json2class
+```
 
 ## 快速开始
 json 文件支持 json 和 json5。

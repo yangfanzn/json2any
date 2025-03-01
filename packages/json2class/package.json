@@ -1,6 +1,6 @@
 {
   "name": "json2class",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "json2class is a CLI tool to generate class objects from JSON or JSON5, supporting serialization and deserialization.",
   "keywords": [
     "json2class",
@@ -37,6 +37,6 @@
   },
   "types": "./types/",
   "bin": {
-    "json2class": "./lib/cmd.js"
+    "json2class": "./lib/json2class"
   }
 }

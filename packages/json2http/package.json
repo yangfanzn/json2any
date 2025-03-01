@@ -41,6 +41,6 @@
   },
   "types": "./types/",
   "bin": {
-    "json2http": "./lib/cmd.js"
+    "json2http": "./lib/json2http"
   }
 }

@@ -13,22 +13,32 @@ $RM_desc
 
 ## Installation
 
-### `✅ Recommend` For JavaScript/TypeScript Frontend Developers
+### `✅ Recommended` Node, npm, and npx Development Environment
 npx requires a Node environment. Please install Node first.
 ```sh
-npx $RM_type build
+npx $RM_type build -l dart@3
 ```
 
-<!-- ohpm install $RM_type -->
-_If you are working within the HarmonyOS development environment,
-you may utilize `ohpm` to inspect the paths for `node` and `npx` by executing `ohpm config list`._
-
-### For Flutter、Dart Developers
+### Flutter and Dart Development Environment
 ```sh
 dart pub add dev:$RM_type
-dart run $RM_type
+dart run $RM_type build -l dart@3
 ```
 
-### For Developers Using Other Tech Stacks
-[GitHub Release Download](https://github.com/yangfanzn/json2any/releases)
-
+### HarmonyOS Development Environment
+Add the following configuration to oh-package.json5.
+```json5
+{
+  "scripts": {
+    // Windows system
+    "$RM_type": "./oh_modules/json2class/src/main/resources/rawfile/$RM_type-win.exe build -l arkTs@12",
+    // macOS system
+    "$RM_type": "./oh_modules/json2class/src/main/resources/rawfile/$RM_type-macos build -l arkTs@12"
+  }
+}
+```
+Run the following commands to install.
+```sh
+ohpm install $RM_type --save-dev
+ohpm run $RM_type
+```
