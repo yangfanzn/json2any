@@ -3,11 +3,13 @@ import { Json2classBase } from 'json2class';
 export enum Language {
   Dart3 = 'dart@3',
   ArkTs12 = 'arkTs@12',
+  Typescript5 = 'typescript@5',
 }
 
 export enum DefaultAgent {
   Dart_Dio5 = 'dart_dio@5',
-  ArkTs_Rcp12 = 'arkTs_Rcp@12',
+  ArkTs_Rcp12 = 'arkTs_rcp@12',
+  Typescript_Fetch0 = 'typescript_fetch@0',
 }
 
 const parent: string[] = Object.values(Json2classBase.Language);

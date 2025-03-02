@@ -35,3 +35,4 @@
 
 ## 0.0.11
 - 2025-03-01 type conflict issue resolved
+- 2025-03-02 typescript supported

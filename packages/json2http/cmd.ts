@@ -67,6 +67,9 @@ program
         case Language.ArkTs12:
           defaultAgent = DefaultAgent.ArkTs_Rcp12;
           break;
+        case Language.Typescript5:
+          defaultAgent = DefaultAgent.Typescript_Fetch0;
+          break;
       }
     }
     if (!defaultAgent.startsWith(`${func.language(env.language).language}_`)) {

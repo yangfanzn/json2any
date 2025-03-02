@@ -155,6 +155,22 @@ export class RcpAgent extends Agent {
   }
 }`,
         };
+      case DefaultAgent.Typescript_Fetch0:
+        return {
+          name: 'FetchAgent',
+          import: '',
+          code: `
+export class FetchAgent extends Agent {
+ async fetch(plan: Plan): Promise${func.addX('Reply')}  {
+    plan.reply.data = {'statusCode': '0'};
+    plan.reply.code = 200;
+    return plan.reply;
+  }
+  body(plan: Plan): Any {
+    return null;
+  }
+}`,
+        };
       default:
         func.unreachableError('defaultAgent', [env.defaultAgent]);
         return { name: '', import: '', code: '' };

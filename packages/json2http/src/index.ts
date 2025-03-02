@@ -12,6 +12,7 @@ export function json2http(key?: string, json?: Record<string, any>, file?: strin
     case Base.Language.Dart3:
       return key && json ? Base.func.core2http(Dart.Http, Dart.Complex, Dart.Simple, key, json, file) : Dart.Http;
     case Base.Language.ArkTs12:
+    case Base.Language.Typescript5:
       return key && json ? Base.func.core2http(ArkTs.Http, ArkTs.Complex, ArkTs.Simple, key, json, file) : ArkTs.Http;
   }
 }
