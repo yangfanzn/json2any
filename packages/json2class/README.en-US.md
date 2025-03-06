@@ -6,10 +6,10 @@ json2class is a CLI tool to generate class objects from JSON(5), supporting seri
 
 ## Supported Languages
 ### Currently Supported
-| [arkTs@12](https://developer.huawei.com/consumer/cn/arkts/) | [dart@3](https://dart.dev/) |
+| [arkTs@12](https://developer.huawei.com/consumer/cn/arkts/) | [dart@3](https://dart.dev/) | [typescript@5](https://www.typescriptlang.org/) |
 
 ### Planned Support
-| [typescript](https://www.typescriptlang.org/) | [Other languages to be supported]() |
+| [java](https://dev.java/) | [kotlin](https://kotlinlang.org/) | [swift](https://developer.apple.com/cn/swift/) | [Other languages to be supported]() |
 
 ## Installation
 
