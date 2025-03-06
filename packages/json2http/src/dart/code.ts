@@ -132,12 +132,12 @@ class DioAgent extends Agent {
       return data.toJson();
     } else if (type == 'form' && data is BodyForm) {
       final a2b = (BodyFormFile a) {
-        final filepath = a.filepath;
+        final file = a.file;
         final content = a.content;
         final contentType = a.contentType == null ? null : _Dio.DioMediaType.parse(a.contentType ?? '');
-        if (filepath != null) {
-          return _Dio.MultipartFile.fromFile(filepath,
-            filename: a.filename, contentType: contentType, headers: a.headers);
+        if (file != null) {
+          return _Dio.MultipartFile.fromFileSync(file,
+            filename: a.filename ?? file.split(new RegExp('[\\\\\\\\/]')).lastOrNull, contentType: contentType, headers: a.headers);
         } else if (content != null) {
           return _Dio.MultipartFile.fromBytes(content,
             filename: a.filename, contentType: contentType, headers: a.headers);
@@ -194,17 +194,17 @@ abstract class Agent {
 }${agentConfig.code}
 class BodyFormFile {
   final Uint8List? content;
-  final String? filepath;
+  final String? file;
   String? filename;
   String? contentType;
   Map${addX(`String, List${addX('String')}`)}? headers;
 
-  BodyFormFile.fromFile(this.filepath)
+  BodyFormFile.fromFile(this.file)
     : content = null;
   BodyFormFile.fromString(String value)
-    : filepath = null, content = _Convert.utf8.encode(value);
+    : file = null, content = _Convert.utf8.encode(value);
   BodyFormFile.fromBytes(List${addX('int')} value)
-    : filepath = null, content = Uint8List.fromList(value);
+    : file = null, content = Uint8List.fromList(value);
 }
 class BodyForm${addX('T extends Json2class, K extends Json2class')} {
   T fields;
