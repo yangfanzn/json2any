@@ -68,7 +68,7 @@ program
           defaultAgent = DefaultAgent.ArkTs_Rcp12;
           break;
         case Language.Typescript5:
-          defaultAgent = DefaultAgent.Typescript_Axios1;
+          defaultAgent = DefaultAgent.Typescript_Fetch0;
           break;
       }
     }

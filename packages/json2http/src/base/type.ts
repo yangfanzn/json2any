@@ -10,6 +10,7 @@ export enum DefaultAgent {
   Dart_Dio5 = 'dart_dio@5',
   ArkTs_Rcp12 = 'arkTs_rcp@12',
   Typescript_Axios1 = 'typescript_axios@1',
+  Typescript_Fetch0 = 'typescript_fetch@0',
 }
 
 const parent: string[] = Object.values(Json2classBase.Language);
