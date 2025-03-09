@@ -87,7 +87,7 @@ export class RcpAgent extends Agent {
       path = path.replace(/{(.*?)}/g, (_, k: string) => seg?.[k]?.toString() ?? '');
     }
     path = \`\${plan.baseURL}\${path}\`;
-    const q = obj2get(plan.params?.toJson() ?? {});
+    const q = _obj2get(plan.params?.toJson() ?? {});
     path = \`\${path}\${q ? (path.includes('?') ? '&' : '?') : ''}\${q}\`;
 
     if (plan.body?.contentType) {
@@ -101,7 +101,7 @@ export class RcpAgent extends Agent {
 
     const response = this.response = await session.fetch(option).finally(() => this.session?.close());
     plan.reply.code = response.statusCode;
-    plan.reply.message = code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;;
+    plan.reply.message = _code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;;
 
     try {
       plan.reply.data = response.toJSON();
@@ -124,7 +124,7 @@ export class RcpAgent extends Agent {
           (data instanceof Json2class ? data.toJson() : data)
       );
     } else if (type === 'map' && data instanceof Json2class) {
-      return obj2get(data.toJson());
+      return _obj2get(data.toJson());
     } else if (type === 'form' && data instanceof BodyForm) {
       const a2b = (a: BodyFormFile) => {
         if (a.file !== null) {
@@ -178,7 +178,7 @@ export class AxiosAgent extends Agent {
       path = path.replace(/{(.*?)}/g, (_, k: string) => seg?.[k]?.toString() ?? '');
     }
 
-    const q = obj2get(plan.params?.toJson() ?? {});
+    const q = _obj2get(plan.params?.toJson() ?? {});
     path = \`\${path}\${q ? (path.includes('?') ? '&' : '?') : ''}\${q}\`;
 
     if (plan.body?.contentType && plan.body.type !== 'form') {
@@ -198,7 +198,7 @@ export class AxiosAgent extends Agent {
 
     const response = (this.response = await session.request(option)); /* .finally(() => this.session?.close()) */
     plan.reply.code = response?.status ?? null;
-    plan.reply.message = code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;
+    plan.reply.message = _code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;
 
     try {
       plan.reply.data = JSON.parse(response?.data);
@@ -223,7 +223,7 @@ export class AxiosAgent extends Agent {
           : data,
       );
     } else if (type === 'map' && data instanceof Json2class) {
-      return obj2get(data.toJson());
+      return _obj2get(data.toJson());
     } else if (type === 'form' && data instanceof BodyForm) {
       const a2b = (a: BodyFormFile) => {
         if (a.file !== null) {
@@ -283,7 +283,7 @@ export class FetchAgent extends Agent {
       path = path.replace(/{(.*?)}/g, (_, k: string) => seg?.[k]?.toString() ?? '');
     }
     path = \`\${plan.baseURL}\${path}\`;
-    const q = obj2get(plan.params?.toJson() ?? {});
+    const q = _obj2get(plan.params?.toJson() ?? {});
     path = \`\${path}\${q ? (path.includes('?') ? '&' : '?') : ''}\${q}\`;
 
     if (plan.body?.contentType && plan.body.type !== 'form') {
@@ -301,7 +301,7 @@ export class FetchAgent extends Agent {
 
     const response = (this.response = await fetch(path, option)); /* .finally(() => this.session?.close()) */
     plan.reply.code = response?.status ?? null;
-    plan.reply.message = code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;
+    plan.reply.message = _code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;
 
     try {
       plan.reply.data = JSON.parse(await response?.text());
@@ -326,7 +326,7 @@ export class FetchAgent extends Agent {
           : data,
       );
     } else if (type === 'map' && data instanceof Json2class) {
-      return obj2get(data.toJson());
+      return _obj2get(data.toJson());
     } else if (type === 'form' && data instanceof BodyForm) {
       const a2b = (a: BodyFormFile) => {
         if (a.file !== null) {
@@ -380,11 +380,15 @@ ${agentConfig.import}
 
 @json2class@
 
-function obj2get(obj: Record${addX('string, Any')}) {
+function _obj2get(obj: Record${addX('string, Any')}) {
   return Object.keys(obj).reduce((v, k) => {
     obj[k] !== null && v.push(\`\${encodeURIComponent(k)}=\${encodeURIComponent(\`\${obj[k]}\`)}\`);
     return v;
   }, [] as Array${addX('string')}).join('&');
+}
+function _replyReset(reply: Reply) {
+  reply.code = reply.error = reply.data = reply.exception = null;
+  reply.message = '';
 }
 export class Reply {
   code: number | null = null;
@@ -392,10 +396,6 @@ export class Reply {
   error: string | null = null;
   data: Any = null;
   exception: Any = null;
-  reset(): void {
-    this.code = this.error = this.data = this.exception = null;
-    this.message = '';
-  }
 }
 export abstract class Agent {
   abstract fetch(plan: Plan): Promise${addX('Reply')};
@@ -492,7 +492,7 @@ export abstract class Plan {
   };
 
   readonly fetch = async (): Promise${addX('void')} => {
-    this.reply.reset();
+    _replyReset(this.reply);
     this.reply = await this.agent.fetch(this).catch((e: Any) => {
       this.reply.exception = e;
       const t = e as Record${addX('string, string')};
@@ -528,7 +528,7 @@ export class Json2http {
 @request@
 }
 
-const code2message: Record${addX('string, string')} = JSON.parse('${Base.func.convertWrap(
+const _code2message: Record${addX('string, string')} = JSON.parse('${Base.func.convertWrap(
       JSON.stringify(Base.code2message),
     )}');
 `;

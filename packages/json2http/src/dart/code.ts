@@ -110,7 +110,7 @@ class DioAgent extends Agent {
 
     final response = this.response = await session.fetch(option).whenComplete(() => this.session?.close());
     plan.reply.code = response.statusCode;
-    plan.reply.message = response.statusMessage ?? code2message[plan.reply.code.toString()] ?? 'unknown http code \${plan.reply.code}';
+    plan.reply.message = response.statusMessage ?? _code2message[plan.reply.code.toString()] ?? 'unknown http code \${plan.reply.code}';
 
     try {
       plan.reply.data = _Convert.jsonDecode(response.data);
@@ -177,16 +177,16 @@ ${agentConfig.import}
 
 @json2class@
 
+_replyReset(Reply reply) {
+  reply.code = reply.error = reply.data = reply.exception = null;
+  reply.message = '';
+}
 class Reply {
   int? code;
   String message = '';
   String? error;
   Object? data;
   Exception? exception;
-  void reset() {
-    code = error = data = exception = null;
-    message = '';
-  }
 }
 abstract class Agent {
   Future${addX('Reply')} fetch(Plan plan);
@@ -264,7 +264,7 @@ abstract class Plan {
   }
 
   Future${addX('void')} fetch() async {
-    this.reply.reset();
+    _replyReset(this.reply);
     this.reply = await this.agent.fetch(this).catchError((e) {
       if (e is Exception) {
         this.reply.exception = e;
@@ -302,7 +302,7 @@ class Json2http {
 @request@
 }
 
-final code2message = _Convert.jsonDecode('${Base.func.convertWrap(JSON.stringify(Base.code2message))}');
+final _code2message = _Convert.jsonDecode('${Base.func.convertWrap(JSON.stringify(Base.code2message))}');
 `;
   }
 }

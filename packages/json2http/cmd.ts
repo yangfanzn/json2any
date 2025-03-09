@@ -36,6 +36,7 @@ program
     '-o, --output <output>',
     'specify the output directory for build artifacts (defaults to the search directory if not provided)',
   )
+  .addOption(new Option('-e, --entry <entry>', 'specify the entry filename').hideHelp())
   .addOption(
     new Option(
       '-a, --default-agent <defaultAgent>',
@@ -77,7 +78,7 @@ program
     }
     env.defaultAgent = defaultAgent;
 
-    bin.http2file(bin.json2piece(search)).forEach((code, file) => {
+    bin.http2file(bin.json2piece(search), options.entry || 'json2http').forEach((code, file) => {
       Fs.writeFileSync(`${output}/${file}`, code);
     });
   });

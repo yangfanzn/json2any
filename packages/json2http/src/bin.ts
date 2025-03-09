@@ -10,7 +10,7 @@ export class Bin extends Json2classBin.Bin {
     }, [] as { key: string; json: any; file: string }[]);
   }
 
-  http2file(jsons: { key: string; file: string; json: any }[]) {
+  http2file(jsons: { key: string; file: string; json: any }[], entry: string) {
     const { func, env } = Base;
 
     const request = [] as string[];
@@ -29,7 +29,7 @@ export class Bin extends Json2classBin.Bin {
     const { ext, temp } = func.language(env.language);
     const files = new Map<string, string>();
     files.set(
-      `json2http.${ext}`,
+      `${entry}.${ext}`,
       [
         func.addCopyRight('json2http'),
         json2http()

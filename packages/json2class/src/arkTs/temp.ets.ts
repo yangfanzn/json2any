@@ -1,5 +1,5 @@
 export type Any = Object | null;
-function isMapLike(x: Any) {
+function _isMapLike(x: Any) {
   return x !== null && !(x instanceof Array) && typeof x === 'object';
 }
 
@@ -112,7 +112,7 @@ export abstract class Json2class {
             } else {
               if (rule.moreIndex === MoreIndex.Drop) {
               } else {
-                if (isMapLike(_data)) {
+                if (_isMapLike(_data)) {
                   if (_cur !== null && !(_cur instanceof Json2class)) {
                     throw new Json2classError(
                       'the current value of a non-empty array should match the type of the provided default value',
@@ -126,7 +126,7 @@ export abstract class Json2class {
                 }
               }
             }
-          } else if (isMapLike(_data)) {
+          } else if (_isMapLike(_data)) {
             if (_cur !== null && !(_cur instanceof Json2class)) {
               throw new Json2classError(
                 'the current value of a non-empty array should match the type of the provided default value',
@@ -335,7 +335,7 @@ export abstract class Json2class {
           } else {
             return rule.missKey === MissKey.Keep ? cur : def.toNew();
           }
-        } else if (isMapLike(data)) {
+        } else if (_isMapLike(data)) {
           return ((cur as Json2class) ?? def.toNew()).fromJson(data, undefined, rule);
         } else if (optional && data === null) {
           return null;
