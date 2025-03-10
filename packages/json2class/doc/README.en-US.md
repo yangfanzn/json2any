@@ -3,7 +3,7 @@ $RM_header
 ## Quick Start
 The tool supports both JSON and JSON5 files.
 ```json5
-// ~/projects/test/test.json
+// ~/projects/config/root.json
 {
   "test": {
     "number": 1,
@@ -17,8 +17,29 @@ The tool supports both JSON and JSON5 files.
 
 By default, the tool searches for and converts JSON configurations in the current directory where the command is executed.
 ```sh
-cd ~/projects/test/
+cd ~/projects/config/
 npx json2class build -l dart@3
+```
+Usage of the code
+```dart
+import 'json2class.dart';
+
+main() {
+  final t = root();
+  t.fromJson({
+    'test': {
+      'number': 123,
+      'string': 'string',
+      'boolean': false,
+      'arr': ['a', 'b', 'c'],
+      'object': {'nextNumber': ''},
+    }
+  });
+  print(t.test.number);
+  print(t.test.arr[0]);
+  print(t.test.object.nextNumber);
+  print(t.toJson());
+}
 ```
 
 ## JSON Configuration Guide

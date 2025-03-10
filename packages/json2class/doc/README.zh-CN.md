@@ -3,7 +3,7 @@ $RM_header
 ## 快速开始
 json 文件支持 json 和 json5。
 ```json5
-// ~/projects/test/test.json
+// ~/projects/config/root.json
 {
   "test": {
     "number": 1,
@@ -17,8 +17,29 @@ json 文件支持 json 和 json5。
 
 默认会在执行命令的当前目录进行 json 配置的搜索及转换。
 ```sh
-cd ~/projects/test/
+cd ~/projects/config/
 npx json2class build -l dart@3
+```
+代码的使用
+```dart
+import 'json2class.dart';
+
+main() {
+  final t = root();
+  t.fromJson({
+    'test': {
+      'number': 123,
+      'string': 'string',
+      'boolean': false,
+      'arr': ['a', 'b', 'c'],
+      'object': {'nextNumber': ''},
+    }
+  });
+  print(t.test.number);
+  print(t.test.arr[0]);
+  print(t.test.object.nextNumber);
+  print(t.toJson());
+}
 ```
 
 ## json 配置说明

@@ -1,5 +1,5 @@
 $RM_header
-@RM_desc:json2http is a CLI tool that depends on json2class for generating code from JSON(5), enabling HTTP-based requests.@
+@RM_desc:json2http is a CLI tool that relies on json2class to convert a specified JSON(5) file into HTTP request code.@
 ## Quick Start
 
 筹备发布中

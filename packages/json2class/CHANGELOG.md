@@ -36,3 +36,6 @@
 ## 0.0.11
 - 2025-03-01 type conflict issue resolved
 - 2025-03-02 typescript supported
+
+## 0.0.12
+- 2025-03-10 Fix the example error in the Quick Start section of the documentation.

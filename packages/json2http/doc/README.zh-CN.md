@@ -1,5 +1,5 @@
 $RM_header
-@RM_desc:json2http 是一个命令行工具，它依赖 json2class 将 JSON(5) 配置生成可调用的 HTTP 请求代码@
+@RM_desc:json2http 是一个命令行工具，它依赖 json2class 将指定的 JSON(5) 文件转换成 HTTP 请求代码@
 ## 快速开始
 
 筹备发布中
