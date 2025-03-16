@@ -210,6 +210,7 @@ export const validate = (e: Complex) => {
     return '';
   }
 
+  // todo: $meta 同级不能有其他 key，e.child.length === 1
   const t = validateItem([], schemaMeta, $meta) as Record<string, any>;
 
   // although it is not secure, it should be fine

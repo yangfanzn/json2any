@@ -20,6 +20,7 @@ json 文件支持 json 和 json5。
 cd ~/projects/config/
 npx json2class build -l dart@3
 ```
+
 代码的使用
 ```dart
 import 'json2class.dart';
