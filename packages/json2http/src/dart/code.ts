@@ -78,7 +78,7 @@ class DioAgent extends Agent {
   static _Dio.Dio _session = _Dio.Dio(_Dio.BaseOptions(
     validateStatus: (e) => true,
     receiveDataWhenStatusError: true,
-    responseType: _Dio.ResponseType.plain,
+    responseType: _Dio.ResponseType.bytes,
   ));
   
   _Dio.Dio? session;
@@ -113,10 +113,9 @@ class DioAgent extends Agent {
     plan.reply.message = response.statusMessage ?? _code2message[plan.reply.code.toString()] ?? 'unknown http code \${plan.reply.code}';
 
     try {
-      plan.reply.data = _Convert.jsonDecode(response.data);
-    } catch (e) {
       plan.reply.data = response.data;
-    }
+      plan.reply.data = _Convert.jsonDecode(_Convert.utf8.decode(plan.reply.data as List${func.addX('int')}));
+    } catch (_) {}
     
     return plan.reply;
   }

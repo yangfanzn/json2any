@@ -104,10 +104,9 @@ export class RcpAgent extends Agent {
     plan.reply.message = _code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;;
 
     try {
-      plan.reply.data = response.toJSON();
-    } catch (e) {
       plan.reply.data = response.body ?? null;
-    }
+      plan.reply.data = response.toJSON() ?? plan.reply.data;
+    } catch (_) {}
 
     return plan.reply;
   }
@@ -163,7 +162,7 @@ export class RcpAgent extends Agent {
 import type * as _AxiosTypes from 'axios';`,
           code: `
 export class AxiosAgent extends Agent {
-  private static session = _Axios.default.create({ responseType: 'text', validateStatus: () => true });
+  private static session = _Axios.default.create({ responseType: 'blob', validateStatus: () => true });
 
   session: _AxiosTypes.Axios | null = null;
   option: _AxiosTypes.AxiosRequestConfig | null = null;
@@ -201,10 +200,9 @@ export class AxiosAgent extends Agent {
     plan.reply.message = _code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;
 
     try {
-      plan.reply.data = JSON.parse(response?.data);
-    } catch (e) {
-      plan.reply.data = response?.data ?? null;
-    }
+      const t = (plan.reply.data = response?.data);
+      plan.reply.data = JSON.parse(await (t instanceof Blob ? t.text() : t));
+    } catch (_) {}
 
     return plan.reply;
   }
@@ -304,10 +302,10 @@ export class FetchAgent extends Agent {
     plan.reply.message = _code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;
 
     try {
-      plan.reply.data = JSON.parse(await response?.text());
-    } catch (e) {
-      plan.reply.data = await response?.text() ?? null;
-    }
+      const rsp = response?.clone();
+      plan.reply.data = await rsp?.blob();
+      plan.reply.data = JSON.parse(await (plan.reply.data as Blob).text());
+    } catch (_) {}
 
     return plan.reply;
   }
