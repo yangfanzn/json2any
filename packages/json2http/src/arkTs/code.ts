@@ -55,7 +55,7 @@ async ${this.launch}(setPlan: (plan: ${this.declPlan}) => void): Promise${addX(t
   await setPlan(plan);
   await (plan.start ?? plan.request)();
   return plan;
-}`,
+} // ${plan.path.origin}`,
       plan: `
 export class ${this.declPlan} extends Plan { ${types}; }`,
     };
