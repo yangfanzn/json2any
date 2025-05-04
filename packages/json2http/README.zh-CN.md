@@ -435,15 +435,6 @@ main() async {
 
 ## 生成代码的使用
 
-### Json2http.single
-
-### Plan
-
-### Agent
-
-### BodyFormFile
-
-
 ## 命令行其他选项
 ### -l --language，指定需要构建的语言
 ```sh

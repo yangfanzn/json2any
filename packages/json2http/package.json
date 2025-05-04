@@ -1,6 +1,6 @@
 {
   "name": "json2http",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "json2http is a CLI tool that depends on json2class for generating code from JSON or JSON5, enabling HTTP-based requests.",
   "keywords": [
     "http request",
