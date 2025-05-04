@@ -119,8 +119,8 @@ export class RcpAgent extends Agent {
     } else if (type === 'json') {
       return JSON.stringify(
         data instanceof Array ? 
-          data.map((e: Any) => e instanceof Json2class ? e.toJson() : e) : 
-          (data instanceof Json2class ? data.toJson() : data)
+          data.map((e: Any) => e instanceof Json2class ? _nullFilter(e.toJson()) : e) : 
+          (data instanceof Json2class ? _nullFilter(data.toJson()) : data)
       );
     } else if (type === 'map' && data instanceof Json2class) {
       return _obj2get(data.toJson());
@@ -215,9 +215,9 @@ export class AxiosAgent extends Agent {
     } else if (type === 'json') {
       return JSON.stringify(
         data instanceof Array
-          ? data.map((e: Any) => (e instanceof Json2class ? e.toJson() : e))
+          ? data.map((e: Any) => (e instanceof Json2class ? _nullFilter(e.toJson()) : e))
           : data instanceof Json2class
-          ? data.toJson()
+          ? _nullFilter(data.toJson())
           : data,
       );
     } else if (type === 'map' && data instanceof Json2class) {
@@ -318,9 +318,9 @@ export class FetchAgent extends Agent {
     } else if (type === 'json') {
       return JSON.stringify(
         data instanceof Array
-          ? data.map((e: Any) => (e instanceof Json2class ? e.toJson() : e))
+          ? data.map((e: Any) => (e instanceof Json2class ? _nullFilter(e.toJson()) : e))
           : data instanceof Json2class
-          ? data.toJson()
+          ? _nullFilter(data.toJson())
           : data,
       );
     } else if (type === 'map' && data instanceof Json2class) {
@@ -378,6 +378,20 @@ ${agentConfig.import}
 
 @json2class@
 
+function _nullFilter(data: Record${addX('string, Any')}) {
+  const result: Record${addX('string, Any')} = {};
+  Object.entries(data).forEach((e) => {
+    const key = e[0];
+    const value = e[1];
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const nested = _nullFilter(value as Record${addX('string, Any')});
+      if (Object.keys(nested).length) result[key] = nested;
+    } else if (value !== null && value !== undefined) {
+      result[key] = value;
+    }
+  });
+  return result;
+}
 function _obj2get(obj: Record${addX('string, Any')}) {
   return Object.keys(obj).reduce((v, k) => {
     obj[k] !== null && v.push(\`\${encodeURIComponent(k)}=\${encodeURIComponent(\`\${obj[k]}\`)}\`);

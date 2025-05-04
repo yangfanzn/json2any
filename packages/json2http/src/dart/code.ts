@@ -126,9 +126,9 @@ class DioAgent extends Agent {
     if (type == null) {
       return null;
     } else if (type == 'json') {
-      return _Convert.jsonEncode(data);
+      return _Convert.jsonEncode(data is Json2class ? _nullFilter(data.toJson()) : data);
     } else if (type == 'map' && data is Json2class) {
-      return data.toJson();
+      return _nullFilter(data.toJson());
     } else if (type == 'form' && data is BodyForm) {
       final a2b = (BodyFormFile a) {
         final file = a.file;
@@ -176,6 +176,18 @@ ${agentConfig.import}
 
 @json2class@
 
+_nullFilter(Map data) {
+  final result = ${addX('String, dynamic')}{};
+  data.forEach((key, value) {
+    if (value is Map) {
+      final nested = _nullFilter(value);
+      if (nested.isNotEmpty) result[key] = nested;
+    } else if (value != null) {
+      result[key] = value;
+    }
+  });
+  return result;
+}
 _replyReset(Reply reply) {
   reply.code = reply.error = reply.data = reply.exception = null;
   reply.message = '';
