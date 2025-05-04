@@ -39,3 +39,6 @@
 
 ## 0.0.12
 - 2025-03-10 Fix the example error in the Quick Start section of the documentation.
+
+## 0.0.13
+- 2025-05-04 official stable release
