@@ -220,6 +220,12 @@ export class Func {
         language: 'typescript',
         version: '5',
       },
+      [Language.Kotlin2]: {
+        ext: 'kt',
+        temp: require('../kotlin/temp.kt').default,
+        language: 'kotlin',
+        version: '2',
+      },
     };
     return languages[language];
   }
