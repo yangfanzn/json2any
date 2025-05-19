@@ -24,7 +24,7 @@ export class Lang {
   }
 
   toFromJson(key: Key) {
-    return `this.${key.prop} = this._fromJson<${key.decl}>(data, '${key.jsonKey}', ${this.arrayValue(key.array)}, ${
+    return `this.${key.prop} = this._fromJson<${key.decl}>(data, "${key.jsonKey}", ${this.arrayValue(key.array)}, ${
       key.optional
     }, this.${key.prop}, ${key.def}, r);`;
   }

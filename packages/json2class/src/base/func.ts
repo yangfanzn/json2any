@@ -83,6 +83,13 @@ export class Func {
       $: '\\$',
       "'": "\\'",
     };
+    if (env.language === Language.Kotlin2) {
+      special['"'] = '\\"';
+      special['$'] = '${"$"}';
+      special['\v'] = '\\\\v';
+      special['\f'] = '\\\\f';
+      str = str.replace(/\\u000b/g, '\\\\v').replace(/\\f/g, '\\\\f');
+    }
     return str.replace(new RegExp(`[${Object.keys(special).join('')}\\\\]`, 'g'), e => {
       const t = special[e];
       if (t) {

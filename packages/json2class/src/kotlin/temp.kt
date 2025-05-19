@@ -1,4 +1,37 @@
+package com.yangfanzn.json2class
+
 import org.json.JSONObject as _JSONObject
+import org.json.JSONArray as _JSONArray
+
+private fun _JSONObject._toMap(): Map<String, Any?> {
+    val map = mutableMapOf<String, Any?>()
+    val keys = keys()
+    while (keys.hasNext()) {
+        val key = keys.next()
+        var value = get(key)
+        value = when (value) {
+            is _JSONObject -> value._toMap()
+            is _JSONArray -> value._toList()
+            else -> value
+        }
+        map[key] = value
+    }
+    return map
+}
+private fun _JSONArray._toList(): List<Any?> {
+    val list = mutableListOf<Any?>()
+    for (i in 0 until length()) {
+        var elem = get(i)
+        elem = when (elem) {
+            is _JSONObject -> elem._toMap()
+            is _JSONArray -> elem._toList()
+            else -> elem
+        }
+        list.add(elem)
+    }
+    return list
+}
+
 
 enum class DiffType { Keep, Default, Null }
 
@@ -9,10 +42,10 @@ enum class MoreIndex { Fill, Drop, Null }
 enum class MissIndex { Fill, Drop, Null, Skip }
 
 open class Rule {
-    var missKey: MissKey = MissKey.Null
-    var diffType: DiffType = DiffType.Null
-    var moreIndex: MoreIndex = MoreIndex.Fill
-    var missIndex: MissIndex = MissIndex.Skip
+    var missKey = MissKey.Null
+    var diffType = DiffType.Null
+    var moreIndex = MoreIndex.Fill
+    var missIndex = MissIndex.Skip
 
     fun copy(): Rule {
         val rule = Rule()
@@ -49,7 +82,7 @@ abstract class Json2class {
         var _data = data
         if (data is String) {
             try {
-                _data = _JSONObject(data)
+                _data = _JSONObject(data)._toMap()
             } catch (_: Exception) {
             }
         }
@@ -62,7 +95,7 @@ abstract class Json2class {
         rule: Rule? = null
     ): Json2class
 
-    var preset: String = ""
+    open var preset = ""
 
     fun fromPreset(
         setRule: ((Rule) -> Unit)? = null,
@@ -286,7 +319,7 @@ abstract class Json2class {
         return t
     }
 
-    fun <T> _fromJson(
+    protected fun <T> _fromJson(
         data: Any?,
         key: String,
         array: List<Boolean>,
@@ -370,7 +403,7 @@ abstract class Json2class {
         }
     }
 
-    fun _toJson(data: Any?): Any? {
+    protected fun _toJson(data: Any?): Any? {
         return when (data) {
             is List<*> -> data.map { if (it is Json2class) it.toJson() else it }
             is Json2class -> data.toJson()
