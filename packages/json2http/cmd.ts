@@ -71,6 +71,9 @@ program
         case Language.Typescript5:
           defaultAgent = DefaultAgent.Typescript_Fetch0;
           break;
+        case Language.Kotlin2:
+          defaultAgent = DefaultAgent.Kotlin_OkHttp4;
+          break;
       }
     }
     if (!defaultAgent.startsWith(`${func.language(env.language).language}_`)) {

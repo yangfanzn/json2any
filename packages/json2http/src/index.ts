@@ -2,6 +2,7 @@ import { Json2classBase } from 'json2class';
 import * as Base from './base';
 import * as Dart from './dart';
 import * as ArkTs from './arkTs';
+import * as Kotlin from './kotlin';
 
 type X = typeof Base.Http<Json2classBase.Complex, Json2classBase.Simple<Json2classBase.Complex>>;
 type Y = Base.Http<Json2classBase.Complex, Json2classBase.Simple<Json2classBase.Complex>>;
@@ -14,5 +15,9 @@ export function json2http(key?: string, json?: Record<string, any>, file?: strin
     case Base.Language.ArkTs12:
     case Base.Language.Typescript5:
       return key && json ? Base.func.core2http(ArkTs.Http, ArkTs.Complex, ArkTs.Simple, key, json, file) : ArkTs.Http;
+    case Base.Language.Kotlin2:
+      return key && json
+        ? Base.func.core2http(Kotlin.Http, Kotlin.Complex, Kotlin.Simple, key, json, file)
+        : Kotlin.Http;
   }
 }
