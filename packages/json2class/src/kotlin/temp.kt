@@ -3,7 +3,7 @@ package com.yangfanzn.json2class
 import org.json.JSONObject as _JSONObject
 import org.json.JSONArray as _JSONArray
 
-private fun _JSONObject._toMap(): Map<String, Any?> {
+private fun _JSONObject._toMap(): MutableMap<String, Any?> {
     val map = mutableMapOf<String, Any?>()
     val keys = keys()
     while (keys.hasNext()) {
@@ -31,7 +31,14 @@ private fun _JSONArray._toList(): List<Any?> {
     }
     return list
 }
-
+private fun _stringify(data: Any?): String {
+    return when (data) {
+        is Map<*, *> -> _JSONObject(data).toString()
+        is List<*> -> _JSONArray(data).toString()
+        is String -> "\"${data}\""
+        else -> data.toString()
+    }
+}
 
 enum class DiffType { Keep, Default, Null }
 
@@ -41,7 +48,7 @@ enum class MoreIndex { Fill, Drop, Null }
 
 enum class MissIndex { Fill, Drop, Null, Skip }
 
-open class Rule {
+class Rule {
     var missKey = MissKey.Null
     var diffType = DiffType.Null
     var moreIndex = MoreIndex.Fill
@@ -74,7 +81,7 @@ abstract class Json2class {
 
     var rule: Rule? = null
 
-    open fun fromAny(
+    fun fromAny(
         data: Any?,
         setRule: ((Rule) -> Unit)? = null,
         rule: Rule? = null
@@ -106,7 +113,7 @@ abstract class Json2class {
 
     abstract fun toNew(): Json2class
 
-    abstract fun toJson(): Map<String, Any?>
+    abstract fun toJson(): MutableMap<String, Any?>
 
     private fun _isSameSimple(source: Any?, target: Any?): Boolean {
         return source?.javaClass == target?.javaClass ||

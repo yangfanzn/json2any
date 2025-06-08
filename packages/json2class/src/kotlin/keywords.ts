@@ -56,7 +56,7 @@ export const keywords: Record<string, string> = {
   companion: 'companion',
   const: 'const',
   crossinline: 'crossinline',
-  data: 'data',
+  // data: 'data',
   enum: 'enum',
   expect: 'expect',
   external: 'external',

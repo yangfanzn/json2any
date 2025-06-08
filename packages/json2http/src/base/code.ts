@@ -1,4 +1,4 @@
-import { Json2classBase, Json2classDart, Json2classArkTs } from 'json2class';
+import { Json2classBase, Json2classDart, Json2classArkTs, Json2classKotlin } from 'json2class';
 import { SchemaPlan, validate } from './schema';
 import { func } from './func';
 
@@ -16,7 +16,7 @@ Object.defineProperty(Json2classBase.Key.prototype, 'prop', {
   },
 });
 
-[{ type: Json2classDart }, { type: Json2classArkTs }].forEach(e => {
+[{ type: Json2classDart }, { type: Json2classArkTs }, { type: Json2classKotlin }].forEach(e => {
   const simple = e.type.Simple.prototype;
   const complex = e.type.Complex.prototype;
 

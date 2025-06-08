@@ -101,7 +101,7 @@ export class RcpAgent extends Agent {
 
     const response = this.response = await session.fetch(option).finally(() => this.session?.close());
     plan.reply.code = response.statusCode;
-    plan.reply.message = _code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;;
+    plan.reply.message = _code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;
 
     try {
       plan.reply.data = response.body ?? null;

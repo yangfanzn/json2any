@@ -62,8 +62,8 @@ class ${this.decl} : Json2class() {
   override fun toNew(): ${this.decl} {
     return ${this.def}
   }
-  override fun toJson(): Map${Base.func.addX('String, Any?')} {
-    return mapOf(${this.child.map(e => `"${e.jsonKey}" to _toJson(${e.prop})`)})
+  override fun toJson(): MutableMap${Base.func.addX('String, Any?')} {
+    return mutableMapOf(${this.child.map(e => `"${e.jsonKey}" to _toJson(${e.prop})`)})
   }
 }`;
   }

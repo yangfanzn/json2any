@@ -11,53 +11,59 @@ export class Http extends Base.Http<Complex, Simple> {
 
     const { body } = plan;
 
+    let bodyDecl = 'Nothing?';
     let bodyDef = 'null';
     if (body) {
       if (body.type === 'form') {
-        bodyDef = `new Body('${body.type}', new BodyForm(${body.data.fields.def}, ${body.data.files.def}))`;
+        bodyDecl = `Body${addX(`BodyForm${addX(`${body.data.fields.decl}, ${body.data.files.decl}`)}`)}`;
+        bodyDef = `Body("${body.type}", BodyForm(${body.data.fields.def}, ${body.data.files.def}))`;
       } else if (body.data?.array.length) {
-        bodyDef = `new Body${addX(
-          `${plan.title.lang.arrayType(body.data.array, body.data.decl)}${body.data.optional ? ' | null' : ''}`,
-        )}('${body.type}', [])`;
+        bodyDecl = `Body${addX(
+          `${plan.title.lang.arrayType(body.data.array, body.data.decl)}${body.data.optional ? '?' : ''}`,
+        )}`;
+        bodyDef = `Body("${body.type}", mutableListOf())`;
       } else if (body.type === 'plain') {
-        bodyDef = `new Body${addX(`string${body.data?.optional ? ' | null' : ''}`)}('${body.type}', '')`;
+        bodyDecl = `Body${addX(`String${body.data?.optional ? '?' : ''}`)}`;
+        bodyDef = `Body("${body.type}", "")`;
       } else if (body.type === 'byte') {
-        bodyDef = `new Body${addX(`Uint8Array${body.data?.optional ? ' | null' : ''}`)}('${
-          body.type
-        }', new Uint8Array(0))`;
+        bodyDecl = `Body${addX(`ByteArray${body.data?.optional ? '?' : ''}`)}`;
+        bodyDef = `Body("${body.type}", ByteArray(0))`;
       } else if (body.data) {
-        bodyDef = `new Body${addX(`${body.data.decl}${body.data.optional ? ' | null' : ''}`)}('${body.type}', ${
-          body.data.def
-        })`;
+        bodyDecl = `Body${addX(`${body.data.decl}${body.data.optional ? '?' : ''}`)}`;
+        bodyDef = `Body("${body.type}", ${body.data.def})`;
       } else {
         Base.func.unreachableError(`[${plan.path.origin}] unknown body type parsing`);
       }
     }
 
     const types = [
-      `path = '${plan.path.origin}'`,
-      `seg = ${plan.seg?.def ?? 'null'}`,
-      `readonly title = '${plan.title.origin}'`,
-      `method = '${plan.method.origin}'`,
-      `res = ${plan.res?.def ?? 'null'}`,
-      `params = ${plan.params?.def ?? 'null'}`,
-      `body = ${bodyDef}`,
-      `headers: Record${addX('string, Any')} = JSON.parse('${Base.func.convertWrap(
+      `override var path = "${plan.path.origin}"`,
+      `override var seg = ${plan.seg?.def ?? 'null'}`,
+      `override val title = "${plan.title.origin}"`,
+      `override var method = "${plan.method.origin}"`,
+      `override var res = ${plan.res?.def ?? 'null'}`,
+      `override var params = ${plan.params?.def ?? 'null'}`,
+      `override var body: ${bodyDecl} = ${bodyDef}`,
+      `override var headers = _JSONObject("${Base.func.convertWrap(
         JSON.stringify(plan.headers?.origin ?? {}),
-      )}')`,
+      )}")._toMap()`,
     ].join('; ');
 
     return {
       code: `
-async ${this.launch}(setPlan: (plan: ${this.declPlan}) => void): Promise${addX(this.declPlan)}  {
-  const plan = new ${this.declPlan}();
-  await Json2http.setPlan?.(plan);
-  await setPlan(plan);
-  await (plan.start ?? plan.request)();
-  return plan;
+suspend fun ${this.launch}(setPlan: (plan: ${this.declPlan}) -> Unit): ${this.declPlan} {
+  val plan = ${this.declPlan}()
+  Json2http.setPlan?.invoke(plan)
+  setPlan(plan)
+  (plan.start ?: plan.request).invoke()
+  return plan
 } // ${plan.path.origin}`,
       plan: `
-export class ${this.declPlan} extends Plan { ${types}; }`,
+class ${this.declPlan}: Plan${addX(
+        `${plan.seg?.decl ?? 'Nothing?'}, ${plan.res?.decl ?? 'Nothing?'}, ${
+          plan.params?.decl ?? 'Nothing?'
+        }, ${bodyDecl}`,
+      )}() { ${types}; }`,
     };
   }
 
@@ -66,92 +72,131 @@ export class ${this.declPlan} extends Plan { ${types}; }`,
     switch (env.defaultAgent) {
       case DefaultAgent.Kotlin_OkHttp4:
         return {
-          name: 'RcpAgent',
-          import: `import { util as _Util } from '@kit.ArkTS';
-import { rcp as _Rcp } from '@kit.RemoteCommunicationKit';
-import { fileUri as _FileUri } from '@kit.CoreFileKit';`,
+          name: 'OkHttpAgent',
+          import: `
+package com.yangfanzn.json2http
+
+import okhttp3.*
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.ResponseBody.Companion.toResponseBody
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import java.io.File`,
           code: `
-export class RcpAgent extends Agent {
-  private static session = _Rcp.createSession();
-  
-  session: _Rcp.Session | null = null;
-  option: _Rcp.Request | null = null;
-  response: _Rcp.Response | null = null;
+class OkHttpAgent: Agent() {
+  companion object {
+    private val session = OkHttpClient.Builder().build()
+  }
 
-  async fetch(plan: Plan): Promise${func.addX('Reply')}  {
-    const session = this.session ?? RcpAgent.session;
+  var session: OkHttpClient? = null
+  var option: Request.Builder? = null
+  var response: Response? = null
 
-    let path = plan.path;
-    if (plan.seg) {
-      const seg = plan.seg?.toJson();
-      path = path.replace(/{(.*?)}/g, (_, k: string) => seg?.[k]?.toString() ?? '');
+  override suspend fun fetch(plan: Plan<*, *, *, *>): Reply {
+    val session = this.session ?: OkHttpAgent.session
+    
+    var path = plan.path
+    plan.seg?.let { seg ->
+      val _seg = seg.toJson()
+      val regex = Regex("\\\\{(.*?)\\\\}")
+      path = regex.replace(path) { matchResult ->
+        val key = matchResult.groupValues[1]
+        _seg[key]?.toString() ?: ""
+      }
     }
-    path = \`\${plan.baseURL}\${path}\`;
-    const q = _obj2get(plan.params?.toJson() ?? {});
-    path = \`\${path}\${q ? (path.includes('?') ? '&' : '?') : ''}\${q}\`;
+    path = "\${plan.baseURL}\${path}";
+    val q = _obj2get(plan.params?.toJson() ?: mapOf());
+    path = "\${path}\${if (q.isNotEmpty()) (if (path.contains('?')) "&" else "?") else ""}\${q}"
 
-    if (plan.body?.contentType) {
-      plan.headers['content-type'] = plan.body.contentType;
+    val option = Request.Builder()
+    plan.body?.let { body -> plan.headers["content-type"] = body.contentType }
+    plan.headers.forEach { (key, value) ->
+      when (value) {
+        is String -> option.addHeader(key, value)
+        is List<*> -> value.forEach { item -> option.addHeader(key, item.toString()) }
+        else -> option.addHeader(key, value.toString())
+      }
     }
+    
+    option.url(path).method(plan.method, body(plan))
+    this.option = option
 
-    const option = this.option =
-      new _Rcp.Request(path, plan.method, plan.headers as _Rcp.RequestHeaders, await this.body(plan) ?? undefined);
+    plan.ready?.invoke()
 
-    await plan.ready?.();
+    val response = session.newCall(option.build()).execute()
+    val bytes = response.body?.bytes()
+    this.response = response.newBuilder().body(bytes?.toResponseBody(response.body?.contentType())).build()
 
-    const response = this.response = await session.fetch(option).finally(() => this.session?.close());
-    plan.reply.code = response.statusCode;
-    plan.reply.message = _code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;;
+    plan.reply.code = response.code
+    plan.reply.message = _code2message["\${plan.reply.code ?: 0}"] ?: "unknown http code \${plan.reply.code}"
 
     try {
-      plan.reply.data = response.body ?? null;
-      plan.reply.data = response.toJSON() ?? plan.reply.data;
-    } catch (_) {}
+      plan.reply.data = bytes
+      plan.reply.data = _JSONObject(String(plan.reply.data as ByteArray))._toMap()
+    } catch (_: Exception) {
+      val contentType = response.header("Content-Type") ?: ""
+      if (contentType.contains("text") || 
+        contentType.contains("plain") || 
+        contentType.contains("json") || 
+        contentType.contains("xml")) {
+        plan.reply.data = plan.reply.data.toString()
+      }
+    }
 
     return plan.reply;
   }
 
-  body(plan: Plan): Any {
-    const type = plan.body?.type ?? null;
-    const data = plan.body?.data ?? null;
-    if (type === null) {
-      return null;
-    } else if (type === 'json') {
-      return JSON.stringify(
-        data instanceof Array ? 
-          data.map((e: Any) => e instanceof Json2class ? _nullFilter(e.toJson()) : e) : 
-          (data instanceof Json2class ? _nullFilter(data.toJson()) : data)
-      );
-    } else if (type === 'map' && data instanceof Json2class) {
-      return _obj2get(data.toJson());
-    } else if (type === 'form' && data instanceof BodyForm) {
-      const a2b = (a: BodyFormFile) => {
-        if (a.file !== null) {
-          return { contentOrPath: a.file, remoteFileName: a.filename ?? new _FileUri.FileUri(a.file).name, contentType: a.contentType } as _Rcp.FormFieldFileValue;
-        } else if (a.content !== null) {
-          return { contentOrPath: { content: a.content.buffer }, remoteFileName: a.filename, contentType: a.contentType } as _Rcp.FormFieldFileValue
+  override suspend fun body(plan: Plan<*, *, *, *>): RequestBody? {
+    val type = plan.body?.type
+    val data = plan.body?.data
+    var body: RequestBody? = when (type) {
+      null -> null
+      "json" -> _stringify(if (data is Json2class) { _nullFilter(data.toJson()) } else { data }).toRequestBody()
+      "map" -> if (data is Json2class) _obj2get(data.toJson()).toRequestBody() else null
+      "form" -> { 
+        if (data !is BodyForm<*, *>) {
+          return null
         }
-        return null;
-      };
-      const map: _Rcp.MultipartFormFields = {};
-      type V = _Rcp.MultipartFormFieldValue;
-      const cb = (data: Record${func.addX('string, Any')}) => Object.keys(data).forEach(k => {
-        if (map[k] === undefined) {
-          map[k] = [];
+        val map: MultipartBody.Builder = MultipartBody.Builder()
+        fun a2b(a: BodyFormFile, key: String) {
+          val headersBuilder = Headers.Builder()
+          a.headers?.forEach { (k, v) -> v.forEach { vv -> headersBuilder.add(k, vv) } }
+          if (a.file != null) {
+            val file = File(a.file)
+            val filename = a.filename ?: file.name
+            val disposition = "form-data; name=\\"$key\\"; filename=\\"$filename\\""
+            headersBuilder.addUnsafeNonAscii("content-disposition", disposition)
+            map.addPart(headersBuilder.build(), file.asRequestBody(a.contentType?.toMediaTypeOrNull()))
+          } else if (a.content != null) {
+            val filename = a.filename ?: ""
+            val disposition = "form-data; name=\\"$key\\"; filename=\\"$filename\\""
+            headersBuilder.addUnsafeNonAscii("content-disposition", disposition)
+            map.addPart(headersBuilder.build(), a.content.toRequestBody(a.contentType?.toMediaTypeOrNull()))
+          }
         }
-        const v = ((data[k] instanceof Array ? data[k] : [data[k]]) as Array${func.addX('Any')})
-          .map(e => e instanceof BodyFormFile ? a2b(e) : e as _Rcp.FormFieldValue)
-          .filter(e => e !== null) as Array${func.addX('V')};
-        (map[k] as Array${func.addX('V')}).push(...v);
-      });
-      cb((data as BodyForm).fields.toJson());
-      cb((data as BodyForm).files.toJson());
-      return new _Rcp.MultipartForm(map);
-    } else if (data instanceof Uint8Array) {
-      return data.buffer;
-    } else {
-      return data;
+        fun cb(key: String, value: Any?) {
+          (if (value is List<*>) value else listOf(value)).forEach { e ->
+            if (e is BodyFormFile) {
+              a2b(e, key)
+            } else if (e != null) {
+              map.addFormDataPart(key, e.toString())
+            }
+          }
+        }
+        data.fields.toJson().forEach(::cb)
+        data.files.toJson().forEach(::cb)
+        return map.build()
+      }
+      else -> when (data) {
+        is String -> data.toRequestBody()
+        is ByteArray -> data.toRequestBody()
+        else -> null
+      }
     }
+    if (plan.method != "GET" && body == null) {
+      body = "".toRequestBody()
+    }
+    return body
   }
 }`,
         };
@@ -164,177 +209,155 @@ export class RcpAgent extends Agent {
   static toEntry() {
     const { addX } = Base.func;
     const { agentConfig } = this;
-    const isTs = Base.env.language.startsWith('typescript@');
+    // const isTs = Base.env.language.startsWith('typescript@');
     return `
 ${agentConfig.import}
 
 @json2class@
 
-function _nullFilter(data: Record${addX('string, Any')}) {
-  const result: Record${addX('string, Any')} = {};
-  Object.entries(data).forEach((e) => {
-    const key = e[0];
-    const value = e[1];
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      const nested = _nullFilter(value as Record${addX('string, Any')});
-      if (Object.keys(nested).length) result[key] = nested;
-    } else if (value !== null && value !== undefined) {
-      result[key] = value;
+private fun _nullFilter(data: Map${addX('String, Any?')}): Map${addX('String, Any?')} {
+  val result = mutableMapOf${addX('String, Any?')}()
+  for ((key, value) in data) {
+    if (value is Map<*, *> && value !is List<*>) {
+      val nested = _nullFilter(value as Map<String, Any?>)
+      if (nested.isNotEmpty()) {
+        result[key] = nested
+      }
+    } else if (value != null) {
+      result[key] = value
     }
-  });
-  return result;
+  }
+  return result
 }
-function _obj2get(obj: Record${addX('string, Any')}) {
-  return Object.keys(obj).reduce((v, k) => {
-    obj[k] !== null && v.push(\`\${encodeURIComponent(k)}=\${encodeURIComponent(\`\${obj[k]}\`)}\`);
-    return v;
-  }, [] as Array${addX('string')}).join('&');
+private fun _obj2get(obj: Map${addX('String, Any?')}): String {
+  return obj.filterValues { it != null }
+    .map { (k, v) -> "\${java.net.URLEncoder.encode(k, "UTF-8")}=\${java.net.URLEncoder.encode(v.toString(), "UTF-8")}" }
+      .joinToString("&")
 }
-function _replyReset(reply: Reply) {
-  reply.code = reply.error = reply.data = reply.exception = null;
-  reply.message = '';
+private fun _replyReset(reply: Reply) {
+  reply.code = null
+  reply.error = null
+  reply.data = null
+  reply.exception = null
+  reply.message = ""
 }
-export class Reply {
-  code: number | null = null;
-  message = '';
-  error: string | null = null;
-  data: Any = null;
-  exception: Any = null;
+class Reply {
+  var code: Int? = null
+  var message: String = ""
+  var error: String? = null
+  var data: Any? = null
+  var exception: Any? = null
 }
-export abstract class Agent {
-  abstract fetch(plan: Plan): Promise${addX('Reply')};
-  abstract body(plan: Plan): Promise${addX('Any')} | Any;
+abstract class Agent {
+  abstract suspend fun fetch(plan: Plan<*, *, *, *>): Reply
+  abstract suspend fun body(plan: Plan<*, *, *, *>): Any?
 }${agentConfig.code}
-export class BodyFormFile {
-  readonly content: Uint8Array | null;
-  readonly file: ${isTs ? 'Blob' : 'string'} | null;
-  filename: string | null = null;
-  contentType: string | null = null;
-  headers: Record${addX(`string, Array${addX('string')}`)} | null = null;
-
-  private constructor(
-    content: Uint8Array | null,
-    file: ${isTs ? 'Blob' : 'string'} | null,
-  ) {
-    this.content = content === null ? null : new Uint8Array(content);
-    this.file = file;
-    this.contentType = 'application/octet-stream';
-  }
-  static fromFile(file: ${isTs ? 'Blob' : 'string'}) {
-    return new BodyFormFile(null, file); }
-  static fromString(value: string) {
-    return new BodyFormFile(${
-      isTs ? 'new TextEncoder().encode(value)' : '_Util.TextEncoder.create().encodeInto(value)'
-    }, null); }
-  static fromBytes(value: Array${addX('number')} | Uint8Array) {
-    return new BodyFormFile(new Uint8Array(value), null); }
-}
-export class BodyForm${addX('T extends Json2class = Json2class, K extends Json2class = Json2class')} {
-  fields: T;
-  files: K;
-  constructor(fields: T, files: K) {
-    this.fields = fields;
-    this.files = files;
+class BodyFormFile private constructor(
+  val content: ByteArray? = null,
+  val file: String? = null
+) {
+  var filename: String? = null
+  var contentType: String? = "application/octet-stream"
+  var headers: MutableMap<String, List<String>>? = null
+  companion object {
+    fun fromFile(file: String): BodyFormFile { return BodyFormFile(null, file) }
+    fun fromString(value: String): BodyFormFile { return BodyFormFile(value.toByteArray(), null) }
+    fun fromBytes(value: ByteArray): BodyFormFile { return BodyFormFile(value, null) }
   }
 }
-export class Body${addX('T')} {
-  private static _types: Record${addX('string, string')} = {${Base.bodyTypes
-      .map(k => `'${k}': '${(Base.contentTypes as Record<string, string>)[k]}'`)
-      .join(',')}};
-
-  readonly type: string;
-  data: T;
-
-  readonly contentType: string | null;
-
-  constructor(type: string, data: T) {
-    this.type = type;
-    this.data = data;
-    this.contentType = Body._types[type] ?? null;
+class BodyForm<T: Json2class, K: Json2class>(
+  val fields: T,
+  val files: K
+)
+class Body<T>(val type: String, var data: T) {
+  companion object {
+    private val _types = mapOf(${Base.bodyTypes
+      .map(k => `"${k}" to "${(Base.contentTypes as Record<string, string>)[k]}"`)
+      .join(',')})
+  }
+  val contentType: String? = _types[type]
+}
+class Json2httpError(val plan: Plan<*, *, *, *>) : Exception() {
+  override val message: String = toString()
+  val name: String = plan.title
+  override fun toString(): String {
+    return plan.reply.error.takeIf { !it.isNullOrEmpty() } ?: plan.reply.message
   }
 }
-export class Json2httpError implements Error {
-  readonly name: string;
-  readonly message: string;
-  readonly plan: Plan;
-  constructor(plan: Plan) {
-    this.plan = plan;
-    this.name = plan.title;
-    this.message = this.toString();
-  }
-  toString(): string {
-    return this.plan.reply.error || this.plan.reply.message;
-  }
-}
+abstract class Plan<
+  S: Json2class?, 
+  R: Json2class?, 
+  P: Json2class?,
+  B: Body<*>?,
+> {
+  var baseURL: String = ""
 
-export abstract class Plan {
-  baseURL = '';
+  abstract var path: String
+  abstract var seg: S
 
-  abstract path: string;
-  abstract seg: Json2class | null;
+  abstract val title: String
+  abstract var method: String
+  abstract var res: R
 
-  abstract readonly title: string;
-  abstract method: string;
-  abstract res: Json2class | null;
+  abstract var params: P
+  abstract var body: B
 
-  abstract params: Json2class | null;
-  abstract body: Body${addX('Any')} | null;
-  
-  abstract headers: Record${addX('string, Any')};
+  abstract var headers: MutableMap<String, Any?>
 
-  agent: Agent = new ${agentConfig.name}();
+  var agent: Agent = ${agentConfig.name}()
 
-  reply = new Reply();
+  var reply = Reply()
 
-  readonly abort = (): void => {
-    if (this.reply.code !== 200 && this.reply.message) {
-      throw new Json2httpError(this);
+  val abort: suspend () -> Unit = {
+    if (reply.code != 200 && reply.message.isNotEmpty()) {
+      throw Json2httpError(this)
     }
-    if (this.reply.error) {
-      throw new Json2httpError(this);
+    if (reply.error != null) {
+      throw Json2httpError(this)
     }
-  };
+  }
 
-  readonly fetch = async (): Promise${addX('void')} => {
-    _replyReset(this.reply);
-    this.reply = await this.agent.fetch(this).catch((e: Any) => {
-      this.reply.exception = e;
-      const t = e as Record${addX('string, string')};
-      this.reply.error = t['message'] || t['data'] || JSON.stringify(e);
-      return this.reply;
-    }).finally(async () => {
-      await this.process?.(this.reply);
-    });
-  };
+  val fetch: suspend () -> Unit = {
+    _replyReset(reply)
+    try {
+      reply = agent.fetch(this)
+    } catch (e: Exception) {
+      reply.exception = e
+      reply.error = (e.message ?: e.toString())
+    } finally {
+      process?.invoke(reply)
+    }
+  }
 
-  readonly request = async (): Promise${addX('void')} => {
-    await this.before?.();
-    await this.fetch();
-    await this.after?.();
-    this.res?.fromAny(this.reply.data);
-    await (this.end ?? this.abort)();
-  };
+  val request: suspend () -> Unit = {
+    before?.invoke()
+    fetch()
+    after?.invoke()
+    res?.fromAny(reply.data)
+    (end ?: abort).invoke()
+  }
 
-  start?: () => void;
-  before?: () => void;
-  ready?: () => void;
-  process?: (reply: Reply) => void;
-  after?: () => void;
-  end?: () => void;
+  var start: (suspend () -> Unit)? = null
+  var before: (suspend () -> Unit)? = null
+  var ready: (suspend () -> Unit)? = null
+  var process: (suspend (Reply) -> Unit)? = null
+  var after: (suspend () -> Unit)? = null
+  var end: (suspend () -> Unit)? = null
 }
 @aliases@
 @deps@
 
-export class Json2http {  
-  private constructor() {}
-  static single = new Json2http();
-  static setPlan: ((plan: Plan) => void) | null = null
+class Json2http private constructor() {
+  companion object {
+    val single: Json2http by lazy { Json2http() }
+    var setPlan: ((Plan<*, *, *, *>) -> Unit)? = null
+  }
 @request@
 }
 
-const _code2message: Record${addX('string, string')} = JSON.parse('${Base.func.convertWrap(
+val _code2message: Map${addX('String, String')} = _JSONObject("${Base.func.convertWrap(
       JSON.stringify(Base.code2message),
-    )}');
+    )}")._toMap() as Map${addX('String, String')}
 `;
   }
 }
