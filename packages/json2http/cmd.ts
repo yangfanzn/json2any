@@ -36,29 +36,34 @@ program
     '-o, --output <output>',
     'specify the output directory for build artifacts (defaults to the search directory if not provided)',
   )
-  .addOption(new Option('-e, --entry <entry>', 'specify the entry filename').hideHelp())
+  .option(
+    '-p, --package <package>',
+    'specify the package name for the generated code file (if required by the target language, defaults to parsing from the output path automatically)',
+  )
   .addOption(
     new Option(
       '-a, --default-agent <defaultAgent>',
       [
         'to facilitate usage, built-in agents for different languages have been provided',
-        `you can specify one for your runtime environment, there are [${Object.values(Base.DefaultAgent)}]`,
+        `you can specify one for your runtime environment`,
       ].join('\n'),
     ).choices(Object.values(Base.DefaultAgent)),
   )
+  .addOption(new Option('-e, --entry <entry>', 'specify the entry filename').hideHelp())
   .action(async options => {
     const { env, func, DefaultAgent, Language } = Base;
 
-    const search = Path.resolve(options.search);
+    const search = Path.resolve(options.search).replace(/\\/g, '/');
     bin.dirIsExist(search);
 
-    const output = Path.resolve(options.output || search);
+    const output = Path.resolve(options.output || search).replace(/\\/g, '/');
     bin.dirIsExist(output);
 
     env.debug = Json2classBase.env.debug = Json2classBase_Bin.env.debug = !!options.debug;
     env.language = Json2classBase.env.language = Json2classBase_Bin.env.language = options.language;
     env.search = Json2classBase.env.search = Json2classBase_Bin.env.search = search;
-    env.output = output;
+    env.output = Json2classBase.env.output = Json2classBase_Bin.env.output = output;
+
     let defaultAgent = options.defaultAgent;
     if (!defaultAgent) {
       switch (env.language) {
@@ -73,6 +78,13 @@ program
           break;
         case Language.Kotlin2:
           defaultAgent = DefaultAgent.Kotlin_OkHttp4;
+
+          env.library = `${
+            options.package ?? output.split(new RegExp('/src/main/(java|kotlin)/'))?.[2]?.replace(/\//g, '.') ?? ''
+          }`;
+          if (env.library) {
+            env.library = `package ${env.library}${'\n'.repeat(2)}`;
+          }
           break;
       }
     }

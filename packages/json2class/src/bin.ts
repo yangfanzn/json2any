@@ -101,6 +101,7 @@ export class Bin {
       `json2class.${ext}`,
       [
         func.addCopyRight('json2class'),
+        env.library,
         func.clearComment(temp.replace('@author@', env.author)),
         ...Array.from(jsons)
           // key is file
@@ -109,7 +110,9 @@ export class Bin {
             codes.push(...cur.toCode().map(e => e.code));
             return codes;
           }, [] as string[]),
-      ].join(''),
+      ]
+        .filter(Boolean)
+        .join(''),
     );
     return files;
   }

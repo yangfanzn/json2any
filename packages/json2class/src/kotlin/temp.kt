@@ -1,5 +1,3 @@
-package com.yangfanzn.json2class
-
 import org.json.JSONObject as _JSONObject
 import org.json.JSONArray as _JSONArray
 

@@ -32,6 +32,7 @@ export class Bin extends Json2classBin.Bin {
       `${entry}.${ext}`,
       [
         func.addCopyRight('json2http'),
+        env.library,
         json2http()
           .toEntry()
           .replace(/@json2class@/, func.clearComment(temp))
@@ -39,7 +40,9 @@ export class Bin extends Json2classBin.Bin {
           .replace(/@aliases@/, plans.join(''))
           .replace(/@deps@/, deps.join(''))
           .replace(/@request@/, request.join('')),
-      ].join(''),
+      ]
+        .filter(Boolean)
+        .join(''),
     );
     return files;
   }

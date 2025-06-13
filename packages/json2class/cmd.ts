@@ -34,8 +34,12 @@ program
     '-o, --output <output>',
     'specify the output directory for build artifacts (defaults to the search directory if not provided)',
   )
+  .option(
+    '-p, --package <package>',
+    'specify the package name for the generated code file (if required by the target language, defaults to parsing from the output path automatically)',
+  )
   .action(async options => {
-    const { env } = Base;
+    const { env, Language } = Base;
 
     // todo: 关于 win 路径反斜杠问题，统一考虑
     const search = Path.resolve(options.search).replace(/\\/g, '/');
@@ -47,6 +51,24 @@ program
     env.debug = !!options.debug;
     env.language = options.language;
     env.search = search;
+    env.output = output;
+
+    switch (env.language) {
+      case Language.Dart3:
+        break;
+      case Language.ArkTs12:
+        break;
+      case Language.Typescript5:
+        break;
+      case Language.Kotlin2:
+        env.library = `${
+          options.package ?? output.split(new RegExp('/src/main/(java|kotlin)/'))?.[2]?.replace(/\//g, '.') ?? ''
+        }`;
+        if (env.library) {
+          env.library = `package ${env.library}${'\n'.repeat(2)}`;
+        }
+        break;
+    }
 
     bin.class2file(bin.searchJsons(search)).forEach((code, file) => {
       Fs.writeFileSync(`${output}/${file}`, code);

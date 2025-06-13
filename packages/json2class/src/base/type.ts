@@ -49,4 +49,6 @@ export const env = {
   debug: false,
   language: Language.Dart3,
   search: '',
+  output: '',
+  library: '',
 };

@@ -27,9 +27,10 @@ export const env = {
   author: '',
   debug: false,
   language: Language.Dart3,
-  defaultAgent: DefaultAgent.Dart_Dio5,
   search: '',
   output: '',
+  library: '',
+  defaultAgent: DefaultAgent.Dart_Dio5,
 };
 
 export const code2message = {

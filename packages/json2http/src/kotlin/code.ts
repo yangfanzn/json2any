@@ -73,10 +73,7 @@ class ${this.declPlan}: Plan${addX(
       case DefaultAgent.Kotlin_OkHttp4:
         return {
           name: 'OkHttpAgent',
-          import: `
-package com.yangfanzn.json2http
-
-import okhttp3.*
+          import: `import okhttp3.*
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -209,9 +206,7 @@ class OkHttpAgent: Agent() {
   static toEntry() {
     const { addX } = Base.func;
     const { agentConfig } = this;
-    // const isTs = Base.env.language.startsWith('typescript@');
-    return `
-${agentConfig.import}
+    return `${agentConfig.import}
 
 @json2class@
 
