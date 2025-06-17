@@ -76,7 +76,7 @@ program
         case Language.Typescript5:
           defaultAgent = DefaultAgent.Typescript_Fetch0;
           break;
-        case Language.Kotlin2:
+        case Language.Kotlin1:
           defaultAgent = DefaultAgent.Kotlin_OkHttp4;
 
           env.library = `${

@@ -6,10 +6,10 @@ $RM_desc
 
 ## Supported Languages
 ### Currently Supported
-| [arkTs@12](https://developer.huawei.com/consumer/cn/arkts/) | [dart@3](https://dart.dev/) | [typescript@5](https://www.typescriptlang.org/) |
+| [dart@3](https://dart.dev/) | [arkTs@12](https://developer.huawei.com/consumer/cn/arkts/) | [typescript@5](https://www.typescriptlang.org/) | [kotlin@1](https://kotlinlang.org/) |
 
 ### Planned Support
-| [java](https://dev.java/) | [kotlin](https://kotlinlang.org/) | [swift](https://developer.apple.com/cn/swift/) | [Other languages to be supported]() |
+| [swift](https://developer.apple.com/swift/) | [java](https://dev.java/) | [Other languages to be supported]() |
 
 ## Installation
 

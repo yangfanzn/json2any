@@ -83,7 +83,7 @@ export class Func {
       $: '\\$',
       "'": "\\'",
     };
-    if (env.language === Language.Kotlin2) {
+    if (env.language === Language.Kotlin1) {
       special['"'] = '\\"';
       special['$'] = '${"$"}';
       special['\v'] = '\\\\v';
@@ -227,7 +227,7 @@ export class Func {
         language: 'typescript',
         version: '5',
       },
-      [Language.Kotlin2]: {
+      [Language.Kotlin1]: {
         ext: 'kt',
         temp: require('../kotlin/temp.kt').default,
         language: 'kotlin',

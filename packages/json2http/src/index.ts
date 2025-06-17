@@ -15,7 +15,7 @@ export function json2http(key?: string, json?: Record<string, any>, file?: strin
     case Base.Language.ArkTs12:
     case Base.Language.Typescript5:
       return key && json ? Base.func.core2http(ArkTs.Http, ArkTs.Complex, ArkTs.Simple, key, json, file) : ArkTs.Http;
-    case Base.Language.Kotlin2:
+    case Base.Language.Kotlin1:
       return key && json
         ? Base.func.core2http(Kotlin.Http, Kotlin.Complex, Kotlin.Simple, key, json, file)
         : Kotlin.Http;

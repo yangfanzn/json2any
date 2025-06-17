@@ -10,7 +10,7 @@ export function json2class(key: string, json: Record<string, any>) {
     case Base.Language.ArkTs12:
     case Base.Language.Typescript5:
       return Base.func.core2class(ArkTs.Complex, ArkTs.Simple, key, json);
-    case Base.Language.Kotlin2:
+    case Base.Language.Kotlin1:
       return Base.func.core2class(Kotlin.Complex, Kotlin.Simple, key, json);
   }
 }

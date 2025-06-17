@@ -60,7 +60,7 @@ program
         break;
       case Language.Typescript5:
         break;
-      case Language.Kotlin2:
+      case Language.Kotlin1:
         env.library = `${
           options.package ?? output.split(new RegExp('/src/main/(java|kotlin)/'))?.[2]?.replace(/\//g, '.') ?? ''
         }`;

@@ -11,26 +11,20 @@ export class Http extends Base.Http<Complex, Simple> {
 
     const { body } = plan;
 
-    let bodyDecl = 'Nothing?';
     let bodyDef = 'null';
     if (body) {
       if (body.type === 'form') {
-        bodyDecl = `Body${addX(`BodyForm${addX(`${body.data.fields.decl}, ${body.data.files.decl}`)}`)}`;
         bodyDef = `Body("${body.type}", BodyForm(${body.data.fields.def}, ${body.data.files.def}))`;
       } else if (body.data?.array.length) {
-        bodyDecl = `Body${addX(
+        bodyDef = `Body${addX(
           `${plan.title.lang.arrayType(body.data.array, body.data.decl)}${body.data.optional ? '?' : ''}`,
-        )}`;
-        bodyDef = `Body("${body.type}", mutableListOf())`;
+        )}("${body.type}", mutableListOf())`;
       } else if (body.type === 'plain') {
-        bodyDecl = `Body${addX(`String${body.data?.optional ? '?' : ''}`)}`;
-        bodyDef = `Body("${body.type}", "")`;
+        bodyDef = `Body${addX(`String${body.data?.optional ? '?' : ''}`)}("${body.type}", "")`;
       } else if (body.type === 'byte') {
-        bodyDecl = `Body${addX(`ByteArray${body.data?.optional ? '?' : ''}`)}`;
-        bodyDef = `Body("${body.type}", ByteArray(0))`;
+        bodyDef = `Body${addX(`ByteArray${body.data?.optional ? '?' : ''}`)}("${body.type}", ByteArray(0))`;
       } else if (body.data) {
-        bodyDecl = `Body${addX(`${body.data.decl}${body.data.optional ? '?' : ''}`)}`;
-        bodyDef = `Body("${body.type}", ${body.data.def})`;
+        bodyDef = `Body${addX(`${body.data.decl}${body.data.optional ? '?' : ''}`)}("${body.type}", ${body.data.def})`;
       } else {
         Base.func.unreachableError(`[${plan.path.origin}] unknown body type parsing`);
       }
@@ -43,7 +37,7 @@ export class Http extends Base.Http<Complex, Simple> {
       `override var method = "${plan.method.origin}"`,
       `override var res = ${plan.res?.def ?? 'null'}`,
       `override var params = ${plan.params?.def ?? 'null'}`,
-      `override var body: ${bodyDecl} = ${bodyDef}`,
+      `override var body = ${bodyDef}`,
       `override var headers = _JSONObject("${Base.func.convertWrap(
         JSON.stringify(plan.headers?.origin ?? {}),
       )}")._toMap()`,
@@ -59,11 +53,7 @@ suspend fun ${this.launch}(setPlan: (plan: ${this.declPlan}) -> Unit): ${this.de
   return plan
 } // ${plan.path.origin}`,
       plan: `
-class ${this.declPlan}: Plan${addX(
-        `${plan.seg?.decl ?? 'Nothing?'}, ${plan.res?.decl ?? 'Nothing?'}, ${
-          plan.params?.decl ?? 'Nothing?'
-        }, ${bodyDecl}`,
-      )}() { ${types}; }`,
+class ${this.declPlan}: Plan() { ${types}; }`,
     };
   }
 
@@ -89,7 +79,7 @@ class OkHttpAgent: Agent() {
   var option: Request.Builder? = null
   var response: Response? = null
 
-  override suspend fun fetch(plan: Plan<*, *, *, *>): Reply {
+  override suspend fun fetch(plan: Plan): Reply {
     val session = this.session ?: OkHttpAgent.session
     
     var path = plan.path
@@ -143,7 +133,7 @@ class OkHttpAgent: Agent() {
     return plan.reply;
   }
 
-  override suspend fun body(plan: Plan<*, *, *, *>): RequestBody? {
+  override suspend fun body(plan: Plan): RequestBody? {
     val type = plan.body?.type
     val data = plan.body?.data
     var body: RequestBody? = when (type) {
@@ -244,8 +234,8 @@ class Reply {
   var exception: Any? = null
 }
 abstract class Agent {
-  abstract suspend fun fetch(plan: Plan<*, *, *, *>): Reply
-  abstract suspend fun body(plan: Plan<*, *, *, *>): Any?
+  abstract suspend fun fetch(plan: Plan): Reply
+  abstract suspend fun body(plan: Plan): Any?
 }${agentConfig.code}
 class BodyFormFile private constructor(
   val content: ByteArray? = null,
@@ -272,30 +262,25 @@ class Body<T>(val type: String, var data: T) {
   }
   val contentType: String? = _types[type]
 }
-class Json2httpError(val plan: Plan<*, *, *, *>) : Exception() {
+class Json2httpError(val plan: Plan) : Exception() {
   override val message: String = toString()
   val name: String = plan.title
   override fun toString(): String {
     return plan.reply.error.takeIf { !it.isNullOrEmpty() } ?: plan.reply.message
   }
 }
-abstract class Plan<
-  S: Json2class?, 
-  R: Json2class?, 
-  P: Json2class?,
-  B: Body<*>?,
-> {
+abstract class Plan {
   var baseURL: String = ""
 
   abstract var path: String
-  abstract var seg: S
+  abstract val seg: Json2class?
 
   abstract val title: String
   abstract var method: String
-  abstract var res: R
+  abstract val res: Json2class?
 
-  abstract var params: P
-  abstract var body: B
+  abstract val params: Json2class?
+  abstract val body: Body<*>?
 
   abstract var headers: MutableMap<String, Any?>
 
@@ -345,7 +330,7 @@ abstract class Plan<
 class Json2http private constructor() {
   companion object {
     val single: Json2http by lazy { Json2http() }
-    var setPlan: ((Plan<*, *, *, *>) -> Unit)? = null
+    var setPlan: ((Plan) -> Unit)? = null
   }
 @request@
 }
