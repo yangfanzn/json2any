@@ -42,3 +42,6 @@
 
 ## 0.0.13
 - 2025-05-04 official stable release
+
+## 0.0.14
+- 2025-06-17 kotlin supported
