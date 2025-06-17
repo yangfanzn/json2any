@@ -231,7 +231,7 @@ class Reply {
   var message: String = ""
   var error: String? = null
   var data: Any? = null
-  var exception: Any? = null
+  var exception: Exception? = null
 }
 abstract class Agent {
   abstract suspend fun fetch(plan: Plan): Reply
