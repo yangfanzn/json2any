@@ -13,27 +13,31 @@ json2class 是一个命令行工具，可以将指定的 JSON(5) 文件转换成
 
 ## 安装
 
-### `✅ 推荐` node npm npx 开发环境
-npx 需要 node 环境，请先安装 node
+- ### `✅ 推荐` node npm npx 开发环境
+> npx 需要 node 环境，请先安装 node
 ```sh
 npx json2class build -l dart@3
 ```
 
-### Flutter、Dart 开发环境
+- ### Flutter、Dart 开发环境
 ```sh
 dart pub add dev:json2class
 dart run json2class build -l dart@3
 ```
 
-### 鸿蒙开发环境
-将如下配置写入 oh-package.json5
+- ### 鸿蒙开发环境
+> _由于 `OpenHarmony三方库中心仓` 发布限制，从 `v0.0.14` 版本开始将无法再直接提供独立的可执行文件，改为提供 js 脚本，
+> 由 `node` 解释执行。幸运的是，`OpenHarmony 开发者工具`和`DevEco-Studio`自带 `node`，将其设置到 `PATH` 环境变量中即可_
+> - _`OpenHarmony 开发者工具` 中的 `node` 通常在如下路径：command-line-tools/tool/node/bin/node_
+> - _`DevEco-Studio` 中的 `node` 通常在如下路径：DevEco-Studio.app/Contents/tools/node/bin/node_
+>
+> _以上方法略显麻烦，所以还是推荐您使用 `npx` 方式，简单快捷_
+
+> 将如下配置写入 oh-package.json5
 ```json5
 {
   "scripts": {
-    // windows 系统
-    "json2class": "./oh_modules/json2class/src/main/resources/rawfile/json2class-win.exe build -l arkTs@12",
-    // macOS 系统
-    "json2class": "./oh_modules/json2class/src/main/resources/rawfile/json2class-macos build -l arkTs@12"
+    "json2class": "node ./oh_modules/json2class/src/main/resources/rawfile/json2class build -l arkTs@12",
   }
 }
 ```

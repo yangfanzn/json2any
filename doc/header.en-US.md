@@ -13,27 +13,32 @@ $RM_desc
 
 ## Installation
 
-### `✅ Recommended` Node, npm, and npx Development Environment
-npx requires a Node environment. Please install Node first.
+- ### `✅ Recommended` Node, npm, and npx Development Environment
+> npx requires a Node environment. Please install Node first.
 ```sh
 npx $RM_type build -l dart@3
 ```
 
-### Flutter and Dart Development Environment
+- ### Flutter and Dart Development Environment
 ```sh
 dart pub add dev:$RM_type
 dart run $RM_type build -l dart@3
 ```
 
-### HarmonyOS Development Environment
-Add the following configuration to oh-package.json5.
+- ### HarmonyOS Development Environment
+> _Due to the release restrictions of `OpenHarmony Third-party Library Center`, from version `v0.0.14`, 
+> independent executable files are no longer provided. Instead, JS scripts are provided and executed by `node`. 
+> Fortunately, `OpenHarmony Developer Tools` and `DevEco-Studio` come with `node`. Just add it to the `PATH` environment variable._
+> - _`OpenHarmony Developer Tools`'s `node` is usually at: command-line-tools/tool/node/bin/node_
+> - _`DevEco-Studio`'s `node` is usually at: DevEco-Studio.app/Contents/tools/node/bin/node_
+>
+> _The above methods are a bit cumbersome, so it is still recommended to use the npx method for simplicity._
+
+> Add the following configuration to oh-package.json5.
 ```json5
 {
   "scripts": {
-    // Windows system
-    "$RM_type": "./oh_modules/json2class/src/main/resources/rawfile/$RM_type-win.exe build -l arkTs@12",
-    // macOS system
-    "$RM_type": "./oh_modules/json2class/src/main/resources/rawfile/$RM_type-macos build -l arkTs@12"
+    "$RM_type": "node ./oh_modules/$RM_type/src/main/resources/rawfile/$RM_type build -l arkTs@12",
   }
 }
 ```
