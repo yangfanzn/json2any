@@ -19,6 +19,7 @@ export enum Language {
   ArkTs12 = 'arkTs@12',
   Typescript5 = 'typescript@5',
   Kotlin1 = 'kotlin@1',
+  Swift5 = 'swift@5',
 }
 
 export abstract class Err extends Error {

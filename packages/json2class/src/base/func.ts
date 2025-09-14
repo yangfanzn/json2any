@@ -90,6 +90,19 @@ export class Func {
       special['\f'] = '\\\\f';
       str = str.replace(/\\u000b/g, '\\\\v').replace(/\\f/g, '\\\\f');
     }
+    if (env.language === Language.Swift5) {
+      special['"'] = '\\"';
+      special['$'] = '$';
+      // Swift 不需要特殊处理 $ 字符，因为它不像 Kotlin 那样有字符串插值冲突
+      // 但需要处理其他转义字符
+      special['\v'] = '\\\\v';
+      special['\f'] = '\\\\f';
+      special['\b'] = '\\\\b';
+      str = str
+        .replace(/\\u000b/g, '\\\\v')
+        .replace(/\\f/g, '\\\\f')
+        .replace(/\\b/g, '\\\\b');
+    }
     return str.replace(new RegExp(`[${Object.keys(special).join('')}\\\\]`, 'g'), e => {
       const t = special[e];
       if (t) {
@@ -232,6 +245,12 @@ export class Func {
         temp: require('../kotlin/temp.kt').default,
         language: 'kotlin',
         version: '2',
+      },
+      [Language.Swift5]: {
+        ext: 'swift',
+        temp: require('../swift/temp.swift').default,
+        language: 'swift',
+        version: '5',
       },
     };
     return languages[language];

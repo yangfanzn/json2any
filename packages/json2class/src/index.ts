@@ -2,6 +2,7 @@ import * as Base from './base';
 import * as Dart from './dart';
 import * as ArkTs from './arkTs';
 import * as Kotlin from './kotlin';
+import * as Swift from './swift';
 
 export function json2class(key: string, json: Record<string, any>) {
   switch (Base.env.language) {
@@ -12,5 +13,7 @@ export function json2class(key: string, json: Record<string, any>) {
       return Base.func.core2class(ArkTs.Complex, ArkTs.Simple, key, json);
     case Base.Language.Kotlin1:
       return Base.func.core2class(Kotlin.Complex, Kotlin.Simple, key, json);
+    case Base.Language.Swift5:
+      return Base.func.core2class(Swift.Complex, Swift.Simple, key, json);
   }
 }
