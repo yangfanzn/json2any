@@ -86,6 +86,9 @@ program
             env.library = `package ${env.library}${'\n'.repeat(2)}`;
           }
           break;
+        case Language.Swift5:
+          defaultAgent = DefaultAgent.Swift_Alamofire5;
+          break;
       }
     }
     if (!defaultAgent.startsWith(`${func.language(env.language).language}_`)) {

@@ -1,8 +1,20 @@
 import Foundation
 
-fileprivate func _isNull(_ data: Any?) -> Bool {
+private func _isNull(_ data: Any?) -> Bool {
     // todo: 这里要不要解包，调用处要不要解包
     return data is NSNull || data == nil
+}
+
+private func _toMap(_ data: Any?) -> [String: Any] {
+    var _data = data
+    if let data = (data as? String)?.data(using: .utf8) {
+        do {
+            _data = try JSONSerialization.jsonObject(with: data, options: [])
+        } catch {
+            _data = [:]
+        }
+    }
+    return _data as? [String: Any] ?? [:]
 }
 
 enum DiffType { case Keep, Default, Null }
@@ -18,7 +30,7 @@ class Rule {
     var diffType: DiffType = .Null
     var moreIndex: MoreIndex = .Fill
     var missIndex: MissIndex = .Skip
-    
+
     func copy() -> Rule {
         let newRule = Rule()
         newRule.missKey = missKey
@@ -62,13 +74,7 @@ class Json2class {
 
     @discardableResult
     func fromAny(_ data: Any?, setRule: ((Rule) -> Void)? = nil, rule: Rule? = nil) -> Self {
-        var _data = data
-        if let data = (data as? String)?.data(using: .utf8) {
-            do {
-                _data = try JSONSerialization.jsonObject(with: data, options: [])
-            } catch {}
-        }
-        return fromJson(_data, setRule: setRule, rule: rule)
+        return fromJson(_toMap(data), setRule: setRule, rule: rule)
     }
 
     func fromJson(_ data: Any?, setRule: ((Rule) -> Void)? = nil, rule: Rule? = nil) -> Self {

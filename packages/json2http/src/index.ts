@@ -3,6 +3,7 @@ import * as Base from './base';
 import * as Dart from './dart';
 import * as ArkTs from './arkTs';
 import * as Kotlin from './kotlin';
+import * as Swift from './swift';
 
 type X = typeof Base.Http<Json2classBase.Complex, Json2classBase.Simple<Json2classBase.Complex>>;
 type Y = Base.Http<Json2classBase.Complex, Json2classBase.Simple<Json2classBase.Complex>>;
@@ -19,5 +20,7 @@ export function json2http(key?: string, json?: Record<string, any>, file?: strin
       return key && json
         ? Base.func.core2http(Kotlin.Http, Kotlin.Complex, Kotlin.Simple, key, json, file)
         : Kotlin.Http;
+    case Base.Language.Swift5:
+      return key && json ? Base.func.core2http(Swift.Http, Swift.Complex, Swift.Simple, key, json, file) : Swift.Http;
   }
 }

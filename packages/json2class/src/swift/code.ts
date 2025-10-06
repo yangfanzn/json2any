@@ -40,11 +40,12 @@ export class Lang extends Base.Lang {
 
   toFromJson(key: Base.Key, typedef?: Record<string, string>) {
     // todo: 对比研究下
+    // todo: def === 'null' 如果涉及更多判断，要从底层想办法优化
     const decl = typedef?.[key.decl] ?? key.decl;
     const def = key instanceof Base.Complex ? `${decl}()` : key.def;
     return `self.${key.prop} = self._fromJson(data, "${key.jsonKey}", ${this.arrayValue(key.array)}, ${
       key.optional
-    }, self.${key.prop}, ${def}, r, type: ${this.arrayType(key.array, decl)}${
+    }, self.${key.prop}, ${def === 'null' ? 'nil' : def}, r, type: ${this.arrayType(key.array, decl)}${
       key.optional ? '?' : ''
     }.self) as! ${this.arrayType(key.array, decl)}${key.optional ? '?' : ''}`;
   }
@@ -94,7 +95,7 @@ class ${this.decl}: Json2class {
   }
 
   override func toJson() -> [String: Any?] {
-    return [${this.child.map(e => `"${e.jsonKey}": _toJson(${e.prop})`).join(', ')}]
+    return [${this.child.map(e => `"${e.jsonKey}": _toJson(${e.prop})`).join(', ') || ':'}]
   }
 }`;
   }

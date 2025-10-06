@@ -5,6 +5,7 @@ export enum Language {
   ArkTs12 = 'arkTs@12',
   Typescript5 = 'typescript@5',
   Kotlin1 = 'kotlin@1',
+  Swift5 = 'swift@5',
 }
 
 export enum DefaultAgent {
@@ -13,6 +14,7 @@ export enum DefaultAgent {
   Typescript_Axios1 = 'typescript_axios@1',
   Typescript_Fetch0 = 'typescript_fetch@0',
   Kotlin_OkHttp4 = 'kotlin_okhttp@4',
+  Swift_Alamofire5 = 'swift_alamofire@5',
 }
 
 const parent: string[] = Object.values(Json2classBase.Language);
