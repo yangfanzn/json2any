@@ -410,7 +410,7 @@ abstract class Json2class {
 
     protected fun _toJson(data: Any?): Any? {
         return when (data) {
-            is List<*> -> data.map { if (it is Json2class) it.toJson() else it }
+            is List<*> -> data.map { if (it is Json2class) it.toJson() else this._toJson(it) }
             is Json2class -> data.toJson()
             else -> data
         }

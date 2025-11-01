@@ -370,7 +370,7 @@ export abstract class Json2class {
 
   protected _toJson(data: Any) {
     if (data instanceof Array) {
-      return data.map((e: Object): Object => (e instanceof Json2class ? e.toJson() : e ?? null));
+      return data.map((e: Object): Any => (e instanceof Json2class ? e.toJson() : this._toJson(e)));
     } else if (data instanceof Json2class) {
       return data.toJson();
     } else {

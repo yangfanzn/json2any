@@ -6,7 +6,7 @@ export class Lang extends Base.Lang {
 
   baseDef = {
     [Base.BaseType.String]: { decl: 'String', def: '""' },
-    [Base.BaseType.Number]: { decl: 'NSNumber', def: '0' },
+    [Base.BaseType.Number]: { decl: 'NSNumber', def: 'NSNumber(0)' },
     [Base.BaseType.Boolean]: { decl: 'Bool', def: 'false' },
   };
 
@@ -94,7 +94,7 @@ class ${this.decl}: Json2class {
     return self
   }
 
-  override func toJson() -> [String: Any?] {
+  override func toJson() -> [String: Any] {
     return [${this.child.map(e => `"${e.jsonKey}": _toJson(${e.prop})`).join(', ') || ':'}]
   }
 }`;

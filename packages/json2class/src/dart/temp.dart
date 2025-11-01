@@ -451,7 +451,7 @@ abstract class Json2class {
 
   dynamic _toJson(dynamic data) {
     if (data is List) {
-      return data.map((e) => e is Json2class ? e.toJson() : e).toList();
+      return data.map((e) => e is Json2class ? e.toJson() : _toJson(e)).toList();
     } else if (data is Json2class) {
       return data.toJson();
     } else {

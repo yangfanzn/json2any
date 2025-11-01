@@ -1,20 +1,49 @@
 import Foundation
 
-private func _isNull(_ data: Any?) -> Bool {
-    // todo: 这里要不要解包，调用处要不要解包
-    return data is NSNull || data == nil
+private protocol _Optionals { var _self: Any? { get } }
+
+extension Optional: _Optionals { fileprivate var _self: Any? { self } }
+
+func _unwrap(_ x: Any?) -> Any? {
+    var x = x
+    while true {
+        guard let v = x else { return nil }
+        if let v = v as? _Optionals {
+            x = v._self
+            continue
+        }
+        return v
+    }
 }
 
-private func _toMap(_ data: Any?) -> [String: Any] {
-    var _data = data
-    if let data = (data as? String)?.data(using: .utf8) {
-        do {
-            _data = try JSONSerialization.jsonObject(with: data, options: [])
-        } catch {
-            _data = [:]
-        }
+func _parse(_ str: String) -> [String: Any] {
+    return (try? JSONSerialization.jsonObject(with: str.data(using: .utf8) ?? Data(), options: [])) as? [String: Any] ?? [:]
+}
+
+func _stringify(_ value: Any?) -> String {
+    if value is NSNull {
+        return "null"
     }
-    return _data as? [String: Any] ?? [:]
+    if let num = value as? NSNumber {
+        if CFGetTypeID(num) == CFBooleanGetTypeID() {
+            return num.boolValue ? "true" : "false"
+        }
+        return "\(num)"
+    }
+    if let str = value as? String {
+        // todo: 转义问题
+        return "\"\(str)\""
+    }
+    if let value = _unwrap(value), let data = try? JSONSerialization.data(withJSONObject: value, options: []),
+       let jsonString = String(data: data, encoding: .utf8) {
+        return jsonString
+    }
+    return ""
+}
+
+func _isNull(_ x: Any?) -> Bool {
+    let cur = _unwrap(x) ?? NSNull()
+    return cur is NSNull
 }
 
 enum DiffType { case Keep, Default, Null }
@@ -74,7 +103,10 @@ class Json2class {
 
     @discardableResult
     func fromAny(_ data: Any?, setRule: ((Rule) -> Void)? = nil, rule: Rule? = nil) -> Self {
-        return fromJson(_toMap(data), setRule: setRule, rule: rule)
+        if let str = data as? String {
+            return fromJson(_parse(str), setRule: setRule, rule: rule)
+        }
+        return fromJson(data, setRule: setRule, rule: rule)
     }
 
     func fromJson(_ data: Any?, setRule: ((Rule) -> Void)? = nil, rule: Rule? = nil) -> Self {
@@ -93,16 +125,17 @@ class Json2class {
         return type(of: self).init()
     }
 
-    func toJson() -> [String: Any?] {
+    func toJson() -> [String: Any] {
         mustOverride()
         return [:]
     }
 
     private func _isSameSimple(_ source: Any?, _ target: Any?) -> Bool {
-        if source == nil && target == nil { return true }
-        guard let source = source, let target = target else { return false }
-        // type(of: source) == type(of: target)
-        return (source is Bool && target is Bool) || (source is String && target is String) || (source is NSNumber && target is NSNumber && !(source is Bool) && !(target is Bool))
+        if source is String && target is String { return true }
+        if let source = source as? NSNumber, let target = target as? NSNumber {
+            return CFGetTypeID(source) == CFGetTypeID(target)
+        }
+        return false
     }
 
     private func _nList<T>(_ array: [Bool], _ n: Int, type: T.Type) -> [Any?] {
@@ -187,7 +220,7 @@ class Json2class {
                         } else {
                             if rule.moreIndex == .Drop {
                             } else {
-                                if let _data = _data as? [String: Any?] {
+                                if let _data = _data as? [String: Any] {
                                     if _cur == nil {
                                         t.append(def.toNew().fromJson(_data, rule: rule))
                                     } else if let _cur = _cur as? Json2class {
@@ -204,7 +237,7 @@ class Json2class {
                                 }
                             }
                         }
-                    } else if let _data = _data as? [String: Any?] {
+                    } else if let _data = _data as? [String: Any] {
                         if _cur == nil {
                             t.append(def.toNew().fromJson(_data, rule: rule))
                         } else if let _cur = _cur as? Json2class {
@@ -257,7 +290,7 @@ class Json2class {
                         t.append(nil)
                     } else {
                         if rule.moreIndex == .Drop {
-                        } else if let _data = _data as? [Any?] {
+                        } else if let _data = _data as? [Any] {
                             t.append(_nArray(
                                 _data,
                                 key,
@@ -273,7 +306,7 @@ class Json2class {
                             t.append(array[level - 1] ? nil : _nList(array, array.count - level, type: T.self))
                         }
                     }
-                } else if let _data = _data as? [Any?] {
+                } else if let _data = _data as? [Any] {
                     t.append(_nArray(
                         _data,
                         key,
@@ -302,7 +335,7 @@ class Json2class {
                                 key,
                                 array,
                                 optional,
-                                _cur as? [Any?] ?? [],
+                                _cur as? [Any] ?? [],
                                 def,
                                 level + 1,
                                 rule,
@@ -344,7 +377,7 @@ class Json2class {
                                 key,
                                 array,
                                 optional,
-                                cur[data.count + i] as? [Any?] ?? [],
+                                cur[data.count + i] as? [Any] ?? [],
                                 def,
                                 level + 1,
                                 rule,
@@ -368,7 +401,7 @@ class Json2class {
         _ rule: Rule,
         type: T.Type
     ) -> Any? {
-        let data = data as? [String: Any?] ?? [:]
+        let data = data as? [String: Any] ?? [:]
         let isExist = data.keys.contains(key)
         let _data = data[key] ?? nil
         if array.count > 0 {
@@ -378,7 +411,7 @@ class Json2class {
                 } else {
                     return rule.missKey == .Keep ? cur : _nList(array, array.count, type: T.self)
                 }
-            } else if let _data = _data as? [Any?] {
+            } else if let _data = _data as? [Any] {
                 return _nArray(
                     _data,
                     key,
@@ -407,7 +440,7 @@ class Json2class {
                     } else {
                         return rule.missKey == .Keep ? cur : def.toNew()
                     }
-                } else if let _data = _data as? [String: Any?] {
+                } else if let _data = _data as? [String: Any] {
                     return (cur as? Json2class ?? def.toNew()).fromJson(_data, rule: rule)
                 } else if optional && _isNull(_data) {
                     return nil
@@ -440,14 +473,13 @@ class Json2class {
         }
     }
 
-    fileprivate func _toJson(_ data: Any?) -> Any? {
-        // todo: NSNull()
+    fileprivate func _toJson(_ data: Any?) -> Any {
         if let data = data as? [Any] {
-            return data.map { e in ((e as? Json2class)?.toJson() ?? e)}
+            return data.map { e in (e as? Json2class)?.toJson() ?? _toJson(e) }
         } else if let data = data as? Json2class {
             return data.toJson()
         } else {
-            return data
+            return _unwrap(data) ?? NSNull()
         }
     }
 }

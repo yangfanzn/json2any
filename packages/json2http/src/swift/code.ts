@@ -32,13 +32,13 @@ export class Http extends Base.Http<Complex, Simple> {
 
     const types = [
       `var path = "${plan.path.origin}"`,
-      `var seg = ${plan.seg?.def ?? 'Json2class()'}`,
+      `var seg = ${plan.seg?.def ?? '_Json2class()'}`,
       `var title = "${plan.title.origin}"`,
       `var method = "${plan.method.origin}"`,
-      `var res = ${plan.res?.def ?? 'Json2class()'}`,
-      `var params = ${plan.params?.def ?? 'Json2class()'}`,
+      `var res = ${plan.res?.def ?? '_Json2class()'}`,
+      `var params = ${plan.params?.def ?? '_Json2class()'}`,
       `var body = ${bodyDef}`,
-      `var headers = _toMap("${Base.func.convertWrap(JSON.stringify(plan.headers?.origin ?? {}))}")`,
+      `var headers = _parse("${Base.func.convertWrap(JSON.stringify(plan.headers?.origin ?? {}))}")`,
       `var baseURL = ""`,
       `var agent: any Agent = ${Http.agentConfig.name}()`,
       `var reply = Reply()`,
@@ -77,7 +77,7 @@ import Alamofire`,
 class AlamofireAgent: Agent {
     private static let _session = Session(configuration: {
         let configuration = URLSessionConfiguration.default
-        configuration.timeoutIntervalForRequest = 30
+        // configuration.timeoutIntervalForRequest = 30
         return configuration
     }())
 
@@ -85,34 +85,79 @@ class AlamofireAgent: Agent {
     var option: URLRequest?
     var response: AFDataResponse${addX('Data')}?
     
-    func fetch(plan: any Plan) async throws -> Reply {
+    func fetch${addX('P: Plan')}(plan: P) async throws -> Reply {
+        var plan = plan
         let session = self.session ?? Self._session
 
-        var option = URLRequest(url: URL(string: "\(plan.baseURL)\(plan.path)") ?? URL(fileURLWithPath: ""))
+        var path = plan.path
+        let seg = plan.seg.toJson()
+        for (key, value) in seg {
+            path = path.replacingOccurrences(of: "{\\(key)}", with: value as? String ?? "")
+        }
+        
+        let q = _obj2get(plan.params.toJson())
+        path = "\\(path)\\(q.isEmpty ? "" : (path.contains("?") ? "&" : "?"))\\(q)"
+
+        var option = URLRequest(url: URL(string: "\\(plan.baseURL)\\(path)") ?? URL(fileURLWithPath: ""))
         option.httpMethod = plan.method
 
-        self.option = option
-        plan.ready?()
-
-        return await withCheckedContinuation { continuation in
-            session.request(option).responseData { [weak self] response in
-                // 存储响应（对应 Dart 的 this.response = ...）
-                self?.response = response
-                
-                // 处理响应数据
-                switch response.result {
-                case .success(let data):
-                    plan.reply.code = response.response?.statusCode ?? 0
-                case .failure(let error):
-                    plan.reply.error = error.localizedDescription
-                }
-                
-                continuation.resume(returning: plan.reply)
+        if let c = plan.body.contentType { plan.headers["content-type"] = c }
+        for (key, value) in plan.headers {
+            if let value = value as? String {
+                option.setValue(value, forHTTPHeaderField: key)
+            } else if let value = value as? [Any] {
+                for v in value { option.addValue("\\(v)", forHTTPHeaderField: key) }
+            } else {
+                option.setValue("\\(value)", forHTTPHeaderField: key)
             }
         }
+        
+        option.httpBody = try await self.body(plan: plan) as? Data ?? nil
+        self.option = option
+
+        plan.ready?()
+
+        let response = await withCheckedContinuation { continuation in
+            session.request(self.option ?? option).responseData { [weak self] response in
+                self?.response = response
+                continuation.resume(returning: response)
+            }
+        }
+
+        let code = response.response?.statusCode ?? 0
+        plan.reply.code = code
+        plan.reply.message = _code2message["\\(code)"] ?? "unknown http code \\(code)"
+        
+        switch response.result {
+            case .success(let data):
+                plan.reply.data = try? JSONSerialization.jsonObject(with: data, options: []) ?? data
+            case .failure(let error):
+                plan.reply.error = error.localizedDescription
+        }
+
+        return plan.reply
     }
 
-    func body(plan: any Plan) async throws -> Any? {
+    func body${addX('P: Plan')}(plan: P) async throws -> Any? {
+        let type = plan.body.type
+        let data = plan.body.data
+        switch type {
+            case "plain": if let v = plan.body.data as? String { return v.data(using: .utf8) }
+            case "byte": if let v = plan.body.data as? Data { return v }
+            case "json":
+                return nil
+                /*
+                if let v = data as? [Json2class?] {
+                    return _stringify(v.map { $0?.toJson() })?.data(using: .utf8)
+                } else if let v = data as? Json2class {
+                    return _stringify(v.toJson())?.data(using: .utf8)
+                } else {
+                    return _stringify(data)?.data(using: .utf8)
+                } if plan.method != "GET" && request.httpBody == nil {
+                    request.httpBody = "".data(using: .utf8)
+                }*/
+            default: return nil
+        }
         return nil
     }
 }`,
@@ -146,13 +191,27 @@ private func _nullFilter(_ data: [String: Any?]) -> [String: Any?] {
 }
 
 private func _obj2get(_ obj: [String: Any?]) -> String {
-    return obj.compactMapValues { $0 }
-        .map { key, value in
-            let encodedKey = key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? key
-            let encodedValue = "\\(value)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "\\(value)"
-            return "\\(encodedKey)=\\(encodedValue)"
+    let rfc: [UInt16] = [0x0000, 0x0000, 0x6782, 0x03ff, 0xfffe, 0x87ff, 0xfffe, 0x47ff]
+    func encode(_ string: String) -> String {
+        var result = ""
+        for char in string.unicodeScalars {
+            let code = Int(char.value)
+            if code < 128 {
+                let i1 = code >> 4
+                let i2 = code & 0x0f
+                if i1 < rfc.count && (rfc[i1] & (1 << i2)) != 0 {
+                    result.append(Character(char))
+                } else {
+                    result.append(String(format: "%%%02X", code))
+                }
+            } else {
+                let utf8 = String(char).utf8
+                for byte in utf8 { result.append(String(format: "%%%02X", byte)) }
+            }
         }
-        .joined(separator: "&")
+        return result
+    }
+    return obj.compactMapValues { $0 } .map { "\\(encode($0))=\\(encode("\\($1)"))" }.joined(separator: "&")
 }
 
 private func _replyReset(_ reply: Reply) {
@@ -161,6 +220,13 @@ private func _replyReset(_ reply: Reply) {
     reply.data = nil
     reply.exception = nil
     reply.message = ""
+}
+
+class _Json2class: Json2class {
+    required init() { super.init(); self.preset = "{}"; }
+    @discardableResult
+    override func fromJson(_ data: Any?, setRule: ((Rule) -> Void)? = nil, rule: Rule? = nil) -> Self { return self }
+    override func toJson() -> [String: Any?] { return [:] }
 }
 
 class Reply {
@@ -172,8 +238,8 @@ class Reply {
 }
 
 protocol Agent {
-    func fetch(plan: any Plan) async throws -> Reply
-    func body(plan: any Plan) async throws -> Any?
+    func fetch${addX('P: Plan')}(plan: P) async throws -> Reply
+    func body${addX('P: Plan')}(plan: P) async throws -> Any?
 }
 
 ${agentConfig.code}
@@ -237,7 +303,7 @@ class Json2httpError: Error {
     }
     let name: String
     
-    init(_ plan: any Plan) {
+    init${addX('P: Plan')}(_ plan: P) {
         self.plan = plan
         self.name = plan.title
     }
@@ -322,7 +388,7 @@ class Json2http {
 @request@
 }
 
-private let _code2message: [String: String] = (_toMap("${Base.func.convertWrap(
+private let _code2message: [String: String] = (_parse("${Base.func.convertWrap(
       JSON.stringify(Base.code2message),
     )}") as? [String: String]) ?? [:]
 `;
