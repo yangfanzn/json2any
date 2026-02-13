@@ -112,7 +112,13 @@ class AlamofireAgent: Agent {
             }
         }
         
-        option.httpBody = try await self.body(plan: plan) as? Data ?? nil
+        let data = try await self.body(plan: plan)
+        if let data = data as? Data {
+            option.httpBody = data
+        } else if let data = data as? MultipartFormData {
+            option.httpBody = try data.encode()
+            option.setValue(data.contentType, forHTTPHeaderField: "content-type")
+        }
         self.option = option
 
         plan.ready?()
@@ -130,7 +136,7 @@ class AlamofireAgent: Agent {
         
         switch response.result {
             case .success(let data):
-                plan.reply.data = try? JSONSerialization.jsonObject(with: data, options: []) ?? data
+                plan.reply.data = (try? JSONSerialization.jsonObject(with: data, options: [])) ?? data
             case .failure(let error):
                 plan.reply.error = error.localizedDescription
         }
@@ -144,18 +150,66 @@ class AlamofireAgent: Agent {
         switch type {
             case "plain": if let v = plan.body.data as? String { return v.data(using: .utf8) }
             case "byte": if let v = plan.body.data as? Data { return v }
+            case "map":
+                if let v = data as? Json2class {
+                    return _obj2get(v.toJson()).data(using: .utf8)
+                }
             case "json":
-                return nil
-                /*
                 if let v = data as? [Json2class?] {
-                    return _stringify(v.map { $0?.toJson() })?.data(using: .utf8)
+                    return try _stringify(v.map { $0?.toJson() })?.data(using: .utf8) ?? "null".data(using: .utf8)
                 } else if let v = data as? Json2class {
-                    return _stringify(v.toJson())?.data(using: .utf8)
+                    return try _stringify(_nullFilter(v.toJson()))?.data(using: .utf8) ?? "null".data(using: .utf8)
                 } else {
-                    return _stringify(data)?.data(using: .utf8)
-                } if plan.method != "GET" && request.httpBody == nil {
-                    request.httpBody = "".data(using: .utf8)
-                }*/
+                    return try _stringify(data)?.data(using: .utf8) ?? "null".data(using: .utf8)
+                }
+            
+            case "form":
+                guard let formData = data as? BodyFormProtocol else {
+                    return nil
+                    
+                }
+                
+                let multipart = MultipartFormData()
+                
+                func a2b(_ a: BodyFormFile, key: String) {
+                    if let content = a.content {
+                        multipart.append(
+                            content,
+                            withName: key,
+                            fileName: a.filename ?? "file",
+                            mimeType: a.contentType ?? "application/octet-stream"
+                        )
+                    } else if let file = a.file {
+                        let url = URL(fileURLWithPath: file)
+                        multipart.append(
+                            url,
+                            withName: key,
+                            fileName: a.filename ?? url.lastPathComponent,
+                            mimeType: a.contentType ?? "application/octet-stream"
+                        )
+                    }
+                }
+                
+                func cb(key: String, value: Any?) {
+                    let values = (value as? [Any]) ?? [value].compactMap { $0 }
+                    for e in values {
+                        if let file = e as? BodyFormFile {
+                            a2b(file, key: key)
+                        } else if !_isNull(e) {
+                            if let fieldData = "\\(e)".data(using: .utf8) {
+                                multipart.append(fieldData, withName: key)
+                            }
+                        }
+                    }
+                }
+                
+                let x = formData.getFields().toJson()
+                x.forEach(cb)
+                let y = formData.getFiles().toJson()
+                y.forEach(cb)
+                return multipart
+                return try (multipart.encode(), multipart.contentType)
+               
             default: return nil
         }
         return nil
@@ -183,8 +237,8 @@ private func _nullFilter(_ data: [String: Any?]) -> [String: Any?] {
             if !nested.isEmpty {
                 result[key] = nested
             }
-        } else if let actualValue = value {
-            result[key] = actualValue
+        } else if !_isNull(value) {
+            result[key] = value
         }
     }
     return result
@@ -211,7 +265,7 @@ private func _obj2get(_ obj: [String: Any?]) -> String {
         }
         return result
     }
-    return obj.compactMapValues { $0 } .map { "\\(encode($0))=\\(encode("\\($1)"))" }.joined(separator: "&")
+    return obj.filter { !_isNull($0.value) } .map { "\\(encode($0))=\\(encode("\\($1!)"))" }.joined(separator: "&")
 }
 
 private func _replyReset(_ reply: Reply) {
@@ -226,7 +280,7 @@ class _Json2class: Json2class {
     required init() { super.init(); self.preset = "{}"; }
     @discardableResult
     override func fromJson(_ data: Any?, setRule: ((Rule) -> Void)? = nil, rule: Rule? = nil) -> Self { return self }
-    override func toJson() -> [String: Any?] { return [:] }
+    override func toJson() -> [String: Any] { return [:] }
 }
 
 class Reply {
@@ -270,13 +324,27 @@ class BodyFormFile {
     }
 }
 
-class BodyForm${addX('T: Json2class, K: Json2class')} {
+
+protocol BodyFormProtocol {
+    func getFields() -> Json2class
+    func getFiles() -> Json2class
+}
+
+class BodyForm${addX('T: Json2class, K: Json2class')}: BodyFormProtocol {
     let fields: T
     let files: K
 
     init(_ fields: T, _ files: K) {
         self.fields = fields
         self.files = files
+    }
+    
+    func getFields() -> Json2class {
+        return fields
+    }
+    
+    func getFiles() -> Json2class {
+        return files
     }
 }
 
@@ -296,17 +364,17 @@ class Body${addX('T')} {
     }
 }
 
-class Json2httpError: Error {
+class Json2httpError: LocalizedError, CustomStringConvertible {
     let plan: any Plan
-    var localizedDescription: String {
-        return plan.reply.error?.isEmpty == false ? plan.reply.error! : plan.reply.message
-    }
     let name: String
-    
+    let message: String
     init${addX('P: Plan')}(_ plan: P) {
         self.plan = plan
         self.name = plan.title
+        self.message = plan.reply.error?.isEmpty == false ? plan.reply.error! : plan.reply.message
     }
+    var description: String { message }
+    var errorDescription: String? { message }
 }
 
 protocol Plan {

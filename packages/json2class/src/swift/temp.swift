@@ -20,7 +20,7 @@ func _parse(_ str: String) -> [String: Any] {
     return (try? JSONSerialization.jsonObject(with: str.data(using: .utf8) ?? Data(), options: [])) as? [String: Any] ?? [:]
 }
 
-func _stringify(_ value: Any?) -> String {
+func _stringify(_ value: Any?) throws -> String? {
     if value is NSNull {
         return "null"
     }
@@ -30,15 +30,14 @@ func _stringify(_ value: Any?) -> String {
         }
         return "\(num)"
     }
-    if let str = value as? String {
+    if let str = value as? String { 
         // todo: 转义问题
         return "\"\(str)\""
     }
-    if let value = _unwrap(value), let data = try? JSONSerialization.data(withJSONObject: value, options: []),
-       let jsonString = String(data: data, encoding: .utf8) {
-        return jsonString
+    if let value = _unwrap(value) {
+        return String(data: try JSONSerialization.data(withJSONObject: value, options: []), encoding: .utf8)
     }
-    return ""
+    return nil
 }
 
 func _isNull(_ x: Any?) -> Bool {
@@ -85,9 +84,7 @@ class Json2classError: LocalizedError, CustomStringConvertible {
         ].joined(separator: "\n")
     }
 
-    var errorDescription: String? {
-        description
-    }
+    var errorDescription: String? { description }
 }
 
 class Json2class {

@@ -30,7 +30,8 @@ export class Func {
 
     const array: boolean[] = [];
     while (Array.isArray(json)) {
-      // 先取 1，再用 0 复写，注意反过来会有问题
+      // retrieve index 1 first, then overwrite with index 0
+      // note that reversing this order will cause issues
       array.push(json[1] === null);
       json = json[0];
     }
@@ -58,8 +59,6 @@ export class Func {
         return self;
 
       case JsonType.Null:
-      // config empty array, has not item
-      // unit test
       case JsonType.Undefined:
         break;
 
@@ -71,8 +70,8 @@ export class Func {
   }
 
   convertWrap(str: string) {
-    // 可能引发换行的字符
     const special: Record<string, string> = {
+      // characters that may cause line breaks
       '\n': '\\n',
       '\r': '\\r',
       '\f': '\\f',
@@ -93,8 +92,8 @@ export class Func {
     if (env.language === Language.Swift5) {
       special['"'] = '\\"';
       special['$'] = '$';
-      // Swift 不需要特殊处理 $ 字符，因为它不像 Kotlin 那样有字符串插值冲突
-      // 但需要处理其他转义字符
+      // swift does not need special handling for the $ character because it does not have string interpolation conflicts like Kotlin
+      // but other escape characters need to be handled
       special['\v'] = '\\\\v';
       special['\f'] = '\\\\f';
       special['\b'] = '\\\\b';
@@ -138,16 +137,16 @@ export class Func {
       return x;
     }
 
-    // quickHash 算法是必须的，因为不仅仅是下划线开头，keywords 也需要加前导
-    // quickHash 算法在 3 位数参数的情况下，针对 10 位字符串的 hash 冲突的概率只有 0.5%
-    // 这 0.5% 只有在使用 restore 时，才会触发，如果是单向转换，永远不会有问题
-
     const x = str.replace(new RegExp(`${splitKey}(\\d+)${splitKey}`, 'g'), (_, e) => String.fromCharCode(e));
     const [, hash] = x.match(new RegExp(`^${startKey}(\\d{${max})`)) ?? [];
     if (hash) {
       const t = x.slice(max + 1);
       return hash === this.quickHash(t, max) ? t : x;
     }
+
+    // quickHash must be used. Keywords also need a leading prefix, not only names that start with '_'.
+    // With 3 digits, quickHash chance of collision for a 10-char string is only 0.5%.
+    // This 0.5% can happen only when using restore. One-way conversion is safe.
     this.unreachableError('convertKeyword restore can not be used');
     return x;
   }

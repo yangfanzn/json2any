@@ -10,7 +10,7 @@ Object.defineProperty(Json2classBase.Key.prototype, 'prop', {
       // remove the '/{}' and concatenate directly.
       // consistent with the way nested objects are concatenated.
       // '/{}' in json key are properly escaped.
-      key = key.replace(/[\/{}]/g, '');
+      key = func.convertLaunch(key);
     }
     return func.convertKeyword(key, this.lang.keywords, false);
   },
@@ -58,7 +58,7 @@ export abstract class Http<C extends Json2classBase.Complex, S extends Json2clas
   }
 
   protected constructor(public key: string, public plan: C) {
-    this.launch = func.convertLaunch(key);
+    this.launch = func.convertKeyword(func.convertLaunch(key), plan.lang.keywords, false);
   }
 
   abstract toLaunch(plan: SchemaPlan): { code: string; plan: string };
