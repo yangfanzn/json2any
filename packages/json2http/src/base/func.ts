@@ -45,10 +45,6 @@ export class Func extends Json2classBase.Func {
     );
   }
 
-  convertLaunch(str: string) {
-    return str.replace(/[\/{}]/g, '');
-  }
-
   isBodyFiles(self: Json2classBase.Key) {
     if (self instanceof Json2classBase.Simple) {
       return (

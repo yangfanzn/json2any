@@ -1,4 +1,4 @@
-import base from '../base/keywords';
+import { keywords as base, keywords2 as base2 } from '../base/keywords';
 
 export const keywords: Record<string, string> = {
   ...base,
@@ -58,4 +58,10 @@ export const keywords: Record<string, string> = {
   var: 'var',
   where: 'where',
   while: 'while',
+  // special word used by baseDef in file: swift/code.ts
+  NSNumber: 'NSNumber',
+};
+
+export const keywords2: Record<string, string> = {
+  ...base2,
 };

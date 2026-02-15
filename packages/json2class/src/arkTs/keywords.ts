@@ -1,4 +1,4 @@
-import base from '../base/keywords';
+import { keywords as base, keywords2 as base2 } from '../base/keywords';
 
 export const keywords: Record<string, string> = {
   ...base,
@@ -77,4 +77,8 @@ export const keywords: Record<string, string> = {
   while: 'while',
   with: 'with',
   yield: 'yield',
+};
+
+export const keywords2: Record<string, string> = {
+  ...base2,
 };

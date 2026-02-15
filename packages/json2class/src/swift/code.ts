@@ -1,8 +1,9 @@
 import * as Base from '../base';
-import { keywords } from './keywords';
+import { keywords, keywords2 } from './keywords';
 
 export class Lang extends Base.Lang {
   keywords = keywords;
+  keywords2 = keywords2;
 
   baseDef = {
     [Base.BaseType.String]: { decl: 'String', def: '""' },
@@ -25,29 +26,27 @@ export class Lang extends Base.Lang {
     const def = key instanceof Base.Complex ? `${decl}()` : key.def;
     if (key.array.length) {
       if (key.optional) {
-        return `var ${key.prop}: ${this.arrayType(key.array, decl)}? = nil`;
+        return `var ${key.prop}: ${this.arrayType(key.array, decl)}? = nil;`;
       } else {
-        return `var ${key.prop}: ${this.arrayType(key.array, decl)} = []`;
+        return `var ${key.prop}: ${this.arrayType(key.array, decl)} = [];`;
       }
     } else {
       if (key.optional) {
-        return `var ${key.prop}: ${decl}? = nil`;
+        return `var ${key.prop}: ${decl}? = nil;`;
       } else {
-        return `var ${key.prop}: ${decl} = ${def}`;
+        return `var ${key.prop}: ${decl} = ${def};`;
       }
     }
   }
 
   toFromJson(key: Base.Key, typedef?: Record<string, string>) {
-    // todo: 对比研究下
-    // todo: def === 'null' 如果涉及更多判断，要从底层想办法优化
     const decl = typedef?.[key.decl] ?? key.decl;
     const def = key instanceof Base.Complex ? `${decl}()` : key.def;
     return `self.${key.prop} = self._fromJson(data, "${key.jsonKey}", ${this.arrayValue(key.array)}, ${
       key.optional
-    }, self.${key.prop}, ${def === 'null' ? 'nil' : def}, r, type: ${this.arrayType(key.array, decl)}${
+    }, self.${key.prop}, ${def}, r, type: ${this.arrayType(key.array, decl)}${
       key.optional ? '?' : ''
-    }.self) as! ${this.arrayType(key.array, decl)}${key.optional ? '?' : ''}`;
+    }.self) as? ${this.arrayType(key.array, decl)}${key.optional ? '?' : ''} ?? self.${key.prop};`;
   }
 }
 
@@ -83,17 +82,13 @@ class ${this.decl}: Json2class {
     super.init()
     self.preset = "${Base.func.convertWrap(JSON.stringify(this.preset))}"
   }
-
-  ${this.child.map(e => this.lang.toProp(e, typedef)).join('\n  ')}
-
+  ${this.child.map(e => this.lang.toProp(e, typedef)).join('')}
   @discardableResult
   override func fromJson(_ data: Any?, setRule: ((Rule) -> Void)? = nil, rule: Rule? = nil) -> Self {
-    let r = (rule ?? self.rule ?? Json2class.defaultRule).copy()
-    setRule?(r)
-    ${this.child.map(e => e.lang.toFromJson(e, typedef)).join('\n    ')}
+    let r = (rule ?? self.rule ?? Json2class.defaultRule).copy(); setRule?(r)
+    ${this.child.map(e => e.lang.toFromJson(e, typedef)).join('')}
     return self
   }
-
   override func toJson() -> [String: Any] {
     return [${this.child.map(e => `"${e.jsonKey}": _toJson(${e.prop})`).join(', ') || ':'}]
   }

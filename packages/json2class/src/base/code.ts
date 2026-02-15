@@ -4,6 +4,7 @@ import { BaseType, JsonType } from './type';
 
 export class Lang {
   keywords: Record<string, string> = {};
+  keywords2: Record<string, string> = {};
 
   baseDef = {
     [BaseType.String]: { decl: '', def: "''" },
@@ -155,11 +156,19 @@ export abstract class Complex extends Key {
     this.refs.preset = {};
     this.refs.resolved = false;
   }
-  public static refsResolve() {
+  public static refsResolve(lang: Lang) {
     if (this.refs.resolved) {
       return;
     } else {
       this.refs.resolved = true;
+    }
+
+    // because this.lang.keywords2 is used
+    // it needs to be used with a delay (it cannot be placed directly in the constructor).
+    for (const decl in this.refs.unique) {
+      if (lang.keywords2[decl]) {
+        func.assertError('conflict with built-in types', [decl]);
+      }
     }
 
     const origin: Record<string, any> = {};
@@ -280,10 +289,6 @@ export abstract class Complex extends Key {
       Complex.refs.unique[decl] = true;
     }
 
-    if (['Rule', 'DiffType', 'MissKey', 'MoreIndex', 'MissIndex', 'Json2class', 'Json2classError'].includes(decl)) {
-      func.assertError('conflict with built-in types', this);
-    }
-
     // JSON.stringify to deep copy
     Complex.refs.origin[index] = JSON.parse(JSON.stringify(this.origin));
   }
@@ -311,7 +316,7 @@ export abstract class Complex extends Key {
 
   private coded = false;
   toCode() {
-    Complex.refsResolve();
+    Complex.refsResolve(this.lang);
 
     if (this.ref) {
       return [];

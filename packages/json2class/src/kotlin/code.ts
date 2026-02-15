@@ -1,8 +1,9 @@
 import * as Base from '../base';
-import { keywords } from './keywords';
+import { keywords, keywords2 } from './keywords';
 
 export class Lang extends Base.Lang {
   keywords = keywords;
+  keywords2 = keywords2;
 
   baseDef = {
     [Base.BaseType.String]: { decl: 'String', def: '""' },
@@ -37,7 +38,7 @@ export class Lang extends Base.Lang {
   }
 
   toFromJson(key: Base.Key): string {
-    return super.toFromJson(key).replace(/;$/, `as ${this.arrayType(key.array, key.decl)}${key.optional ? '?' : ''};`);
+    return super.toFromJson(key).replace(/;$/, ` as ${this.arrayType(key.array, key.decl)}${key.optional ? '?' : ''};`);
   }
 }
 
@@ -50,9 +51,20 @@ export class Complex extends Base.Complex {
   }
 
   toClass() {
+    const jvmNames: Record<string, boolean> = {};
     return `
 class ${this.decl} : Json2class() {
-  ${this.child.map(e => this.lang.toProp(e)).join('')}
+  ${this.child
+    .map((e, i) => {
+      let prefix = '';
+      const p = Base.func.toUpperCaseFirst(e.prop);
+      if (jvmNames[p]) {
+        prefix = `@get:JvmName("get${p}${i}") @set:JvmName("set${p}${i}") `;
+      }
+      jvmNames[p] = true;
+      return `${prefix}${this.lang.toProp(e)}`;
+    })
+    .join('')}
   override var preset = "${Base.func.convertWrap(JSON.stringify(this.preset))}"
   override fun fromJson(data: Any?, setRule: ((Rule) -> Unit)?, rule: Rule?): ${this.decl} {
     val r = (rule ?: this.rule ?: defaultRule).copy(); setRule?.invoke(r)

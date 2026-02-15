@@ -1,8 +1,9 @@
 import * as Base from '../base';
-import { keywords } from './keywords';
+import { keywords, keywords2 } from './keywords';
 
 export class Lang extends Base.Lang {
   keywords = keywords;
+  keywords2 = keywords2;
 
   baseDef = {
     [Base.BaseType.String]: { decl: 'string', def: "''" },

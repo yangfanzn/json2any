@@ -10,7 +10,7 @@ Object.defineProperty(Json2classBase.Key.prototype, 'prop', {
       // remove the '/{}' and concatenate directly.
       // consistent with the way nested objects are concatenated.
       // '/{}' in json key are properly escaped.
-      key = func.convertLaunch(key);
+      key = key.replace(/[\/{}]/g, '');
     }
     return func.convertKeyword(key, this.lang.keywords, false);
   },
@@ -27,7 +27,7 @@ Object.defineProperty(Json2classBase.Key.prototype, 'prop', {
     const simpleToDecl2Def = simple.toDecl2Def;
     simple.toDecl2Def = function () {
       if (func.isBodyFiles(this)) {
-        return { decl: 'BodyFormFile', def: 'null' };
+        return { decl: 'BodyFormFile', def: e.type === Json2classSwift ? 'nil' : 'null' };
       }
       return simpleToDecl2Def.call(this);
     };
@@ -58,13 +58,13 @@ export abstract class Http<C extends Json2classBase.Complex, S extends Json2clas
   }
 
   protected constructor(public key: string, public plan: C) {
-    this.launch = func.convertKeyword(func.convertLaunch(key), plan.lang.keywords, false);
+    this.launch = plan.prop;
   }
 
   abstract toLaunch(plan: SchemaPlan): { code: string; plan: string };
 
   toCode() {
-    Json2classBase.Complex.refsResolve();
+    Json2classBase.Complex.refsResolve(this.plan.lang);
 
     const plan = validate(this.plan);
     const { code, plan: code2 } = this.toLaunch(plan);

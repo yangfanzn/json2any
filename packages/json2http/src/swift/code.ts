@@ -38,14 +38,14 @@ export class Http extends Base.Http<Complex, Simple> {
       `var res = ${plan.res?.def ?? '_Json2class()'}`,
       `var params = ${plan.params?.def ?? '_Json2class()'}`,
       `var body = ${bodyDef}`,
-      `var headers = _parse("${Base.func.convertWrap(JSON.stringify(plan.headers?.origin ?? {}))}")`,
+      `var headers = _parseMap("${Base.func.convertWrap(JSON.stringify(plan.headers?.origin ?? {}))}")`,
       `var baseURL = ""`,
       `var agent: any Agent = ${Http.agentConfig.name}()`,
       `var reply = Reply()`,
       `var start: (() async throws -> Void)? = nil`,
       `var before: (() async throws -> Void)? = nil`,
-      `var ready: (() -> Void)? = nil`,
-      `var process: ((Reply) -> Void)? = nil`,
+      `var ready: (() async throws -> Void)? = nil`,
+      `var process: ((Reply) async throws -> Void)? = nil`,
       `var after: (() async throws -> Void)? = nil`,
       `var end: (() async throws -> Void)? = nil`,
     ].join('; ');
@@ -121,7 +121,7 @@ class AlamofireAgent: Agent {
         }
         self.option = option
 
-        plan.ready?()
+        try await plan.ready?()
 
         let response = await withCheckedContinuation { continuation in
             session.request(self.option ?? option).responseData { [weak self] response in
@@ -156,11 +156,11 @@ class AlamofireAgent: Agent {
                 }
             case "json":
                 if let v = data as? [Json2class?] {
-                    return try _stringify(v.map { $0?.toJson() })?.data(using: .utf8) ?? "null".data(using: .utf8)
+                    return _stringify(v.map { $0?.toJson() }).data(using: .utf8) ?? "null".data(using: .utf8)
                 } else if let v = data as? Json2class {
-                    return try _stringify(_nullFilter(v.toJson()))?.data(using: .utf8) ?? "null".data(using: .utf8)
+                    return _stringify(_nullFilter(v.toJson())).data(using: .utf8) ?? "null".data(using: .utf8)
                 } else {
-                    return try _stringify(data)?.data(using: .utf8) ?? "null".data(using: .utf8)
+                    return _stringify(data).data(using: .utf8) ?? "null".data(using: .utf8)
                 }
             
             case "form":
@@ -207,9 +207,7 @@ class AlamofireAgent: Agent {
                 x.forEach(cb)
                 let y = formData.getFiles().toJson()
                 y.forEach(cb)
-                return multipart
-                return try (multipart.encode(), multipart.contentType)
-               
+                return multipart               
             default: return nil
         }
         return nil
@@ -403,8 +401,8 @@ protocol Plan {
         
     var start: (() async throws -> Void)? { get set }
     var before: (() async throws -> Void)? { get set }
-    var ready: (() -> Void)? { get set }
-    var process: ((Reply) -> Void)? { get set }
+    var ready: (() async throws -> Void)? { get set }
+    var process: ((Reply) async throws -> Void)? { get set }
     var after: (() async throws -> Void)? { get set }
     var end: (() async throws -> Void)? { get set }
 }
@@ -424,15 +422,10 @@ extension Plan {
         do {
             self.reply = try await self.agent.fetch(plan: self)
         } catch {
-            if let error = error as? Error {
-                self.reply.exception = error
-                self.reply.error = "\\(error)"
-                // 返回 reply，不抛出
-            } else {
-                throw error
-            }
+            self.reply.exception = error
+            self.reply.error = "\\(error)"
         }
-        await self.process?(self.reply)
+        try await self.process?(self.reply)
     }
   
     mutating func request() async throws -> Void {
@@ -456,7 +449,7 @@ class Json2http {
 @request@
 }
 
-private let _code2message: [String: String] = (_parse("${Base.func.convertWrap(
+private let _code2message: [String: String] = (_parseMap("${Base.func.convertWrap(
       JSON.stringify(Base.code2message),
     )}") as? [String: String]) ?? [:]
 `;

@@ -38,9 +38,7 @@ export class Http extends Base.Http<Complex, Simple> {
       `override var res = ${plan.res?.def ?? 'null'}`,
       `override var params = ${plan.params?.def ?? 'null'}`,
       `override var body = ${bodyDef}`,
-      `override var headers = _JSONObject("${Base.func.convertWrap(
-        JSON.stringify(plan.headers?.origin ?? {}),
-      )}")._toMap()`,
+      `override var headers = _parseMap("${Base.func.convertWrap(JSON.stringify(plan.headers?.origin ?? {}))}")`,
     ].join('; ');
 
     return {
@@ -119,7 +117,7 @@ class OkHttpAgent: Agent() {
 
     try {
       plan.reply.data = bytes
-      plan.reply.data = _JSONObject(String(plan.reply.data as ByteArray))._toMap()
+      plan.reply.data = _parse(String(plan.reply.data as ByteArray))
     } catch (_: Exception) {
       val contentType = response.header("Content-Type") ?: ""
       if (contentType.contains("text") || 
@@ -335,9 +333,9 @@ class Json2http private constructor() {
 @request@
 }
 
-val _code2message: Map${addX('String, String')} = _JSONObject("${Base.func.convertWrap(
-      JSON.stringify(Base.code2message),
-    )}")._toMap() as Map${addX('String, String')}
+val _code2message = _parseMap("${Base.func.convertWrap(JSON.stringify(Base.code2message))}") as Map${addX(
+      'String, String',
+    )}
 `;
   }
 }

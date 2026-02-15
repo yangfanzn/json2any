@@ -3,33 +3,20 @@ function _isMapLike(x: Any) {
   return x !== null && !(x instanceof Array) && typeof x === 'object';
 }
 
-export enum DiffType {
-  Keep,
-  Default,
-  Null,
-}
-export enum MissKey {
-  Keep,
-  Default,
-  Null,
-}
-export enum MoreIndex {
-  Fill,
-  Drop,
-  Null,
-}
-export enum MissIndex {
-  Fill,
-  Drop,
-  Null,
-  Skip,
-}
+export enum DiffType { Keep, Default, Null}
+
+export enum MissKey { Keep, Default, Null}
+
+export enum MoreIndex {Fill, Drop, Null}
+
+export enum MissIndex { Fill, Drop, Null, Skip}
 
 export class Rule {
   missKey = MissKey.Null;
   diffType = DiffType.Null;
   moreIndex = MoreIndex.Fill;
   missIndex = MissIndex.Skip;
+
   copy() {
     const rule = new Rule();
     rule.missKey = this.missKey;
@@ -177,35 +164,31 @@ export abstract class Json2class {
           } else {
             if (rule.moreIndex === MoreIndex.Drop) {
             } else if (_data instanceof Array) {
-              t.push(
-                this._nArray<T>(
-                  _data,
-                  key,
-                  array,
-                  optional,
-                  this._nList<T>(array, array.length - level),
-                  def,
-                  level + 1,
-                  rule,
-                ),
-              );
+              t.push(this._nArray<T>(
+                _data,
+                key,
+                array,
+                optional,
+                this._nList<T>(array, array.length - level),
+                def,
+                level + 1,
+                rule,
+              ));
             } else {
               t.push(array[level - 1] ? null : this._nList<T>(array, array.length - level));
             }
           }
         } else if (_data instanceof Array) {
-          t.push(
-            this._nArray<T>(
-              _data,
-              key,
-              array,
-              optional,
-              _cur === null ? this._nList<T>(array, array.length - level) : (_cur as Array<Any>),
-              def,
-              level + 1,
-              rule,
-            ),
-          );
+          t.push(this._nArray<T>(
+            _data,
+            key,
+            array,
+            optional,
+            _cur === null ? this._nList<T>(array, array.length - level) : (_cur as Array<Any>),
+            def,
+            level + 1,
+            rule,
+          ));
         } else if (array[level - 1] && _data === null) {
           t.push(null);
         } else {
@@ -219,18 +202,16 @@ export abstract class Json2class {
               _cur !== null &&
               (rule.missIndex === MissIndex.Fill || (rule.missIndex === MissIndex.Null && !array[level - 1]))
             ) {
-              t.push(
-                this._nArray<T>(
-                  this._nList<T>(array, array.length - level),
-                  key,
-                  array,
-                  optional,
-                  _cur as Array<Any>,
-                  def,
-                  level + 1,
-                  rule,
-                ),
-              );
+              t.push(this._nArray<T>(
+                this._nList<T>(array, array.length - level),
+                key,
+                array,
+                optional,
+                _cur as Array<Any>,
+                def,
+                level + 1,
+                rule,
+              ));
             } else {
               t.push(this._nList<T>(array, array.length - level));
             }
@@ -262,23 +243,22 @@ export abstract class Json2class {
             if (cur[data.length + i] === null) {
               t.push(null);
             } else {
-              t.push(
-                this._nArray<T>(
-                  this._nList<T>(array, array.length - level),
-                  key,
-                  array,
-                  optional,
-                  cur[data.length + i] as Array<Any>,
-                  def,
-                  level + 1,
-                  rule,
-                ),
-              );
+              t.push(this._nArray<T>(
+                this._nList<T>(array, array.length - level),
+                key,
+                array,
+                optional,
+                cur[data.length + i] as Array<Any>,
+                def,
+                level + 1,
+                rule,
+              ));
             }
           }
         }
       }
     }
+
     return t;
   }
 

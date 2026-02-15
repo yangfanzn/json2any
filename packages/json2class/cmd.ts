@@ -41,7 +41,6 @@ program
   .action(async options => {
     const { env, Language } = Base;
 
-    // todo: 关于 win 路径反斜杠问题，统一考虑
     const search = Path.resolve(options.search).replace(/\\/g, '/');
     bin.dirIsExist(search);
 
