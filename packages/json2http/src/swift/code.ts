@@ -71,8 +71,7 @@ class ${this.declPlan}: Plan { ${types}; }`,
       case DefaultAgent.Swift_Alamofire5:
         return {
           name: 'AlamofireAgent',
-          import: `import Foundation
-import Alamofire`,
+          import: `import Alamofire`,
           code: `
 class AlamofireAgent: Agent {
     private static let _session = Session(configuration: {
@@ -227,7 +226,7 @@ class AlamofireAgent: Agent {
 
 @json2class@
 
-private func _nullFilter(_ data: [String: Any?]) -> [String: Any?] {
+fileprivate func _nullFilter(_ data: [String: Any?]) -> [String: Any?] {
     var result: [String: Any?] = [:]
     for (key, value) in data {
         if let dictValue = value as? [String: Any?] {
@@ -242,7 +241,7 @@ private func _nullFilter(_ data: [String: Any?]) -> [String: Any?] {
     return result
 }
 
-private func _obj2get(_ obj: [String: Any?]) -> String {
+fileprivate func _obj2get(_ obj: [String: Any?]) -> String {
     let rfc: [UInt16] = [0x0000, 0x0000, 0x6782, 0x03ff, 0xfffe, 0x87ff, 0xfffe, 0x47ff]
     func encode(_ string: String) -> String {
         var result = ""
@@ -266,7 +265,7 @@ private func _obj2get(_ obj: [String: Any?]) -> String {
     return obj.filter { !_isNull($0.value) } .map { "\\(encode($0))=\\(encode("\\($1!)"))" }.joined(separator: "&")
 }
 
-private func _replyReset(_ reply: Reply) {
+fileprivate func _replyReset(_ reply: Reply) {
     reply.code = nil
     reply.error = nil
     reply.data = nil

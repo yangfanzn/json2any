@@ -2,7 +2,7 @@ import Foundation
 
 fileprivate protocol _Optionals { var _self: Any? { get } }
 extension Optional: _Optionals { fileprivate var _self: Any? { self } }
-func _unwrap(_ x: Any?) -> Any? {
+fileprivate func _unwrap(_ x: Any?) -> Any? {
   var x = x
   while true {
     guard let v = x else { return nil }
@@ -14,7 +14,7 @@ func _unwrap(_ x: Any?) -> Any? {
   }
 }
 
-func _isNull(_ x: Any?) -> Bool {
+fileprivate func _isNull(_ x: Any?) -> Bool {
   let cur = _unwrap(x) ?? NSNull()
   return cur is NSNull
 }
@@ -23,14 +23,14 @@ fileprivate func _parseMap(_ str: String) -> [String: Any] {
   return (try? _parse(str)) as? [String: Any] ?? [:]
 }
 
-func _parse(_ str: String) throws -> Any {
+fileprivate func _parse(_ str: String) throws -> Any {
   guard let data = str.data(using: .utf8) else {
     throw Json2classError("Invalid UTF-8 string")
   }
   return try JSONSerialization.jsonObject(with: data, options: .fragmentsAllowed)
 }
 
-func _stringify(_ value: Any?) -> String {
+fileprivate func _stringify(_ value: Any?) -> String {
   guard let value = _unwrap(value), !_isNull(value) else {
     return "null"
   }
@@ -77,7 +77,7 @@ class Rule {
   }
 }
 
-fileprivate class Json2classError: LocalizedError, CustomStringConvertible {
+class Json2classError: LocalizedError, CustomStringConvertible {
   let message: String
   init(_ message: String) {
     self.message = message
