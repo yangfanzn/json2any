@@ -2,7 +2,7 @@ import org.json.JSONObject as _JSONObject
 import org.json.JSONArray as _JSONArray
 import org.json.JSONTokener as _JSONTokener
 
-fun _parseMap(data: String): MutableMap<String, Any?> {
+private fun _parseMap(data: String): MutableMap<String, Any?> {
   return (_parse(data) as? MutableMap<String, Any?>) ?: mutableMapOf()
 }
 

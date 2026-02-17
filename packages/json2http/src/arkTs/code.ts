@@ -45,7 +45,7 @@ export class Http extends Base.Http<Complex, Simple> {
       `headers: Record${addX('string, Any')} = JSON.parse('${Base.func.convertWrap(
         JSON.stringify(plan.headers?.origin ?? {}),
       )}')`,
-    ].join('; ');
+    ].join(';');
 
     return {
       code: `
@@ -189,13 +189,12 @@ export class AxiosAgent extends Agent {
       method: plan.method,
       baseURL: plan.baseURL,
       headers: plan.headers as unknown as undefined,
-      // params: plan.params?.toJson(),
       data: (await this.body(plan)) ?? undefined,
     });
 
     await plan.ready?.();
 
-    const response = (this.response = await session.request(option)); /* .finally(() => this.session?.close()) */
+    const response = (this.response = await session.request(option));
     plan.reply.code = response?.status ?? null;
     plan.reply.message = _code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;
 
@@ -266,15 +265,12 @@ export class AxiosAgent extends Agent {
           import: '',
           code: `
 export class FetchAgent extends Agent {
-  // private static session = _Axios.default.create({ responseType: 'text', validateStatus: () => true });
 
-  // session: _AxiosTypes.Axios | null = null;
+  session: (() => Promise${func.addX('Response')}) | null = null;
   option: RequestInit | null = null;
   response: Response | null = null;
 
   async fetch(plan: Plan): Promise${func.addX('Reply')} {
-    // const session = this.session ?? AxiosAgent.session;
-
     let path = plan.path;
     if (plan.seg) {
       const seg = plan.seg?.toJson();
@@ -291,13 +287,12 @@ export class FetchAgent extends Agent {
     const option = (this.option = {
       method: plan.method,
       headers: plan.headers as unknown as undefined,
-      // params: plan.params?.toJson(),
       body: (await this.body(plan)),
     });
 
     await plan.ready?.();
 
-    const response = (this.response = await fetch(path, option)); /* .finally(() => this.session?.close()) */
+    const response = (this.response = await (this.session ? this.session() : fetch(path, option)));
     plan.reply.code = response?.status ?? null;
     plan.reply.message = _code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;
 
@@ -319,9 +314,7 @@ export class FetchAgent extends Agent {
       return JSON.stringify(
         data instanceof Array
           ? data.map((e: Any) => (e instanceof Json2class ? _nullFilter(e.toJson()) : e))
-          : data instanceof Json2class
-          ? _nullFilter(data.toJson())
-          : data,
+          : data instanceof Json2class ? _nullFilter(data.toJson()) : data,
       );
     } else if (type === 'map' && data instanceof Json2class) {
       return _obj2get(data.toJson());
@@ -378,6 +371,13 @@ ${agentConfig.import}
 
 @json2class@
 
+function _obj2get(obj: Record${addX('string, Any')}) {
+  return Object.keys(obj).reduce((v, k) => {
+    obj[k] !== null && v.push(\`\${encodeURIComponent(k)}=\${encodeURIComponent(\`\${obj[k]}\`)}\`);
+    return v;
+  }, [] as Array${addX('string')}).join('&');
+}
+
 function _nullFilter(data: Record${addX('string, Any')}) {
   const result: Record${addX('string, Any')} = {};
   Object.entries(data).forEach((e) => {
@@ -392,16 +392,12 @@ function _nullFilter(data: Record${addX('string, Any')}) {
   });
   return result;
 }
-function _obj2get(obj: Record${addX('string, Any')}) {
-  return Object.keys(obj).reduce((v, k) => {
-    obj[k] !== null && v.push(\`\${encodeURIComponent(k)}=\${encodeURIComponent(\`\${obj[k]}\`)}\`);
-    return v;
-  }, [] as Array${addX('string')}).join('&');
-}
+
 function _replyReset(reply: Reply) {
   reply.code = reply.error = reply.data = reply.exception = null;
   reply.message = '';
 }
+
 export class Reply {
   code: number | null = null;
   message = '';
@@ -409,10 +405,12 @@ export class Reply {
   data: Any = null;
   exception: Any = null;
 }
+
 export abstract class Agent {
   abstract fetch(plan: Plan): Promise${addX('Reply')};
   abstract body(plan: Plan): Promise${addX('Any')} | Any;
 }${agentConfig.code}
+
 export class BodyFormFile {
   readonly content: Uint8Array | null;
   readonly file: ${isTs ? 'Blob' : 'string'} | null;
@@ -428,15 +426,13 @@ export class BodyFormFile {
     this.file = file;
     this.contentType = 'application/octet-stream';
   }
-  static fromFile(file: ${isTs ? 'Blob' : 'string'}) {
-    return new BodyFormFile(null, file); }
-  static fromString(value: string) {
-    return new BodyFormFile(${
-      isTs ? 'new TextEncoder().encode(value)' : '_Util.TextEncoder.create().encodeInto(value)'
-    }, null); }
-  static fromBytes(value: Array${addX('number')} | Uint8Array) {
-    return new BodyFormFile(new Uint8Array(value), null); }
+  static fromFile(file: ${isTs ? 'Blob' : 'string'}) { return new BodyFormFile(null, file); }
+  static fromString(value: string) { return new BodyFormFile(${
+    isTs ? 'new TextEncoder().encode(value)' : '_Util.TextEncoder.create().encodeInto(value)'
+  }, null); }
+  static fromBytes(value: Array${addX('number')} | Uint8Array) { return new BodyFormFile(new Uint8Array(value), null); }
 }
+
 export class BodyForm${addX('T extends Json2class = Json2class, K extends Json2class = Json2class')} {
   fields: T;
   files: K;
@@ -445,6 +441,7 @@ export class BodyForm${addX('T extends Json2class = Json2class, K extends Json2c
     this.files = files;
   }
 }
+
 export class Body${addX('T')} {
   private static _types: Record${addX('string, string')} = {${Base.bodyTypes
       .map(k => `'${k}': '${(Base.contentTypes as Record<string, string>)[k]}'`)
@@ -461,6 +458,7 @@ export class Body${addX('T')} {
     this.contentType = Body._types[type] ?? null;
   }
 }
+
 export class Json2httpError implements Error {
   readonly name: string;
   readonly message: string;

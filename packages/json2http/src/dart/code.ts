@@ -50,7 +50,7 @@ export class Http extends Base.Http<Complex, Simple> {
       //   is unsuitable，because of headers usually does not change on a special request but need change on a common request with Map.
       //   finally, if it is hardcoded as xxx, it would also feel strange.
       `var headers = _Convert.jsonDecode('${Base.func.convertWrap(JSON.stringify(plan.headers?.origin ?? {}))}')`,
-    ].join('; ');
+    ].join(';');
 
     return {
       code: `
@@ -126,7 +126,11 @@ class DioAgent extends Agent {
     if (type == null) {
       return null;
     } else if (type == 'json') {
-      return _Convert.jsonEncode(data is Json2class ? _nullFilter(data.toJson()) : data);
+      return _Convert.jsonEncode(
+        data is List
+          ? data.map((e) => e is Json2class ? _nullFilter(e.toJson()) : e).toList()
+          : data is Json2class ? _nullFilter(data.toJson()) : data
+      );
     } else if (type == 'map' && data is Json2class) {
       return _nullFilter(data.toJson());
     } else if (type == 'form' && data is BodyForm) {
@@ -188,21 +192,25 @@ _nullFilter(Map data) {
   });
   return result;
 }
+
 _replyReset(Reply reply) {
   reply.code = reply.error = reply.data = reply.exception = null;
   reply.message = '';
 }
+
 class Reply {
   int? code;
   String message = '';
   String? error;
   Object? data;
-  Exception? exception;
+  Object? exception;
 }
+
 abstract class Agent {
   Future${addX('Reply')} fetch(Plan plan);
   FutureOr${addX('Object?')} body(Plan plan);
 }${agentConfig.code}
+
 class BodyFormFile {
   final Uint8List? content;
   final String? file;
@@ -210,13 +218,11 @@ class BodyFormFile {
   String? contentType;
   Map${addX(`String, List${addX('String')}`)}? headers;
 
-  BodyFormFile.fromFile(this.file)
-    : content = null;
-  BodyFormFile.fromString(String value)
-    : file = null, content = _Convert.utf8.encode(value);
-  BodyFormFile.fromBytes(List${addX('int')} value)
-    : file = null, content = Uint8List.fromList(value);
+  BodyFormFile.fromFile(this.file) : content = null;
+  BodyFormFile.fromString(String value) : file = null, content = _Convert.utf8.encode(value);
+  BodyFormFile.fromBytes(List${addX('int')} value) : file = null, content = Uint8List.fromList(value);
 }
+
 class BodyForm${addX('T extends Json2class, K extends Json2class')} {
   T fields;
   K files;
@@ -225,6 +231,7 @@ class BodyForm${addX('T extends Json2class, K extends Json2class')} {
     required this.files,
   });
 }
+
 class Body${addX('T')} {
   static Map${addX('String, String')} _types = {${Base.bodyTypes
       .map(k => `'${k}': '${(Base.contentTypes as Record<string, string>)[k]}'`)
@@ -240,6 +247,7 @@ class Body${addX('T')} {
     required this.data,
   }) : contentType = _types[type];
 }
+
 class Json2httpError implements Exception {
   final Plan plan;
   Json2httpError(this.plan);
@@ -265,36 +273,33 @@ abstract class Plan {
 
   Reply reply = Reply();
 
-  FutureOr${addX('void')} abort() {
+  late final FutureOr${addX('void')} Function() abort = () {
     if (this.reply.code != 200 && this.reply.message.isNotEmpty) {
       throw Json2httpError(this);
     }
     if (this.reply.error?.isNotEmpty ?? false) {
       throw Json2httpError(this);
     }
-  }
+  };
 
-  Future${addX('void')} fetch() async {
+  late final Future${addX('void')} Function() fetch = () async {
     _replyReset(this.reply);
     this.reply = await this.agent.fetch(this).catchError((e) {
-      if (e is Exception) {
-        this.reply.exception = e;
-        this.reply.error = e.toString();
-        return this.reply;
-      }
-      throw e;
+      this.reply.exception = e;
+      this.reply.error = e.toString();
+      return this.reply;
     }).whenComplete(() async {
       await this.process?.call(this.reply);
     });
-  }
+  };
 
-  Future${addX('void')} request() async {
+  late final Future${addX('void')} Function() request = () async {
     await this.before?.call();
     await this.fetch();
     await this.after?.call();
     this.res?.fromAny(this.reply.data);
     await (this.end ?? this.abort)();
-  }
+  };
 
   FutureOr${addX('void')} Function()? start;
   FutureOr${addX('void')} Function()? before;

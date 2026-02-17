@@ -39,7 +39,7 @@ export class Http extends Base.Http<Complex, Simple> {
       `override var params = ${plan.params?.def ?? 'null'}`,
       `override var body = ${bodyDef}`,
       `override var headers = _parseMap("${Base.func.convertWrap(JSON.stringify(plan.headers?.origin ?? {}))}")`,
-    ].join('; ');
+    ].join(';');
 
     return {
       code: `
@@ -47,7 +47,7 @@ suspend fun ${this.launch}(setPlan: (plan: ${this.declPlan}) -> Unit): ${this.de
   val plan = ${this.declPlan}()
   Json2http.setPlan?.invoke(plan)
   setPlan(plan)
-  (plan.start ?: plan.request).invoke()
+  (plan.start ?: plan::request).invoke()
   return plan
 } // ${plan.path.origin}`,
       plan: `
@@ -118,15 +118,7 @@ class OkHttpAgent: Agent() {
     try {
       plan.reply.data = bytes
       plan.reply.data = _parse(String(plan.reply.data as ByteArray))
-    } catch (_: Exception) {
-      val contentType = response.header("Content-Type") ?: ""
-      if (contentType.contains("text") || 
-        contentType.contains("plain") || 
-        contentType.contains("json") || 
-        contentType.contains("xml")) {
-        plan.reply.data = plan.reply.data.toString()
-      }
-    }
+    } catch (_: Exception) {}
 
     return plan.reply;
   }
@@ -136,7 +128,10 @@ class OkHttpAgent: Agent() {
     val data = plan.body?.data
     var body: RequestBody? = when (type) {
       null -> null
-      "json" -> _stringify(if (data is Json2class) { _nullFilter(data.toJson()) } else { data }).toRequestBody()
+      "json" -> _stringify(
+        if (data is List<*>) data.map { if (it is Json2class) _nullFilter(it.toJson()) else it }
+          else if (data is Json2class) _nullFilter(data.toJson()) else data
+        ).toRequestBody()
       "map" -> if (data is Json2class) _obj2get(data.toJson()).toRequestBody() else null
       "form" -> { 
         if (data !is BodyForm<*, *>) {
@@ -198,6 +193,12 @@ class OkHttpAgent: Agent() {
 
 @json2class@
 
+private fun _obj2get(obj: Map${addX('String, Any?')}): String {
+  return obj.filterValues { it != null }
+    .map { (k, v) -> "\${java.net.URLEncoder.encode(k, "UTF-8")}=\${java.net.URLEncoder.encode(v.toString(), "UTF-8")}" }
+      .joinToString("&")
+}
+
 private fun _nullFilter(data: Map${addX('String, Any?')}): Map${addX('String, Any?')} {
   val result = mutableMapOf${addX('String, Any?')}()
   for ((key, value) in data) {
@@ -212,11 +213,7 @@ private fun _nullFilter(data: Map${addX('String, Any?')}): Map${addX('String, An
   }
   return result
 }
-private fun _obj2get(obj: Map${addX('String, Any?')}): String {
-  return obj.filterValues { it != null }
-    .map { (k, v) -> "\${java.net.URLEncoder.encode(k, "UTF-8")}=\${java.net.URLEncoder.encode(v.toString(), "UTF-8")}" }
-      .joinToString("&")
-}
+
 private fun _replyReset(reply: Reply) {
   reply.code = null
   reply.error = null
@@ -224,17 +221,20 @@ private fun _replyReset(reply: Reply) {
   reply.exception = null
   reply.message = ""
 }
+
 class Reply {
   var code: Int? = null
   var message: String = ""
   var error: String? = null
   var data: Any? = null
-  var exception: Exception? = null
+  var exception: Throwable? = null
 }
+
 abstract class Agent {
   abstract suspend fun fetch(plan: Plan): Reply
   abstract suspend fun body(plan: Plan): Any?
 }${agentConfig.code}
+
 class BodyFormFile private constructor(
   val content: ByteArray? = null,
   val file: String? = null
@@ -248,10 +248,12 @@ class BodyFormFile private constructor(
     fun fromBytes(value: ByteArray): BodyFormFile { return BodyFormFile(value, null) }
   }
 }
+
 class BodyForm<T: Json2class, K: Json2class>(
-  val fields: T,
-  val files: K
+  var fields: T,
+  var files: K
 )
+
 class Body<T>(val type: String, var data: T) {
   companion object {
     private val _types = mapOf(${Base.bodyTypes
@@ -260,13 +262,14 @@ class Body<T>(val type: String, var data: T) {
   }
   val contentType: String? = _types[type]
 }
+
 class Json2httpError(val plan: Plan) : Exception() {
   override val message: String = toString()
-  val name: String = plan.title
   override fun toString(): String {
     return plan.reply.error.takeIf { !it.isNullOrEmpty() } ?: plan.reply.message
   }
 }
+
 abstract class Plan {
   var baseURL: String = ""
 
@@ -286,7 +289,7 @@ abstract class Plan {
 
   var reply = Reply()
 
-  val abort: suspend () -> Unit = {
+  suspend fun abort() {
     if (reply.code != 200 && reply.message.isNotEmpty()) {
       throw Json2httpError(this)
     }
@@ -295,11 +298,11 @@ abstract class Plan {
     }
   }
 
-  val fetch: suspend () -> Unit = {
+  suspend fun fetch() {
     _replyReset(reply)
     try {
       reply = agent.fetch(this)
-    } catch (e: Exception) {
+    } catch (e: Throwable) {
       reply.exception = e
       reply.error = (e.message ?: e.toString())
     } finally {
@@ -307,12 +310,12 @@ abstract class Plan {
     }
   }
 
-  val request: suspend () -> Unit = {
+  suspend fun request() {
     before?.invoke()
     fetch()
     after?.invoke()
     res?.fromAny(reply.data)
-    (end ?: abort).invoke()
+    (end ?: ::abort).invoke()
   }
 
   var start: (suspend () -> Unit)? = null
@@ -333,7 +336,7 @@ class Json2http private constructor() {
 @request@
 }
 
-val _code2message = _parseMap("${Base.func.convertWrap(JSON.stringify(Base.code2message))}") as Map${addX(
+private val _code2message = _parseMap("${Base.func.convertWrap(JSON.stringify(Base.code2message))}") as Map${addX(
       'String, String',
     )}
 `;

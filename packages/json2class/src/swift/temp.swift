@@ -23,6 +23,9 @@ fileprivate func _parseMap(_ str: String) -> [String: Any] {
   return (try? _parse(str)) as? [String: Any] ?? [:]
 }
 
+fileprivate func _parse(_ data: Data) throws -> Any {
+  return try JSONSerialization.jsonObject(with: data, options: .fragmentsAllowed)
+}
 fileprivate func _parse(_ str: String) throws -> Any {
   guard let data = str.data(using: .utf8) else {
     throw Json2classError("Invalid UTF-8 string")
@@ -139,61 +142,7 @@ class Json2class {
   }
 
   fileprivate func _nList<T>(_ array: [Bool], _ n: Int, type: T.Type) -> [Any?] {
-    switch array {
-    case [true]:
-      return [T?]().map { $0 as Any }
-    case [false]:
-      return [T]().map { $0 as Any }
-
-    case [true, true]:
-      if n == 1 { return [T?]().map { $0 as Any } }
-      return [[T?]?]().map { $0 as Any }
-    case [true, false]:
-      if n == 1 { return [T]().map { $0 as Any } }
-      return [[T]?]().map { $0 as Any }
-    case [false, true]:
-      if n == 1 { return [T?]().map { $0 as Any } }
-      return [[T?]]().map { $0 as Any }
-    case [false, false]:
-      if n == 1 { return [T]().map { $0 as Any } }
-      return [[T]]().map { $0 as Any }
-
-    case [true, true, true]:
-      if n == 1 { return [T?]().map { $0 as Any } }
-      else if n == 2 { return [[T?]?]().map { $0 as Any } }
-      return [[[T?]?]?]().map { $0 as Any }
-    case [true, true, false]:
-      if n == 1 { return [T]().map { $0 as Any } }
-      else if n == 2 { return [[T]?]().map { $0 as Any } }
-      return [[[T]?]?]().map { $0 as Any }
-    case [true, false, true]:
-      if n == 1 { return [T?]().map { $0 as Any } }
-      else if n == 2 { return [[T?]]().map { $0 as Any } }
-      return [[[T?]]?]().map { $0 as Any }
-    case [true, false, false]:
-      if n == 1 { return [T]().map { $0 as Any } }
-      else if n == 2 { return [[T]]().map { $0 as Any } }
-      return [[[T]]?]().map { $0 as Any }
-    case [false, true, true]:
-      if n == 1 { return [T?]().map { $0 as Any } }
-      else if n == 2 { return [[T?]?]().map { $0 as Any } }
-      return [[[T?]?]]().map { $0 as Any }
-    case [false, true, false]:
-      if n == 1 { return [T]().map { $0 as Any } }
-      else if n == 2 { return [[T]?]().map { $0 as Any } }
-      return [[[T]?]]().map { $0 as Any }
-    case [false, false, true]:
-      if n == 1 { return [T?]().map { $0 as Any } }
-      else if n == 2 { return [[T?]]().map { $0 as Any } }
-      return [[[T?]]]().map { $0 as Any }
-    case [false, false, false]:
-      if n == 1 { return [T]().map { $0 as Any } }
-      else if n == 2 { return [[T]]().map { $0 as Any } }
-      return [[[T]]]().map { $0 as Any }
-    default:
-      break
-    }
-    fatalError(Json2classError("supports up to three-dimensional arrays").description)
+    return []
   }
 
   fileprivate func _nArray<T>(
