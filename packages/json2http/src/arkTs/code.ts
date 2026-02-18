@@ -49,7 +49,7 @@ export class Http extends Base.Http<Complex, Simple> {
 
     return {
       code: `
-async ${this.launch}(setPlan: (plan: ${this.declPlan}) => void): Promise${addX(this.declPlan)}  {
+async ${this.launch}(setPlan: (plan: ${this.declPlan}) => void): Promise${addX(this.declPlan)} {
   const plan = new ${this.declPlan}();
   await Json2http.setPlan?.(plan);
   await setPlan(plan);
@@ -236,14 +236,14 @@ export class AxiosAgent extends Agent {
           ((data[k] instanceof Array ? data[k] : [data[k]]) as Array${func.addX('Any')}).forEach(e => {
             if (e instanceof BodyFormFile) {
               const t = a2b(e);
-              if (t) {
+              if (t !== null) {
                 if (e.filename === null) {
                   map.append(k, t);
                 } else {
                   map.append(k, t, e.filename);
                 }
               }
-            } else if (e) {
+            } else if (e !== null) {
               map.append(k, e.toString());
             }
           });
@@ -333,14 +333,14 @@ export class FetchAgent extends Agent {
           ((data[k] instanceof Array ? data[k] : [data[k]]) as Array${func.addX('Any')}).forEach(e => {
             if (e instanceof BodyFormFile) {
               const t = a2b(e);
-              if (t) {
+              if (t !== null) {
                 if (e.filename === null) {
                   map.append(k, t);
                 } else {
                   map.append(k, t, e.filename);
                 }
               }
-            } else if (e) {
+            } else if (e !== null) {
               map.append(k, e.toString());
             }
           });

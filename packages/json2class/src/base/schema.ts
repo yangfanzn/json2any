@@ -1,6 +1,6 @@
 import { func } from './func';
 import { JsonType } from './type';
-import { Complex, Simple, Key } from './code';
+import { Complex, Key, Simple } from './code';
 
 type SchemaGroup = (SchemaItem | null)[][];
 export type SchemaItem = {
@@ -14,7 +14,14 @@ export type SchemaItem = {
       child: SchemaGroup;
     }
   | {
-      origin: 'Record.String' | 'Record.Array' | 'Complex' | 'String' | ((origin: any) => string);
+      origin:
+        | 'Record.Simple'
+        | 'Record.String'
+        | 'Record.Array.String'
+        | 'Record.Array.Simple'
+        | 'Complex'
+        | 'String'
+        | ((origin: any) => string);
       child: null;
     }
 );
@@ -49,17 +56,34 @@ export const validateItem = (
         return func.assertError(`${keys} must be an object`, root);
       }
       break;
+    case 'Record.Simple':
+      if (
+        func.type(item.origin) !== JsonType.Object ||
+        Object.values(item.origin).findIndex(
+          e => ![JsonType.String, JsonType.Number, JsonType.Boolean].includes(func.type(e) as JsonType),
+        ) >= 0
+      ) {
+        return func.assertError(`${keys} must be a map${func.addX('string, string | number | boolean')}`, root);
+      }
+      break;
     case 'Record.String':
       if (
         func.type(item.origin) !== JsonType.Object ||
-        Object.values(item.origin).filter(e => func.type(e) !== JsonType.String).length
+        Object.values(item.origin).findIndex(e => func.type(e) !== JsonType.String) >= 0
       ) {
         return func.assertError(`${keys} must be a map${func.addX('string, string')}`, root);
       }
       break;
-    case 'Record.Array':
+    case 'Record.Array.String':
+    case 'Record.Array.Simple':
+      let typeMessage = 'string, string | string[]';
+      const condition = [JsonType.String, JsonType.Null];
+      if (schemaItem.origin === 'Record.Array.Simple') {
+        condition.push(JsonType.Number, JsonType.Boolean);
+        typeMessage = 'string, (string | number | boolean) | (string | number | boolean)[]';
+      }
       const check = (data: any) => {
-        const c = (e: any) => ![JsonType.String, JsonType.Null].includes(func.type(e) as JsonType);
+        const c = (e: any) => !condition.includes(func.type(e) as JsonType);
         return (
           Object.keys(data).findIndex(k => {
             const e = data[k];
@@ -71,7 +95,7 @@ export const validateItem = (
         );
       };
       if (func.type(item.origin) !== JsonType.Object || check(item.origin)) {
-        return func.assertError(`${keys} must be a map${func.addX('string, string | string[]')}`, root);
+        return func.assertError(`${keys} must be a map${func.addX(typeMessage)}`, root);
       }
       break;
     case 'String':

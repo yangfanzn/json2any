@@ -81,7 +81,7 @@ const schemaPlan: Json2classBase.SchemaItem = {
         child: null,
       },
       { key: 'res', required: false, optional: false, array: false, origin: 'Complex', child: null },
-      { key: 'params', required: false, optional: false, array: false, origin: 'Record.String', child: null },
+      { key: 'params', required: false, optional: false, array: false, origin: 'Record.Simple', child: null },
       {
         key: 'body',
         required: false,
@@ -135,7 +135,7 @@ const schemaPlan: Json2classBase.SchemaItem = {
             { key: 'data', required: true, optional: true, array: null, origin: null, child: [] },
             { key: 'data', required: true, optional: true, array: false, origin: 'String', child: null },
             { key: 'data', required: true, optional: true, array: false, origin: 'String', child: null },
-            { key: 'data', required: true, optional: false, array: false, origin: 'Record.String', child: null },
+            { key: 'data', required: true, optional: false, array: false, origin: 'Record.Simple', child: null },
             {
               key: 'data',
               required: true,
@@ -144,15 +144,29 @@ const schemaPlan: Json2classBase.SchemaItem = {
               origin: null,
               child: [
                 [
-                  { key: 'fields', required: true, optional: false, array: false, origin: 'Record.Array', child: null },
-                  { key: 'files', required: true, optional: false, array: false, origin: 'Record.Array', child: null },
+                  {
+                    key: 'fields',
+                    required: true,
+                    optional: false,
+                    array: false,
+                    origin: 'Record.Array.Simple',
+                    child: null,
+                  },
+                  {
+                    key: 'files',
+                    required: true,
+                    optional: false,
+                    array: false,
+                    origin: 'Record.Array.String',
+                    child: null,
+                  },
                 ],
               ],
             },
           ],
         ],
       },
-      { key: 'headers', required: false, optional: false, array: false, origin: 'Record.Array', child: null },
+      { key: 'headers', required: false, optional: false, array: false, origin: 'Record.Array.String', child: null },
     ],
   ],
 };
