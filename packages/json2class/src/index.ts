@@ -11,9 +11,9 @@ export function json2class(key: string, json: Record<string, any>) {
     case Base.Language.ArkTs12:
     case Base.Language.Typescript5:
       return Base.func.core2class(ArkTs.Complex, ArkTs.Simple, key, json);
-    case Base.Language.Kotlin1:
+    case Base.Language.Kotlin1_3:
       return Base.func.core2class(Kotlin.Complex, Kotlin.Simple, key, json);
-    case Base.Language.Swift5:
+    case Base.Language.Swift5_7:
       return Base.func.core2class(Swift.Complex, Swift.Simple, key, json);
   }
 }

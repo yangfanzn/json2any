@@ -82,14 +82,14 @@ export class Func {
       $: '\\$',
       "'": "\\'",
     };
-    if (env.language === Language.Kotlin1) {
+    if (env.language === Language.Kotlin1_3) {
       special['"'] = '\\"';
       special['$'] = '${"$"}';
       special['\v'] = '\\\\v';
       special['\f'] = '\\\\f';
       str = str.replace(/\\u000b/g, '\\\\v').replace(/\\f/g, '\\\\f');
     }
-    if (env.language === Language.Swift5) {
+    if (env.language === Language.Swift5_7) {
       special['"'] = '\\"';
       special['$'] = '$';
       // swift does not need special handling for the $ character because it does not have string interpolation conflicts like Kotlin
@@ -220,7 +220,7 @@ export class Func {
   }
 
   language(language: Language) {
-    const languages: Record<Language, { ext: string; temp: string; language: string; version: string }> = {
+    const languages: Record<Language, { ext: string; temp: string; language: string; version?: string }> = {
       [Language.Dart3]: {
         ext: 'dart',
         temp: require('../dart/temp.dart').default,
@@ -239,17 +239,17 @@ export class Func {
         language: 'typescript',
         version: '5',
       },
-      [Language.Kotlin1]: {
+      [Language.Kotlin1_3]: {
         ext: 'kt',
         temp: require('../kotlin/temp.kt').default,
         language: 'kotlin',
-        version: '2',
+        version: '1.3',
       },
-      [Language.Swift5]: {
+      [Language.Swift5_7]: {
         ext: 'swift',
         temp: require('../swift/temp.swift').default,
         language: 'swift',
-        version: '5',
+        version: '5.7',
       },
     };
     return languages[language];

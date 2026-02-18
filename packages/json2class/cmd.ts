@@ -53,13 +53,7 @@ program
     env.output = output;
 
     switch (env.language) {
-      case Language.Dart3:
-        break;
-      case Language.ArkTs12:
-        break;
-      case Language.Typescript5:
-        break;
-      case Language.Kotlin1:
+      case Language.Kotlin1_3:
         env.library = `${
           options.package ?? output.split(new RegExp('/src/main/(java|kotlin)/'))?.[2]?.replace(/\//g, '.') ?? ''
         }`;

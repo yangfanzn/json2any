@@ -16,11 +16,11 @@ export function json2http(key?: string, json?: Record<string, any>, file?: strin
     case Base.Language.ArkTs12:
     case Base.Language.Typescript5:
       return key && json ? Base.func.core2http(ArkTs.Http, ArkTs.Complex, ArkTs.Simple, key, json, file) : ArkTs.Http;
-    case Base.Language.Kotlin1:
+    case Base.Language.Kotlin1_3:
       return key && json
         ? Base.func.core2http(Kotlin.Http, Kotlin.Complex, Kotlin.Simple, key, json, file)
         : Kotlin.Http;
-    case Base.Language.Swift5:
+    case Base.Language.Swift5_7:
       return key && json ? Base.func.core2http(Swift.Http, Swift.Complex, Swift.Simple, key, json, file) : Swift.Http;
   }
 }

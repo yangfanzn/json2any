@@ -76,7 +76,7 @@ program
         case Language.Typescript5:
           defaultAgent = DefaultAgent.Typescript_Fetch0;
           break;
-        case Language.Kotlin1:
+        case Language.Kotlin1_3:
           defaultAgent = DefaultAgent.Kotlin_OkHttp4;
 
           env.library = `${
@@ -86,7 +86,7 @@ program
             env.library = `package ${env.library}${'\n'.repeat(2)}`;
           }
           break;
-        case Language.Swift5:
+        case Language.Swift5_7:
           defaultAgent = DefaultAgent.Swift_Alamofire5;
           break;
       }

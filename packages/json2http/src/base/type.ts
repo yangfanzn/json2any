@@ -4,8 +4,8 @@ export enum Language {
   Dart3 = 'dart@3',
   ArkTs12 = 'arkTs@12',
   Typescript5 = 'typescript@5',
-  Kotlin1 = 'kotlin@1',
-  Swift5 = 'swift@5',
+  Kotlin1_3 = 'kotlin@1.3',
+  Swift5_7 = 'swift@5.7',
 }
 
 export enum DefaultAgent {
