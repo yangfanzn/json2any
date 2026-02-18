@@ -7,7 +7,7 @@ export class Simple extends Json2classSwift.Simple {}
 
 export class Http extends Base.Http<Complex, Simple> {
   toLaunch(plan: Base.SchemaPlan) {
-    const { addX } = Base.func;
+    const { addX, convertWrap } = Base.func;
 
     const { body } = plan;
 
@@ -33,12 +33,12 @@ export class Http extends Base.Http<Complex, Simple> {
     const types = [
       `var path = "${plan.path.origin}"`,
       `var seg = ${plan.seg?.def ?? 'NilJson2class()'}`,
-      `let title = "${plan.title.origin}"`,
+      `let title = "${convertWrap(plan.title.origin.toString())}"`,
       `var method = "${plan.method.origin}"`,
       `var res = ${plan.res?.def ?? 'NilJson2class()'}`,
       `var params = ${plan.params?.def ?? 'NilJson2class()'}`,
       `var body = ${bodyDef}`,
-      `var headers = _parseMap("${Base.func.convertWrap(JSON.stringify(plan.headers?.origin ?? {}))}")`,
+      `var headers = _parseMap("${convertWrap(JSON.stringify(plan.headers?.origin ?? {}))}")`,
       `var baseURL = ""`,
       `var agent: any Agent = ${Http.agentConfig.name}()`,
       `var reply = Reply()`,
@@ -205,7 +205,7 @@ class AlamofireAgent: Agent {
   }
 
   static toEntry() {
-    const { addX } = Base.func;
+    const { addX, convertWrap } = Base.func;
     const { agentConfig } = this;
     return `${agentConfig.import}
 
@@ -405,7 +405,7 @@ class Json2http {
 @request@
 }
 
-fileprivate let _code2message: [String: String] = (_parseMap("${Base.func.convertWrap(
+fileprivate let _code2message: [String: String] = (_parseMap("${convertWrap(
       JSON.stringify(Base.code2message),
     )}") as? [String: String]) ?? [:]
 `;

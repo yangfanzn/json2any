@@ -7,7 +7,7 @@ export class Simple extends Json2classDart.Simple {}
 
 export class Http extends Base.Http<Complex, Simple> {
   toLaunch(plan: Base.SchemaPlan) {
-    const { addX } = Base.func;
+    const { addX, convertWrap } = Base.func;
 
     const { body } = plan;
 
@@ -39,7 +39,7 @@ export class Http extends Base.Http<Complex, Simple> {
     const types = [
       `var path = '${plan.path.origin}'`,
       `covariant ${plan.seg?.decl ?? 'Null'} seg = ${plan.seg?.def ?? 'null'}`,
-      `final title = '${plan.title.origin}'`,
+      `final title = '${convertWrap(plan.title.origin.toString())}'`,
       `var method = '${plan.method.origin}'`,
       `covariant ${plan.res?.decl ?? 'Null'} res = ${plan.res?.def ?? 'null'}`,
       `covariant ${plan.params?.decl ?? 'Null'} params = ${plan.params?.def ?? 'null'}`,
@@ -49,7 +49,7 @@ export class Http extends Base.Http<Complex, Simple> {
       //   but the dart does not support Map<String, String | List<String>>, if the tools make headers to a special type
       //   is unsuitable，because of headers usually does not change on a special request but need change on a common request with Map.
       //   finally, if it is hardcoded as xxx, it would also feel strange.
-      `var headers = _Convert.jsonDecode('${Base.func.convertWrap(JSON.stringify(plan.headers?.origin ?? {}))}')`,
+      `var headers = _Convert.jsonDecode('${convertWrap(JSON.stringify(plan.headers?.origin ?? {}))}')`,
     ].join(';');
 
     return {
@@ -172,7 +172,7 @@ class DioAgent extends Agent {
   }
 
   static toEntry() {
-    const { addX } = Base.func;
+    const { addX, convertWrap } = Base.func;
     const { agentConfig } = this;
     return `import 'dart:async';
 import 'dart:typed_data';
@@ -318,7 +318,7 @@ class Json2http {
 @request@
 }
 
-final _code2message = _Convert.jsonDecode('${Base.func.convertWrap(JSON.stringify(Base.code2message))}');
+final _code2message = _Convert.jsonDecode('${convertWrap(JSON.stringify(Base.code2message))}');
 `;
   }
 }

@@ -7,7 +7,7 @@ export class Simple extends Json2classKotlin.Simple {}
 
 export class Http extends Base.Http<Complex, Simple> {
   toLaunch(plan: Base.SchemaPlan) {
-    const { addX } = Base.func;
+    const { addX, convertWrap } = Base.func;
 
     const { body } = plan;
 
@@ -33,12 +33,12 @@ export class Http extends Base.Http<Complex, Simple> {
     const types = [
       `override var path = "${plan.path.origin}"`,
       `override var seg = ${plan.seg?.def ?? 'null'}`,
-      `override val title = "${plan.title.origin}"`,
+      `override val title = "${convertWrap(plan.title.origin.toString())}"`,
       `override var method = "${plan.method.origin}"`,
       `override var res = ${plan.res?.def ?? 'null'}`,
       `override var params = ${plan.params?.def ?? 'null'}`,
       `override var body = ${bodyDef}`,
-      `override var headers = _parseMap("${Base.func.convertWrap(JSON.stringify(plan.headers?.origin ?? {}))}")`,
+      `override var headers = _parseMap("${convertWrap(JSON.stringify(plan.headers?.origin ?? {}))}")`,
     ].join(';');
 
     return {
@@ -187,7 +187,7 @@ class OkHttpAgent: Agent() {
   }
 
   static toEntry() {
-    const { addX } = Base.func;
+    const { addX, convertWrap } = Base.func;
     const { agentConfig } = this;
     return `${agentConfig.import}
 
@@ -336,7 +336,7 @@ class Json2http private constructor() {
 @request@
 }
 
-private val _code2message = _parseMap("${Base.func.convertWrap(JSON.stringify(Base.code2message))}") as Map${addX(
+private val _code2message = _parseMap("${convertWrap(JSON.stringify(Base.code2message))}") as Map${addX(
       'String, String',
     )}
 `;

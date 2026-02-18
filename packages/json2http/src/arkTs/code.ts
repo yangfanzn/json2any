@@ -7,7 +7,7 @@ export class Simple extends Json2classArkTs.Simple {}
 
 export class Http extends Base.Http<Complex, Simple> {
   toLaunch(plan: Base.SchemaPlan) {
-    const { addX } = Base.func;
+    const { addX, convertWrap } = Base.func;
 
     const { body } = plan;
 
@@ -37,12 +37,12 @@ export class Http extends Base.Http<Complex, Simple> {
     const types = [
       `path = '${plan.path.origin}'`,
       `seg = ${plan.seg?.def ?? 'null'}`,
-      `readonly title = '${plan.title.origin}'`,
+      `readonly title = '${convertWrap(plan.title.origin.toString())}'`,
       `method = '${plan.method.origin}'`,
       `res = ${plan.res?.def ?? 'null'}`,
       `params = ${plan.params?.def ?? 'null'}`,
       `body = ${bodyDef}`,
-      `headers: Record${addX('string, Any')} = JSON.parse('${Base.func.convertWrap(
+      `headers: Record${addX('string, Any')} = JSON.parse('${convertWrap(
         JSON.stringify(plan.headers?.origin ?? {}),
       )}')`,
     ].join(';');
@@ -363,7 +363,7 @@ export class FetchAgent extends Agent {
   }
 
   static toEntry() {
-    const { addX } = Base.func;
+    const { addX, convertWrap } = Base.func;
     const { agentConfig } = this;
     const isTs = Base.env.language.startsWith('typescript@');
     return `
@@ -538,9 +538,7 @@ export class Json2http {
 @request@
 }
 
-const _code2message: Record${addX('string, string')} = JSON.parse('${Base.func.convertWrap(
-      JSON.stringify(Base.code2message),
-    )}');
+const _code2message: Record${addX('string, string')} = JSON.parse('${convertWrap(JSON.stringify(Base.code2message))}');
 `;
   }
 }
