@@ -23,8 +23,7 @@ $RM_type.*
 ```
 
 ## Feedback & Improvement
-Thank you for using this tool! In order to quickly improve and release **version 1.0.0**,
-we would love to hear your feedback and suggestions.
+Thank you for using this tool! we would love to hear your feedback and suggestions.
 If you encounter any issues or have suggestions for improvement,
 please feel free to provide feedback through the following channels:
 

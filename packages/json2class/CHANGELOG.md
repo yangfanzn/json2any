@@ -45,3 +45,6 @@
 
 ## 0.0.14
 - 2025-06-17 kotlin supported
+
+## 1.1.0
+- 2026-02-19 official release: dart、typescript、arkTs、kotlin、swift supported

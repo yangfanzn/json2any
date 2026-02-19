@@ -11,3 +11,6 @@
 - 2025-05-03 Added ability to quickly view the path from the entry method
 - 2025-05-03 Added a configurable placeholder item via ref [the current res meets this need]
 - 2025-05-04 Removed null values when sending data to the cloud
+
+## 1.1.0
+- 2026-02-19 official release: dart、typescript、arkTs、kotlin、swift supported

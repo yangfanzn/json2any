@@ -1,5 +1,5 @@
 $RM_header
-@RM_desc:json2http 是一个命令行工具，它依赖 json2class 将指定的 JSON(5) 文件转换成 HTTP 请求代码@
+@RM_desc:json2http 是一个命令行工具，它依赖 [json2class](https://github.com/yangfanzn/json2any/blob/main/packages/json2class/README.md) 将指定的 JSON(5) 文件转换成 HTTP 请求代码@
 ## 快速开始
 json 文件支持 json 和 json5。
 ```json5
@@ -109,7 +109,7 @@ main() async {
 
 ### method
 - 作用：http method
-- 校验：GET、POST、DELETE、PUT
+- 校验：GET、POST、DELETE、PUT 等
 - 必须：是
 
 ### headers
@@ -119,7 +119,7 @@ main() async {
 
 ### params
 - 作用：http path 查询参数
-- 校验：必须是 map<string, string> 类型
+- 校验：必须是 map<string, string | number | boolean> 类型
 - 必须：否
 - 示例：
 ```json5
@@ -127,7 +127,7 @@ main() async {
   "/api/test/path": {
     "title": "",
     "method": "GET",
-    "params": { "xxx": "", "yyy": "" }
+    "params": { "xxx": "", "yyy": 123, "zzz": true }
   }
 }
 ```
@@ -170,7 +170,7 @@ main() async {
 ```
 
 ### body.data [body.type = map]
-- 校验：data 必须是 map<string, string> 类型
+- 校验：data 必须是 map<string, string | number | boolean> 类型
 - 必须：是
 - 示例：
 ```json5
@@ -180,7 +180,7 @@ main() async {
     "method": "POST",
     "body": {
       "type": "map",
-      "data": { "xxx": "", "yyy": "" }
+      "data": { "xxx": "", "yyy": 123, "zzz": true }
     }
   }
 }
@@ -189,7 +189,8 @@ main() async {
 ### body.data [body.type = form]
 - 校验：
 1. data 下必须存在 fields 和 files 字段
-2. fields 和 files 字段必须是 map<string, string 或 Array<string>> 类型
+2. files 字段必须是 map<string, string | Array<string>> 类型
+3. fields 字段必须是 map<string, (string | number | boolean) | Array<string | number | boolean>> 类型
 - 必须：是
 - 示例：
 ```json5
@@ -200,8 +201,8 @@ main() async {
     "body": {
       "type": "form",
       "data": {
-        "fields": { "xxx": "", "yyy": "" },
-        "files": { "aaa": [""], "bbb": "" },
+        "fields": { "xxx": "", "yyy": 123 },
+        "files": { "aaa": [true], "bbb": "" },
       }
     }
   }
@@ -239,7 +240,6 @@ main() async {
   }
 }
 ```
-
 
 ### res
 - 作用：http 返回值
@@ -391,5 +391,112 @@ main() async {
 ```
 
 ## 生成代码的使用
+
+### 全局入口 Json2http
+
+- Json2http.setPlan
+```dart
+import 'json2http.dart';
+
+// 可以自定义 Agent，完全控制请求调用行为
+class XAgent extends Agent {
+  Future<Reply> fetch(Plan plan) async {
+    // 可以参照已经生成的代码中进行实现
+    plan.reply.data = {'statusCode': '0'};
+    plan.reply.code = 200;
+    return plan.reply;
+  }
+  body(Plan plan) {
+    // 可以参照已经生成的代码中进行实现
+    return null;
+  }
+}
+
+main() {
+  Json2http.setPlan = (plan) {
+    // 全局配置
+    plan.baseURL = 'http://localhost:3000';
+    plan.process = (reply) {
+      final data = reply.data;
+      if (data is Map) {
+        if (data['statusCode'] != '0') {
+          // 决定最终请求是否抛出异常
+          reply.error = data['statusMessage'];
+        }
+      }
+    };
+    
+    plan.ready = () {
+      // 设置原始请求工具中的原始配置
+      plan.option = xxx;
+      // 设置原始请求工具
+      plan.session = xxx;
+    };
+
+    if (plan is testagentplan) {
+      plan.agent = XAgent();
+    }
+
+    if (plan.title.startsWith('amap:')) {
+      // 特殊接口特殊配置
+      plan.baseURL = 'https://restapi.amap.com/v3';
+      plan.path = '${plan.path}?key=xxx';
+      plan.process = (reply) {
+        var data = reply.data;
+        if (data is Map) {
+          if (data['status'] != '1') {
+            reply.error = data['info'];
+          }
+        }
+      };
+    }
+    
+    if (plan is refreshtestplan) {
+      plan.after = () async {
+        if (plan.reply.error == 'small token is error') {
+          // 实现 token 刷新
+          final x = await Json2http.single.refreshtoken((p) {
+            p.headers = {'access-token': 'bearer xxx'};
+          });
+          // 重新设置 token 后，接口重试
+          plan.headers['access-token'] = x.res.data;
+          await plan.fetch();
+        }
+      };
+    }
+  };
+}
+```
+
+- 发起接口调用
+```json5
+{
+  "/api/blood/index": {
+    "title": "宝宝血型计算",
+    "method": "GET",
+    "params": {
+      "father": "",
+      "mother": ""
+    },
+    "res": {
+      "code": 0,
+      "msg": "",
+      "data": {
+        "possible": [""],
+        "impossible": [""]
+      },
+      "copyright": ""
+    }
+  }
+}
+```
+```dart
+main() async {
+  final result = await Json2http.single.apibloodindex((plan) {
+    plan.params.father = 'A';
+    plan.params.mother = 'B';
+  });
+}
+```
 
 $RM_footer

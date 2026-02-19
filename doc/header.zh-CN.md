@@ -6,10 +6,10 @@ $RM_desc
 
 ## 支持的语言
 ### 已支持
-| [dart@3](https://dart.dev/) | [arkTs@12](https://developer.huawei.com/consumer/cn/arkts/) | [typescript@5](https://www.typescriptlang.org/) | [kotlin@1](https://kotlinlang.org/) |
+| [dart@3](https://dart.dev/) | [arkTs@12](https://developer.huawei.com/consumer/cn/arkts/) | [typescript@5](https://www.typescriptlang.org/) | [kotlin@1.3](https://kotlinlang.org/) | [swift@5.7](https://developer.apple.com/swift/) |
 
 ### 将会支持
-| [swift](https://developer.apple.com/swift/) | [java](https://dev.java/) | [其他语言陆续支持]() |
+| [java](https://dev.java/) | [其他语言陆续支持]() |
 
 ## 安装
 
