@@ -2,38 +2,42 @@
 
 简体中文 | [English](https://github.com/yangfanzn/json2any/blob/main/packages/json2http/README.en-US.md)
 
-json2http 是一个命令行工具，它依赖 json2class 将指定的 JSON(5) 文件转换成 HTTP 请求代码
+json2http 是一个命令行工具，它依赖 [json2class](https://github.com/yangfanzn/json2any/blob/main/packages/json2class/README.md) 将指定的 JSON(5) 文件转换成 HTTP 请求代码
 
 ## 支持的语言
 ### 已支持
-| [arkTs@12](https://developer.huawei.com/consumer/cn/arkts/) | [dart@3](https://dart.dev/) | [typescript@5](https://www.typescriptlang.org/) |
+| [dart@3](https://dart.dev/) | [arkTs@12](https://developer.huawei.com/consumer/cn/arkts/) | [typescript@5](https://www.typescriptlang.org/) | [kotlin@1.3](https://kotlinlang.org/) | [swift@5.7](https://developer.apple.com/swift/) |
 
 ### 将会支持
-| [java](https://dev.java/) | [kotlin](https://kotlinlang.org/) | [swift](https://developer.apple.com/cn/swift/) | [其他语言陆续支持]() |
+| [java](https://dev.java/) | [其他语言陆续支持]() |
 
 ## 安装
 
-### `✅ 推荐` node npm npx 开发环境
-npx 需要 node 环境，请先安装 node
+- ### `✅ 推荐` node npm npx 开发环境
+> npx 需要 node 环境，请先安装 node
 ```sh
 npx json2http build -l dart@3
 ```
 
-### Flutter、Dart 开发环境
+- ### Flutter、Dart 开发环境
 ```sh
 dart pub add dev:json2http
 dart run json2http build -l dart@3
 ```
 
-### 鸿蒙开发环境
-将如下配置写入 oh-package.json5
+- ### 鸿蒙开发环境
+> _由于 `OpenHarmony三方库中心仓` 发布限制，从 `v0.0.14` 版本开始将无法再直接提供独立的可执行文件，改为提供 js 脚本，
+> 由 `node` 解释执行。幸运的是，`OpenHarmony 开发者工具`和`DevEco-Studio`自带 `node`，将其设置到 `PATH` 环境变量中即可_
+> - _`OpenHarmony 开发者工具` 中的 `node` 通常在如下路径：command-line-tools/tool/node/bin/node_
+> - _`DevEco-Studio` 中的 `node` 通常在如下路径：DevEco-Studio.app/Contents/tools/node/bin/node_
+>
+> _以上方法略显麻烦，所以还是推荐您使用 `npx` 方式，简单快捷_
+
+> 将如下配置写入 oh-package.json5
 ```json5
 {
   "scripts": {
-    // windows 系统
-    "json2http": "./oh_modules/json2class/src/main/resources/rawfile/json2http-win.exe build -l arkTs@12",
-    // macOS 系统
-    "json2http": "./oh_modules/json2class/src/main/resources/rawfile/json2http-macos build -l arkTs@12"
+    "json2http": "node ./oh_modules/json2http/src/main/resources/rawfile/json2http build -l arkTs@12",
   }
 }
 ```
@@ -152,7 +156,7 @@ main() async {
 
 ### method
 - 作用：http method
-- 校验：GET、POST、DELETE、PUT
+- 校验：GET、POST、DELETE、PUT 等
 - 必须：是
 
 ### headers
@@ -162,7 +166,7 @@ main() async {
 
 ### params
 - 作用：http path 查询参数
-- 校验：必须是 map<string, string> 类型
+- 校验：必须是 map<string, string | number | boolean> 类型
 - 必须：否
 - 示例：
 ```json5
@@ -170,7 +174,7 @@ main() async {
   "/api/test/path": {
     "title": "",
     "method": "GET",
-    "params": { "xxx": "", "yyy": "" }
+    "params": { "xxx": "", "yyy": 123, "zzz": true }
   }
 }
 ```
@@ -213,7 +217,7 @@ main() async {
 ```
 
 ### body.data [body.type = map]
-- 校验：data 必须是 map<string, string> 类型
+- 校验：data 必须是 map<string, string | number | boolean> 类型
 - 必须：是
 - 示例：
 ```json5
@@ -223,7 +227,7 @@ main() async {
     "method": "POST",
     "body": {
       "type": "map",
-      "data": { "xxx": "", "yyy": "" }
+      "data": { "xxx": "", "yyy": 123, "zzz": true }
     }
   }
 }
@@ -232,7 +236,8 @@ main() async {
 ### body.data [body.type = form]
 - 校验：
 1. data 下必须存在 fields 和 files 字段
-2. fields 和 files 字段必须是 map<string, string 或 Array<string>> 类型
+2. files 字段必须是 map<string, string | Array<string>> 类型
+3. fields 字段必须是 map<string, (string | number | boolean) | Array<string | number | boolean>> 类型
 - 必须：是
 - 示例：
 ```json5
@@ -243,8 +248,8 @@ main() async {
     "body": {
       "type": "form",
       "data": {
-        "fields": { "xxx": "", "yyy": "" },
-        "files": { "aaa": [""], "bbb": "" },
+        "fields": { "xxx": "", "yyy": 123 },
+        "files": { "aaa": [true], "bbb": "" },
       }
     }
   }
@@ -282,7 +287,6 @@ main() async {
   }
 }
 ```
-
 
 ### res
 - 作用：http 返回值
@@ -435,6 +439,113 @@ main() async {
 
 ## 生成代码的使用
 
+### 全局入口 Json2http
+
+- Json2http.setPlan
+```dart
+import 'json2http.dart';
+
+// 可以自定义 Agent，完全控制请求调用行为
+class XAgent extends Agent {
+  Future<Reply> fetch(Plan plan) async {
+    // 可以参照已经生成的代码中进行实现
+    plan.reply.data = {'statusCode': '0'};
+    plan.reply.code = 200;
+    return plan.reply;
+  }
+  body(Plan plan) {
+    // 可以参照已经生成的代码中进行实现
+    return null;
+  }
+}
+
+main() {
+  Json2http.setPlan = (plan) {
+    // 全局配置
+    plan.baseURL = 'http://localhost:3000';
+    plan.process = (reply) {
+      final data = reply.data;
+      if (data is Map) {
+        if (data['statusCode'] != '0') {
+          // 决定最终请求是否抛出异常
+          reply.error = data['statusMessage'];
+        }
+      }
+    };
+    
+    plan.ready = () {
+      // 设置原始请求工具中的原始配置
+      plan.option = xxx;
+      // 设置原始请求工具
+      plan.session = xxx;
+    };
+
+    if (plan is testagentplan) {
+      plan.agent = XAgent();
+    }
+
+    if (plan.title.startsWith('amap:')) {
+      // 特殊接口特殊配置
+      plan.baseURL = 'https://restapi.amap.com/v3';
+      plan.path = '${plan.path}?key=xxx';
+      plan.process = (reply) {
+        var data = reply.data;
+        if (data is Map) {
+          if (data['status'] != '1') {
+            reply.error = data['info'];
+          }
+        }
+      };
+    }
+    
+    if (plan is refreshtestplan) {
+      plan.after = () async {
+        if (plan.reply.error == 'small token is error') {
+          // 实现 token 刷新
+          final x = await Json2http.single.refreshtoken((p) {
+            p.headers = {'access-token': 'bearer xxx'};
+          });
+          // 重新设置 token 后，接口重试
+          plan.headers['access-token'] = x.res.data;
+          await plan.fetch();
+        }
+      };
+    }
+  };
+}
+```
+
+- 发起接口调用
+```json5
+{
+  "/api/blood/index": {
+    "title": "宝宝血型计算",
+    "method": "GET",
+    "params": {
+      "father": "",
+      "mother": ""
+    },
+    "res": {
+      "code": 0,
+      "msg": "",
+      "data": {
+        "possible": [""],
+        "impossible": [""]
+      },
+      "copyright": ""
+    }
+  }
+}
+```
+```dart
+main() async {
+  final result = await Json2http.single.apibloodindex((plan) {
+    plan.params.father = 'A';
+    plan.params.mother = 'B';
+  });
+}
+```
+
 ## 命令行其他选项
 ### -l --language，指定需要构建的语言
 ```sh
@@ -460,7 +571,7 @@ json2http.*
 ```
 
 ## 反馈与改进
-感谢您使用本工具，为了尽快完善并发布 **1.0.0 正式版本**，我们希望听到您的意见和建议。
+感谢您使用本工具，我们希望听到您的意见和建议。
 如果您在使用过程中遇到问题，或者有任何改进的建议，欢迎通过如下方式反馈：
 
 - 在 [GitHub Issues](https://github.com/yangfanzn/json2any/issues) 提交问题的或建议

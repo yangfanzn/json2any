@@ -6,10 +6,10 @@ json2class 是一个命令行工具，可以将指定的 JSON(5) 文件转换成
 
 ## 支持的语言
 ### 已支持
-| [dart@3](https://dart.dev/) | [arkTs@12](https://developer.huawei.com/consumer/cn/arkts/) | [typescript@5](https://www.typescriptlang.org/) | [kotlin@1](https://kotlinlang.org/) |
+| [dart@3](https://dart.dev/) | [arkTs@12](https://developer.huawei.com/consumer/cn/arkts/) | [typescript@5](https://www.typescriptlang.org/) | [kotlin@1.3](https://kotlinlang.org/) | [swift@5.7](https://developer.apple.com/swift/) |
 
 ### 将会支持
-| [swift](https://developer.apple.com/swift/) | [java](https://dev.java/) | [其他语言陆续支持]() |
+| [java](https://dev.java/) | [其他语言陆续支持]() |
 
 ## 安装
 
@@ -313,7 +313,7 @@ json2class.*
 ```
 
 ## 反馈与改进
-感谢您使用本工具，为了尽快完善并发布 **1.0.0 正式版本**，我们希望听到您的意见和建议。
+感谢您使用本工具，我们希望听到您的意见和建议。
 如果您在使用过程中遇到问题，或者有任何改进的建议，欢迎通过如下方式反馈：
 
 - 在 [GitHub Issues](https://github.com/yangfanzn/json2any/issues) 提交问题的或建议
