@@ -134,10 +134,11 @@ class OkHttpAgent: Agent() {
         ).toRequestBody()
       "map" -> if (data is Json2class) _obj2get(data.toJson()).toRequestBody() else null
       "form" -> { 
-        if (data !is BodyForm<*, *>) {
-          return null
+        if (data !is BodyForm<*, *>) { 
+          return null 
         }
         val map: MultipartBody.Builder = MultipartBody.Builder()
+        var hasParts = false
         fun a2b(a: BodyFormFile, key: String) {
           val headersBuilder = Headers.Builder()
           a.headers?.forEach { (k, v) -> v.forEach { vv -> headersBuilder.add(k, vv) } }
@@ -147,11 +148,13 @@ class OkHttpAgent: Agent() {
             val disposition = "form-data; name=\\"$key\\"; filename=\\"$filename\\""
             headersBuilder.addUnsafeNonAscii("content-disposition", disposition)
             map.addPart(headersBuilder.build(), file.asRequestBody(a.contentType?.toMediaTypeOrNull()))
+            hasParts = true
           } else if (a.content != null) {
             val filename = a.filename ?: ""
             val disposition = "form-data; name=\\"$key\\"; filename=\\"$filename\\""
             headersBuilder.addUnsafeNonAscii("content-disposition", disposition)
             map.addPart(headersBuilder.build(), a.content.toRequestBody(a.contentType?.toMediaTypeOrNull()))
+            hasParts = true
           }
         }
         fun cb(key: String, value: Any?) {
@@ -160,12 +163,13 @@ class OkHttpAgent: Agent() {
               a2b(e, key)
             } else if (e != null) {
               map.addFormDataPart(key, e.toString())
+              hasParts = true
             }
           }
         }
         data.fields.toJson().forEach(::cb)
         data.files.toJson().forEach(::cb)
-        return map.build()
+        if (hasParts) map.build() else null
       }
       else -> when (data) {
         is String -> data.toRequestBody()

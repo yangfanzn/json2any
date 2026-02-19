@@ -102,7 +102,7 @@ class DioAgent extends Agent {
       session.options,
       '\${plan.baseURL}\${path}',
       data: await body(plan),
-      queryParameters: plan.params?.toJson(),
+      queryParameters: plan.params == null ? null : _nullFilter(plan.params?.toJson() ?? {}),
       sourceStackTrace: StackTrace.current,
     );
 
@@ -180,10 +180,10 @@ ${agentConfig.import}
 
 @json2class@
 
-_nullFilter(Map data) {
+_nullFilter(Map${addX('String, dynamic')} data) {
   final result = ${addX('String, dynamic')}{};
   data.forEach((key, value) {
-    if (value is Map) {
+    if (value is Map${addX('String, dynamic')}) {
       final nested = _nullFilter(value);
       if (nested.isNotEmpty) result[key] = nested;
     } else if (value != null) {
