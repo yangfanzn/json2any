@@ -13,6 +13,7 @@ export enum DefaultAgent {
   ArkTs_Rcp12 = 'arkTs_rcp@12',
   Typescript_Axios1 = 'typescript_axios@1',
   Typescript_Fetch0 = 'typescript_fetch@0',
+  Typescript_Weixin3 = 'typescript_weixin@3',
   Kotlin_OkHttp4 = 'kotlin_okhttp@4',
   Swift_Alamofire5 = 'swift_alamofire@5',
 }
