@@ -1,5 +1,6 @@
 import { Json2classArkTs } from 'json2class';
 import * as Base from '../base';
+import * as Agent from './agent';
 
 export class Complex extends Json2classArkTs.Complex {}
 
@@ -65,394 +66,13 @@ export class ${this.declPlan} extends Plan { ${types}; }`,
     const { func, env, DefaultAgent } = Base;
     switch (env.defaultAgent) {
       case DefaultAgent.ArkTs_Rcp12:
-        return {
-          name: 'RcpAgent',
-          import: `import { util as _Util } from '@kit.ArkTS';
-import { rcp as _Rcp } from '@kit.RemoteCommunicationKit';
-import { fileUri as _FileUri } from '@kit.CoreFileKit';`,
-          code: `
-export class RcpAgent extends Agent {
-  private static session = _Rcp.createSession();
-  
-  session: _Rcp.Session | null = null;
-  option: _Rcp.Request | null = null;
-  response: _Rcp.Response | null = null;
-
-  async fetch(plan: Plan): Promise${func.addX('Reply')}  {
-    const session = this.session ?? RcpAgent.session;
-
-    let path = plan.path;
-    if (plan.seg) {
-      const seg = plan.seg?.toJson();
-      path = path.replace(/{(.*?)}/g, (_, k: string) => seg?.[k]?.toString() ?? '');
-    }
-    path = \`\${plan.baseURL}\${path}\`;
-    const q = _obj2get(plan.params?.toJson() ?? {});
-    path = \`\${path}\${q ? (path.includes('?') ? '&' : '?') : ''}\${q}\`;
-
-    if (plan.body?.contentType) {
-      plan.headers['content-type'] = plan.body.contentType;
-    }
-
-    const option = this.option =
-      new _Rcp.Request(path, plan.method, plan.headers as _Rcp.RequestHeaders, await this.body(plan) ?? undefined);
-
-    await plan.ready?.();
-
-    const response = this.response = await session.fetch(option).finally(() => this.session?.close());
-    plan.reply.code = response.statusCode;
-    plan.reply.message = _code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;
-
-    try {
-      plan.reply.data = response.body ?? null;
-      plan.reply.data = response.toJSON() ?? plan.reply.data;
-    } catch (_) {}
-
-    return plan.reply;
-  }
-
-  body(plan: Plan): Any {
-    const type = plan.body?.type ?? null;
-    const data = plan.body?.data ?? null;
-    if (type === null) {
-      return null;
-    } else if (type === 'json') {
-      return JSON.stringify(
-        data instanceof Array ? 
-          data.map((e: Any) => e instanceof Json2class ? _nullFilter(e.toJson()) : e) : 
-          (data instanceof Json2class ? _nullFilter(data.toJson()) : data)
-      );
-    } else if (type === 'map' && data instanceof Json2class) {
-      return _obj2get(data.toJson());
-    } else if (type === 'form' && data instanceof BodyForm) {
-      const a2b = (a: BodyFormFile) => {
-        if (a.file !== null) {
-          return { contentOrPath: a.file, remoteFileName: a.filename ?? new _FileUri.FileUri(a.file).name, contentType: a.contentType } as _Rcp.FormFieldFileValue;
-        } else if (a.content !== null) {
-          return { contentOrPath: { content: a.content.buffer }, remoteFileName: a.filename, contentType: a.contentType } as _Rcp.FormFieldFileValue
-        }
-        return null;
-      };
-      const map: _Rcp.MultipartFormFields = {};
-      type V = _Rcp.MultipartFormFieldValue;
-      const cb = (data: Record${func.addX('string, Any')}) => Object.keys(data).forEach(k => {
-        if (map[k] === undefined) {
-          map[k] = [];
-        }
-        const v = ((data[k] instanceof Array ? data[k] : [data[k]]) as Array${func.addX('Any')})
-          .map(e => e instanceof BodyFormFile ? a2b(e) : e as _Rcp.FormFieldValue)
-          .filter(e => e !== null) as Array${func.addX('V')};
-        (map[k] as Array${func.addX('V')}).push(...v);
-      });
-      cb((data as BodyForm).fields.toJson());
-      cb((data as BodyForm).files.toJson());
-      return new _Rcp.MultipartForm(map);
-    } else if (data instanceof Uint8Array) {
-      return data.buffer;
-    } else {
-      return data;
-    }
-  }
-}`,
-        };
+        return Agent.rcp(func);
       case DefaultAgent.Typescript_Axios1:
-        return {
-          name: 'AxiosAgent',
-          import: `import * as _Axios from 'axios';
-import type * as _AxiosTypes from 'axios';`,
-          code: `
-export class AxiosAgent extends Agent {
-  private static session = _Axios.default.create({ responseType: 'blob', validateStatus: () => true });
-
-  session: _AxiosTypes.Axios | null = null;
-  option: _AxiosTypes.AxiosRequestConfig | null = null;
-  response: _AxiosTypes.AxiosResponse | null = null;
-
-  async fetch(plan: Plan): Promise${func.addX('Reply')} {
-    const session = this.session ?? AxiosAgent.session;
-
-    let path = plan.path;
-    if (plan.seg) {
-      const seg = plan.seg?.toJson();
-      path = path.replace(/{(.*?)}/g, (_, k: string) => seg?.[k]?.toString() ?? '');
-    }
-
-    const q = _obj2get(plan.params?.toJson() ?? {});
-    path = \`\${path}\${q ? (path.includes('?') ? '&' : '?') : ''}\${q}\`;
-
-    if (plan.body?.contentType && plan.body.type !== 'form') {
-      plan.headers['content-type'] = plan.body.contentType;
-    }
-
-    const option = (this.option = {
-      url: path,
-      method: plan.method,
-      baseURL: plan.baseURL,
-      headers: plan.headers as unknown as undefined,
-      data: (await this.body(plan)) ?? undefined,
-    });
-
-    await plan.ready?.();
-
-    const response = (this.response = await session.request(option));
-    plan.reply.code = response?.status ?? null;
-    plan.reply.message = _code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;
-
-    try {
-      const t = (plan.reply.data = response?.data);
-      plan.reply.data = JSON.parse(await (t instanceof Blob ? t.text() : t));
-    } catch (_) {}
-
-    return plan.reply;
-  }
-
-  body(plan: Plan): Any {
-    const type = plan.body?.type ?? null;
-    const data = plan.body?.data ?? null;
-    if (type === null) {
-      return null;
-    } else if (type === 'json') {
-      return JSON.stringify(
-        data instanceof Array
-          ? data.map((e: Any) => (e instanceof Json2class ? _nullFilter(e.toJson()) : e))
-          : data instanceof Json2class
-          ? _nullFilter(data.toJson())
-          : data,
-      );
-    } else if (type === 'map' && data instanceof Json2class) {
-      return _obj2get(data.toJson());
-    } else if (type === 'form' && data instanceof BodyForm) {
-      const a2b = (a: BodyFormFile) => {
-        if (a.file !== null) {
-          return a.file;
-        } else if (a.content !== null) {
-          return new Blob([a.content], { type: a.contentType ?? undefined });
-        }
-        return null;
-      };
-      const map = new FormData();
-      const cb = (data: Record${func.addX('string, Any')}) =>
-        Object.keys(data).forEach(k => {
-          ((data[k] instanceof Array ? data[k] : [data[k]]) as Array${func.addX('Any')}).forEach(e => {
-            if (e instanceof BodyFormFile) {
-              const t = a2b(e);
-              if (t !== null) {
-                if (e.filename === null) {
-                  map.append(k, t);
-                } else {
-                  map.append(k, t, e.filename);
-                }
-              }
-            } else if (e !== null) {
-              map.append(k, e.toString());
-            }
-          });
-        });
-      cb((data as BodyForm).fields.toJson());
-      cb((data as BodyForm).files.toJson());
-      return map;
-    } else if (data instanceof Uint8Array) {
-      return data.buffer;
-    } else {
-      return data;
-    }
-  }
-}`,
-        };
+        return Agent.axios(func);
       case DefaultAgent.Typescript_Fetch0:
-        return {
-          name: 'FetchAgent',
-          import: '',
-          code: `
-export class FetchAgent extends Agent {
-
-  session: (() => Promise${func.addX('Response')}) | null = null;
-  option: RequestInit | null = null;
-  response: Response | null = null;
-
-  async fetch(plan: Plan): Promise${func.addX('Reply')} {
-    let path = plan.path;
-    if (plan.seg) {
-      const seg = plan.seg?.toJson();
-      path = path.replace(/{(.*?)}/g, (_, k: string) => seg?.[k]?.toString() ?? '');
-    }
-    path = \`\${plan.baseURL}\${path}\`;
-    const q = _obj2get(plan.params?.toJson() ?? {});
-    path = \`\${path}\${q ? (path.includes('?') ? '&' : '?') : ''}\${q}\`;
-
-    if (plan.body?.contentType && plan.body.type !== 'form') {
-      plan.headers['content-type'] = plan.body.contentType;
-    }
-
-    const option = (this.option = {
-      method: plan.method,
-      headers: plan.headers as unknown as undefined,
-      body: (await this.body(plan)),
-    });
-
-    await plan.ready?.();
-
-    const response = (this.response = await (this.session ? this.session() : fetch(path, option)));
-    plan.reply.code = response?.status ?? null;
-    plan.reply.message = _code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;
-
-    try {
-      const rsp = response?.clone();
-      plan.reply.data = await rsp?.blob();
-      plan.reply.data = JSON.parse(await (plan.reply.data as Blob).text());
-    } catch (_) {}
-
-    return plan.reply;
-  }
-
-  body(plan: Plan): null | string | FormData | ArrayBufferLike {
-    const type = plan.body?.type ?? null;
-    const data = plan.body?.data ?? null;
-    if (type === null) {
-      return null;
-    } else if (type === 'json') {
-      return JSON.stringify(
-        data instanceof Array
-          ? data.map((e: Any) => (e instanceof Json2class ? _nullFilter(e.toJson()) : e))
-          : data instanceof Json2class ? _nullFilter(data.toJson()) : data,
-      );
-    } else if (type === 'map' && data instanceof Json2class) {
-      return _obj2get(data.toJson());
-    } else if (type === 'form' && data instanceof BodyForm) {
-      const a2b = (a: BodyFormFile) => {
-        if (a.file !== null) {
-          return a.file;
-        } else if (a.content !== null) {
-          return new Blob([a.content], { type: a.contentType ?? undefined });
-        }
-        return null;
-      };
-      const map = new FormData();
-      const cb = (data: Record${func.addX('string, Any')}) =>
-        Object.keys(data).forEach(k => {
-          ((data[k] instanceof Array ? data[k] : [data[k]]) as Array${func.addX('Any')}).forEach(e => {
-            if (e instanceof BodyFormFile) {
-              const t = a2b(e);
-              if (t !== null) {
-                if (e.filename === null) {
-                  map.append(k, t);
-                } else {
-                  map.append(k, t, e.filename);
-                }
-              }
-            } else if (e !== null) {
-              map.append(k, e.toString());
-            }
-          });
-        });
-      cb((data as BodyForm).fields.toJson());
-      cb((data as BodyForm).files.toJson());
-      return map;
-    } else if (data instanceof Uint8Array) {
-      return data.buffer;
-    } else {
-      return data as string;
-    }
-  }
-}`,
-        };
+        return Agent.fetch(func);
       case DefaultAgent.Typescript_Weixin3:
-        return {
-          name: 'FetchAgent',
-          import: '',
-          code: `
-export class FetchAgent extends Agent {
-
-  session: (() => Promise${func.addX('Response')}) | null = null;
-  option: RequestInit | null = null;
-  response: Response | null = null;
-
-  async fetch(plan: Plan): Promise${func.addX('Reply')} {
-    let path = plan.path;
-    if (plan.seg) {
-      const seg = plan.seg?.toJson();
-      path = path.replace(/{(.*?)}/g, (_, k: string) => seg?.[k]?.toString() ?? '');
-    }
-    path = \`\${plan.baseURL}\${path}\`;
-    const q = _obj2get(plan.params?.toJson() ?? {});
-    path = \`\${path}\${q ? (path.includes('?') ? '&' : '?') : ''}\${q}\`;
-
-    if (plan.body?.contentType && plan.body.type !== 'form') {
-      plan.headers['content-type'] = plan.body.contentType;
-    }
-
-    const option = (this.option = {
-      method: plan.method,
-      headers: plan.headers as unknown as undefined,
-      body: (await this.body(plan)),
-    });
-
-    await plan.ready?.();
-
-    const response = (this.response = await (this.session ? this.session() : fetch(path, option)));
-    plan.reply.code = response?.status ?? null;
-    plan.reply.message = _code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;
-
-    try {
-      const rsp = response?.clone();
-      plan.reply.data = await rsp?.blob();
-      plan.reply.data = JSON.parse(await (plan.reply.data as Blob).text());
-    } catch (_) {}
-
-    return plan.reply;
-  }
-
-  body(plan: Plan): null | string | FormData | ArrayBufferLike {
-    const type = plan.body?.type ?? null;
-    const data = plan.body?.data ?? null;
-    if (type === null) {
-      return null;
-    } else if (type === 'json') {
-      return JSON.stringify(
-        data instanceof Array
-          ? data.map((e: Any) => (e instanceof Json2class ? _nullFilter(e.toJson()) : e))
-          : data instanceof Json2class ? _nullFilter(data.toJson()) : data,
-      );
-    } else if (type === 'map' && data instanceof Json2class) {
-      return _obj2get(data.toJson());
-    } else if (type === 'form' && data instanceof BodyForm) {
-      const a2b = (a: BodyFormFile) => {
-        if (a.file !== null) {
-          return a.file;
-        } else if (a.content !== null) {
-          return new Blob([a.content], { type: a.contentType ?? undefined });
-        }
-        return null;
-      };
-      const map = new FormData();
-      const cb = (data: Record${func.addX('string, Any')}) =>
-        Object.keys(data).forEach(k => {
-          ((data[k] instanceof Array ? data[k] : [data[k]]) as Array${func.addX('Any')}).forEach(e => {
-            if (e instanceof BodyFormFile) {
-              const t = a2b(e);
-              if (t !== null) {
-                if (e.filename === null) {
-                  map.append(k, t);
-                } else {
-                  map.append(k, t, e.filename);
-                }
-              }
-            } else if (e !== null) {
-              map.append(k, e.toString());
-            }
-          });
-        });
-      cb((data as BodyForm).fields.toJson());
-      cb((data as BodyForm).files.toJson());
-      return map;
-    } else if (data instanceof Uint8Array) {
-      return data.buffer;
-    } else {
-      return data as string;
-    }
-  }
-}`,
-        };
+        return Agent.weixin(func);
       default:
         func.unreachableError('defaultAgent', [env.defaultAgent]);
         return { name: '', import: '', code: '' };
@@ -463,6 +83,7 @@ export class FetchAgent extends Agent {
     const { addX, convertWrap } = Base.func;
     const { agentConfig } = this;
     const isTs = Base.env.language.startsWith('typescript@');
+    const isWeixinAgent = Base.env.defaultAgent === Base.DefaultAgent.Typescript_Weixin3;
     return `
 ${agentConfig.import}
 
@@ -510,22 +131,26 @@ export abstract class Agent {
 
 export class BodyFormFile {
   readonly content: Uint8Array | null;
-  readonly file: ${isTs ? 'Blob' : 'string'} | null;
+  readonly file: ${isTs && !isWeixinAgent ? 'Blob' : 'string'} | null;
   filename: string | null = null;
   contentType: string | null = null;
   headers: Record${addX(`string, Array${addX('string')}`)} | null = null;
 
   private constructor(
     content: Uint8Array | null,
-    file: ${isTs ? 'Blob' : 'string'} | null,
+    file: ${isTs && !isWeixinAgent ? 'Blob' : 'string'} | null,
   ) {
     this.content = content === null ? null : new Uint8Array(content);
     this.file = file;
     this.contentType = 'application/octet-stream';
   }
-  static fromFile(file: ${isTs ? 'Blob' : 'string'}) { return new BodyFormFile(null, file); }
+  static fromFile(file: ${isTs && !isWeixinAgent ? 'Blob' : 'string'}) { return new BodyFormFile(null, file); }
   static fromString(value: string) { return new BodyFormFile(${
-    isTs ? 'new TextEncoder().encode(value)' : '_Util.TextEncoder.create().encodeInto(value)'
+    isTs
+      ? isWeixinAgent
+        ? 'encodeUTF8(value)'
+        : 'new TextEncoder().encode(value)'
+      : '_Util.TextEncoder.create().encodeInto(value)'
   }, null); }
   static fromBytes(value: Array${addX('number')} | Uint8Array) { return new BodyFormFile(new Uint8Array(value), null); }
 }
