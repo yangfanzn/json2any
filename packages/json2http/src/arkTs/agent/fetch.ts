@@ -8,7 +8,7 @@ export default function (func: Base.Func) {
 export class FetchAgent extends Agent {
 
   session: (() => Promise${func.addX('Response')}) | null = null;
-  option: RequestInit | null = null;
+  option: (RequestInit & { url: string }) | null = null;
   response: Response | null = null;
 
   async fetch(plan: Plan): Promise${func.addX('Reply')} {
@@ -26,14 +26,17 @@ export class FetchAgent extends Agent {
     }
 
     const option = (this.option = {
+      url: path,
       method: plan.method,
       headers: plan.headers as unknown as undefined,
       body: (await this.body(plan)),
     });
 
     await plan.ready?.();
-
-    const response = (this.response = await (this.session ? this.session() : fetch(path, option)));
+    
+    // @ts-ignore
+    option.url = undefined;
+    const response = (this.response = await (this.session ? this.session() : fetch(path, option)).finally(() => option.url = path));
     plan.reply.code = response?.status ?? null;
     plan.reply.message = _code2message[plan.reply.code ?? 0] ?? \`unknown http code \${plan.reply.code}\`;
 

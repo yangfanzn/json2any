@@ -53,18 +53,24 @@ export class FormData {
   }
 }
 export function decodeUTF8(uint8Array: Uint8Array) {
-  // @ts-ignore
-  if (typeof TextDecoder !== 'undefined') {
+  try {
     // @ts-ignore
-    const decoder = new TextDecoder('utf-8');
-    return decoder.decode(uint8Array);
-  }
+    if (typeof TextDecoder !== 'undefined') {
+      // @ts-ignore
+      const decoder = new TextDecoder('utf-8');
+      return decoder.decode(uint8Array);
+    }
+  } catch (_) {}
   let binary = '';
   const len = uint8Array.length;
   for (let i = 0; i < len; i++) {
     binary += String.fromCharCode(uint8Array[i]);
   }
-  return decodeURIComponent(escape(binary));
+  try {
+    return decodeURIComponent(escape(binary));
+  } catch (_) {
+    return binary;
+  }
 }
 export function encodeUTF8(str: string) {
   const encoded = encodeURIComponent(str);
@@ -105,12 +111,29 @@ export class WeixinAgent extends Agent {
     const q = _obj2get(plan.params?.toJson() ?? {});
     path = \`\${path}\${q ? (path.includes('?') ? '&' : '?') : ''}\${q}\`;
 
-    // if (plan.body?.contentType && plan.body.type !== 'form') {
-    //   plan.headers['content-type'] = plan.body.contentType;
-    // }
+    if (plan.body?.contentType && plan.body.type !== 'form') {
+      plan.headers['content-type'] = plan.body.contentType;
+    }
+
+    const response: Response = {};
+
+    let body = await this.body(plan);
+    if (body instanceof FormData) {
+      const { buffer, contentType } = await body.toBuffer();
+      plan.headers['content-type'] = contentType;
+      body = buffer;
+    }
+    const option: WechatMiniprogram.RequestOption = (this.option = {
+      url: path,
+      method: plan.method as 'GET',
+      header: Object.keys(plan.headers).reduce((a, k) => ({ ...a, [k]: plan.headers?.[k]?.toString() ?? '' }), {}),
+      responseType: 'arraybuffer',
+      data: body as string,
+    });
+
+    await plan.ready?.();
 
     await new Promise(async (resolve, reject) => {
-      const response: Response = {};
       const callback = (res: WechatMiniprogram.RequestSuccessCallbackResult | WechatMiniprogram.GeneralCallbackResult) => {
         if ('statusCode' in res) {
           response.success = res;
@@ -120,22 +143,6 @@ export class WeixinAgent extends Agent {
           reject(res);
         }
       }
-      
-      let body = await this.body(plan);
-      if (body instanceof FormData) {
-        const { buffer, contentType } = await body.toBuffer();
-        plan.headers['content-type'] = contentType;
-        body = buffer;
-      }
-      const option: WechatMiniprogram.RequestOption = (this.option = {
-        url: path,
-        method: plan.method as 'GET',
-        header: Object.keys(plan.headers).reduce((a, k) => ({ ...a, [k]: plan.headers?.[k]?.toString() ?? '' }), {}),
-        responseType: 'arraybuffer',
-        data: body as string,
-      });
-
-      await plan.ready?.();
 
       option.success = callback;
       option.fail = callback;
