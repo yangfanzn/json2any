@@ -32,8 +32,14 @@
   ],
   "main": "./lib/index.js",
   "exports": {
-    ".": "./lib/index.js",
-    "./bin": "./lib/bin.js"
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./bin": {
+      "types": "./types/bin.d.ts",
+      "default": "./lib/bin.js"
+    }
   },
   "types": "./types/",
   "bin": {

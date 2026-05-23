@@ -9,7 +9,7 @@ import type * as _AxiosTypes from 'axios';`,
 export class AxiosAgent extends Agent {
   private static session = _Axios.default.create({ responseType: 'blob', validateStatus: () => true });
 
-  session: _AxiosTypes.Axios | null = null;
+  session: _AxiosTypes.AxiosInstance | null = null;
   option: _AxiosTypes.AxiosRequestConfig | null = null;
   response: _AxiosTypes.AxiosResponse | null = null;
 
