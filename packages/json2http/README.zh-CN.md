@@ -9,7 +9,9 @@ json2http 是一个命令行工具，它依赖 [json2class](https://github.com/y
 | [dart@3](https://dart.dev/) | [arkTs@12](https://developer.huawei.com/consumer/cn/arkts/) | [typescript@5](https://www.typescriptlang.org/) | [kotlin@1.3](https://kotlinlang.org/) | [swift@5.7](https://developer.apple.com/swift/) |
 
 ### 将会支持
-| [java](https://dev.java/) | [其他语言陆续支持]() |
+| [java](https://dev.java/) | [objective-c](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ProgrammingWithObjectiveC/Introduction/Introduction.html) | [其他语言陆续支持]() |
+
+> **typescript@5** 内置了 `typescript_axios@1`、`typescript_fetch@0`、`typescript_weixin@3` 三种 agent，其中微信小程序需要额外环境配置，详见 [typescript_weixin@3 配置说明](https://github.com/yangfanzn/json2any/blob/main/packages/json2http/doc/typescript-weixin.zh-CN.md)
 
 ## 安装
 
@@ -46,6 +48,10 @@ dart run json2http build -l dart@3
 ohpm install json2http --save-dev
 ohpm run json2http
 ```
+
+
+
+
 
 ## 快速开始
 json 文件支持 json 和 json5。

@@ -3,4 +3,3 @@ packages/*/lib/
 packages/*/types/
 packages/*/pkg/
 v-*.zip
-tsconfig.tsbuildinfo

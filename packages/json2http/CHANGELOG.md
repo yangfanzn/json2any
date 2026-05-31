@@ -14,3 +14,6 @@
 
 ## 1.1.0
 - 2026-02-19 official release: dart、typescript、arkTs、kotlin、swift supported
+
+## 1.2.0
+- 2026-05-31 typescript weixin mini program supported, version alignment with json2class, release v1.2.0

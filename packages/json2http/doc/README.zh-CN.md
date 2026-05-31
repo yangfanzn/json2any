@@ -1,5 +1,9 @@
 $RM_header
+
 @RM_desc:json2http 是一个命令行工具，它依赖 [json2class](https://github.com/yangfanzn/json2any/blob/main/packages/json2class/README.md) 将指定的 JSON(5) 文件转换成 HTTP 请求代码@
+
+@RM_typescript_agents:> **typescript@5** 内置了 `typescript_axios@1`、`typescript_fetch@0`、`typescript_weixin@3` 三种 agent，其中微信小程序需要额外环境配置，详见 [typescript_weixin@3 配置说明](https://github.com/yangfanzn/json2any/blob/main/packages/json2http/doc/typescript-weixin.zh-CN.md)@
+
 ## 快速开始
 json 文件支持 json 和 json5。
 ```json5
