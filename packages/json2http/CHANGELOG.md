@@ -17,3 +17,6 @@
 
 ## 1.2.0
 - 2026-05-31 typescript weixin mini program supported, version alignment with json2class, release v1.2.0
+
+## 1.2.1
+- 2026-06-04 weixin agent type optimization

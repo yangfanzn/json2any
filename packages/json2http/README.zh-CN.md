@@ -11,7 +11,7 @@ json2http 是一个命令行工具，它依赖 [json2class](https://github.com/y
 ### 将会支持
 | [java](https://dev.java/) | [objective-c](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ProgrammingWithObjectiveC/Introduction/Introduction.html) | [其他语言陆续支持]() |
 
-> **typescript@5** 内置了 `typescript_axios@1`、`typescript_fetch@0`、`typescript_weixin@3` 三种 agent，其中微信小程序需要额外环境配置，详见 [typescript_weixin@3 配置说明](https://github.com/yangfanzn/json2any/blob/main/packages/json2http/doc/typescript-weixin.zh-CN.md)
+> **💡 typescript@5 说明：** 内置了 `typescript_axios@1`、`typescript_fetch@0`、`typescript_weixin@3` 三种 agent，其中微信小程序需要额外环境配置，详见 [typescript_weixin@3 配置说明](https://github.com/yangfanzn/json2any/blob/main/packages/json2http/doc/typescript-weixin.zh-CN.md)
 
 ## 安装
 
