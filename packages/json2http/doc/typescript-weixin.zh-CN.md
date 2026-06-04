@@ -64,7 +64,14 @@ interface IAppOption {
 ```typescript
 // app.ts
 App<IAppOption>({
-  json2http: require.async('./json2http/json2http'),
+  json2http: require.async('./json2http/json2http').then((e: JSON2HTTP) => {
+    // 全局配置方式
+    e.Json2http.setPlan = (plan: json2http.Plan) => {
+      plan.baseURL = 'http://localhost:3000';
+      // 其他全局配置参考主文档
+    };
+    return e;
+  }),
 });
 ```
 

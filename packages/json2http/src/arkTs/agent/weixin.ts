@@ -57,38 +57,61 @@ export function decodeUTF8(uint8Array: Uint8Array) {
     // @ts-ignore
     if (typeof TextDecoder !== 'undefined') {
       // @ts-ignore
-      const decoder = new TextDecoder('utf-8');
-      return decoder.decode(uint8Array);
+      return new TextDecoder('utf-8').decode(uint8Array);
     }
   } catch (_) {}
-  let binary = '';
-  const len = uint8Array.length;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(uint8Array[i]);
-  }
-  try {
-    return decodeURIComponent(escape(binary));
-  } catch (_) {
-    return binary;
-  }
-}
-export function encodeUTF8(str: string) {
-  const encoded = encodeURIComponent(str);
-  const len = encoded.length;
-  const bytes = new Array(len);
-  let writeIdx = 0;
-  for (let i = 0; i < len; i++) {
-    const c = encoded[i];
-    if (c === '%') {
-      const high = encoded.charCodeAt(i + 1);
-      const low = encoded.charCodeAt(i + 2);
-      bytes[writeIdx++] = (high - (high > 64 ? 55 : 48)) * 16 + (low - (low > 64 ? 55 : 48));
+  let result = '';
+  let i = 0;
+  while (i < uint8Array.length) {
+    const b = uint8Array[i] as number;
+    const b1 = uint8Array[i + 1] as number;
+    const b2 = uint8Array[i + 2] as number;
+    const b3 = uint8Array[i + 3] as number;
+    let cp: number;
+    if (b < 0x80) {
+      cp = b;
+      i += 1;
+    } else if ((b & 0xe0) === 0xc0) {
+      cp = ((b & 0x1f) << 6) | (b1 & 0x3f);
       i += 2;
+    } else if ((b & 0xf0) === 0xe0) {
+      cp = ((b & 0x0f) << 12) | ((b1 & 0x3f) << 6) | (b2 & 0x3f);
+      i += 3;
     } else {
-      bytes[writeIdx++] = c.charCodeAt(0);
+      cp = ((b & 0x07) << 18) | ((b1 & 0x3f) << 12) | ((b2 & 0x3f) << 6) | (b3 & 0x3f);
+      i += 4;
+    }
+    if (cp > 0xffff) {
+      cp -= 0x10000;
+      result += String.fromCharCode(0xd800 + (cp >> 10), 0xdc00 + (cp & 0x3ff));
+    } else {
+      result += String.fromCharCode(cp);
     }
   }
-  return new Uint8Array(bytes.slice(0, writeIdx));
+  return result;
+}
+export function encodeUTF8(str: string) {
+  const bytes: number[] = [];
+  for (let i = 0; i < str.length; i++) {
+    let cp = str.charCodeAt(i);
+    if (cp >= 0xd800 && cp <= 0xdbff && i + 1 < str.length) {
+      const lo = str.charCodeAt(i + 1);
+      if (lo >= 0xdc00 && lo <= 0xdfff) {
+        cp = ((cp - 0xd800) << 10) + (lo - 0xdc00) + 0x10000;
+        i++;
+      }
+    }
+    if (cp < 0x80) {
+      bytes.push(cp);
+    } else if (cp < 0x800) {
+      bytes.push(0xc0 | (cp >> 6), 0x80 | (cp & 0x3f));
+    } else if (cp < 0x10000) {
+      bytes.push(0xe0 | (cp >> 12), 0x80 | ((cp >> 6) & 0x3f), 0x80 | (cp & 0x3f));
+    } else {
+      bytes.push(0xf0 | (cp >> 18), 0x80 | ((cp >> 12) & 0x3f), 0x80 | ((cp >> 6) & 0x3f), 0x80 | (cp & 0x3f));
+    }
+  }
+  return new Uint8Array(bytes);
 }
 export interface Response {
   success?: WechatMiniprogram.RequestSuccessCallbackResult;
