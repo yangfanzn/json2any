@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "path": { "type": "string", "pattern": "^/" },
+    "seg": { "type": "object", "additionalProperties": { "type": "string" } },
+    "title": { "type": "string" },
+    "method": {
+      "type": "string",
+      "enum": ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS", "TRACE", "CONNECT"]
+    },
+    "res": { "type": "object" },
+    "params": {
+      "type": "object",
+      "additionalProperties": { "type": ["string", "number", "boolean"] }
+    },
+    "body": {
+      "type": "object",
+      "properties": { "type": { "enum": ["json", "byte", "plain", "map", "form"] } },
+      "required": ["type"],
+      "minProperties": 2,
+      "maxProperties": 2,
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "json" } } },
+          "then": {
+            "patternProperties": { "^data\\??$": true }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "byte" } } },
+          "then": {
+            "patternProperties": { "^data\\??$": { "type": "string" } }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "plain" } } },
+          "then": {
+            "patternProperties": { "^data\\??$": { "type": "string" } }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "map" } } },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "additionalProperties": { "type": ["string", "number", "boolean"] }
+              }
+            },
+            "required": ["data"]
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "form" } } },
+          "then": {
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": ["fields", "files"],
+                "additionalProperties": false,
+                "properties": {
+                  "fields": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "anyOf": [
+                        { "type": ["string", "number", "boolean"] },
+                        { "type": "array", "items": { "type": ["string", "number", "boolean", "null"] } }
+                      ]
+                    }
+                  },
+                  "files": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "anyOf": [{ "type": "string" }, { "type": "array", "items": { "type": ["string", "null"] } }]
+                    }
+                  }
+                }
+              }
+            },
+            "required": ["data"]
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "headers": {
+      "type": "object",
+      "additionalProperties": {
+        "anyOf": [{ "type": "string" }, { "type": "array", "items": { "type": ["string", "null"] } }]
+      }
+    }
+  },
+  "required": ["title", "method"],
+  "additionalProperties": false
+}

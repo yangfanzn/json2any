@@ -101,4 +101,31 @@ program
     });
   });
 
+program
+  .command('convert')
+  .description('convert external API specs to json2http config files')
+  .addOption(
+    new Option('-t, --type <type>', 'specify the source spec format').choices(['openapi@3']).default('openapi@3'),
+  )
+  .option(
+    '-s, --search <search>',
+    'specify the search directory (default is current directory) for source spec files.',
+    '.',
+  )
+  .option('-o, --output <output>', 'output directory for json2http config files (defaults to the search directory)')
+  .action(options => {
+    const search = Path.resolve(options.search).replace(/\\/g, '/');
+    bin.dirIsExist(search);
+
+    const output = Path.resolve(options.output || search).replace(/\\/g, '/');
+    bin.dirIsExist(output);
+
+    bin.searchJsons(search).forEach((jsons, file) => {
+      if (!jsons['openapi'] || !jsons['info'] || !jsons['paths']) {
+        return;
+      }
+      Fs.writeFileSync(`${output}${file}.${options.type}.json`, new Base.OpenApi(jsons, true).parse());
+    });
+  });
+
 program.parseAsync().catch(e => bin.exit(e));

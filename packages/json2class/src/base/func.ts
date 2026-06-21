@@ -183,6 +183,9 @@ export class Func {
   type(o: any) {
     return Object.prototype.toString.call(o).slice(8, -1).toLowerCase();
   }
+  typeIsObject(o: unknown): o is Record<string, any> {
+    return this.type(o) === JsonType.Object;
+  }
 
   private errorFormat(detail?: (string | undefined)[] | Complex) {
     const list: (string | undefined)[] = [];
@@ -201,7 +204,7 @@ export class Func {
     return list;
   }
 
-  unreachableError(message: string, detail?: (string | undefined)[] | Complex): any {
+  unreachableError(message: string, detail?: (string | undefined)[] | Complex): never {
     const list: (string | undefined)[] = [message];
     list.push(...this.errorFormat(detail));
     list.push(
@@ -213,7 +216,7 @@ export class Func {
     throw new UnreachableError(list.join('\n'));
   }
 
-  assertError(message: string, detail?: (string | undefined)[] | Complex): any {
+  assertError(message: string, detail?: (string | undefined)[] | Complex): never {
     const list: (string | undefined)[] = [message];
     list.push(...this.errorFormat(detail));
     throw new AssertError(list.join('\n'));

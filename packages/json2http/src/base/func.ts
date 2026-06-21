@@ -7,11 +7,10 @@ export class Func extends Json2classBase.Func {
     complex: typeof Json2classBase.Complex,
     simple: typeof Json2classBase.Simple<Json2classBase.Complex>,
     key: string,
-    json: Record<string, any>,
+    json?: Record<string, any>,
     file?: string,
   ): Http<Json2classBase.Complex, Json2classBase.Simple<Json2classBase.Complex>> {
-    // must be objected
-    if (this.type(json) !== Json2classBase.JsonType.Object) {
+    if (!this.typeIsObject(json)) {
       this.assertError('plan config must be an object', [file, key]);
     }
 

@@ -1,6 +1,6 @@
 import { Json2classBase } from 'json2class';
 
-const methodTypes = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT'] as const;
+export const methodTypes = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT'] as const;
 export const contentTypes = {
   json: 'application/json',
   map: 'application/x-www-form-urlencoded',

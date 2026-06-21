@@ -76,21 +76,24 @@ export const validateItem = (
       break;
     case 'Record.Array.String':
     case 'Record.Array.Simple':
-      let typeMessage = 'string, string | string[]';
-      const condition = [JsonType.String, JsonType.Null];
+      let typeMessage = 'string, string | (string | null)[]';
+      const valueCondition: JsonType[] = [JsonType.String];
+      const arrayCondition: JsonType[] = [JsonType.String, JsonType.Null];
       if (schemaItem.origin === 'Record.Array.Simple') {
-        condition.push(JsonType.Number, JsonType.Boolean);
-        typeMessage = 'string, (string | number | boolean) | (string | number | boolean)[]';
+        valueCondition.push(JsonType.Number, JsonType.Boolean);
+        arrayCondition.push(JsonType.Number, JsonType.Boolean);
+        typeMessage = 'string, (string | number | boolean) | (string | number | boolean | null)[]';
       }
       const check = (data: any) => {
-        const c = (e: any) => !condition.includes(func.type(e) as JsonType);
+        const valueInvalid = (e: any) => !valueCondition.includes(func.type(e) as JsonType);
+        const arrayInvalid = (e: any) => !arrayCondition.includes(func.type(e) as JsonType);
         return (
           Object.keys(data).findIndex(k => {
             const e = data[k];
             if (func.type(e) === JsonType.Array) {
-              return (e as []).findIndex(ee => c(ee)) >= 0;
+              return (e as []).findIndex(ee => arrayInvalid(ee)) >= 0;
             }
-            return c(e);
+            return valueInvalid(e);
           }) >= 0
         );
       };
