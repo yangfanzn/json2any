@@ -124,7 +124,15 @@ program
       if (!jsons['openapi'] || !jsons['info'] || !jsons['paths']) {
         return;
       }
-      Fs.writeFileSync(`${output}${file}.${options.type}.json`, new Base.OpenApi(jsons, true).parse());
+      const out = `${output}${file}.${options.type}.json`;
+      Fs.writeFileSync(
+        out,
+        new Base.OpenApi(
+          jsons,
+          true,
+          Fs.existsSync(out) ? Base.OpenApi.history(JSON.parse(Fs.readFileSync(out).toString())) : undefined,
+        ).parse(),
+      );
     });
   });
 

@@ -178,10 +178,21 @@ export class OpenApi {
       : [v?.type, v?.nullable];
   }
 
-  // openapi 3.x 中 components/schemas 的索引 与 json2http $ref 映射表
+  // 非 useRef 模式下，循环引用的 $ref 与其首次展开位置的映射表
   private maps: Record<string, string> = {};
-  // json2http $ref 引用统计，用于判断是否需要提取为组件入口
-  private indexes: Record<string, { count: number; uri: string }> = {};
+  // 第一趟收集：每个 [ref, isRes] 在本次出现的所有位置（按遍历顺序）
+  private occur: Record<string, string[]> = {};
+  // 选定的锚点：每个 [ref, isRes] 的 $meta.ref 指向位置
+  private anchors: Record<string, string> = {};
+
+  // 为每个 [ref, isRes] 选锚点：优先沿用命中历史的位置（防漂移），否则取字典序最小者
+  private chooseAnchors() {
+    Object.entries(this.occur).forEach(([k, uris]) => {
+      const hit = uris.filter(u => this.history.has(u));
+      // [0] 一定存在！第二趟 this.anchors[k] 一定存在
+      this.anchors[k] = (hit.length ? hit : [...uris]).sort()[0]!;
+    });
+  }
 
   private schema2json(schema: any, uri: string, refs: string[], isRes: boolean): any {
     schema = Object.assign({}, schema);
@@ -242,16 +253,23 @@ export class OpenApi {
 
       if (this.useRef) {
         const k = JSON.stringify([ref, isRes]);
-        if (!this.indexes[k]) {
-          this.indexes[k] = { count: 1, uri };
-        } else {
-          this.indexes[k].count++;
+        // 始终记录出现位置（第二趟的重复记录无害，chooseAnchors 之后不再读 occur）
+        if (!this.occur[k]) {
+          this.occur[k] = [];
         }
-        if (this.indexes[k].count > 1) {
-          // 出现重复引用，改为 $meta.ref 引用
-          return { $meta: { ref: this.indexes[k].uri } };
+        this.occur[k].push(uri);
+
+        const anchor = this.anchors[k];
+        if (refs.includes(ref)) {
+          // 循环引用，停止展开
+          return { $meta: { ref: anchor } };
         }
-        return this.schema2json(target, uri, [...refs, ref], isRes);
+
+        // 第一趟（anchor 未定）：总是展开；第二趟：仅锚点位置展开，其余指向锚点
+        if (anchor === undefined || uri === anchor) {
+          return this.schema2json(target, uri, [...refs, ref], isRes);
+        }
+        return { $meta: { ref: anchor } };
       } else {
         if (refs.includes(ref)) {
           // 循环引用，停止展开
@@ -272,43 +290,69 @@ export class OpenApi {
     return [...mp, ...msp.filter((p: any) => !mKeys.has(`${p.in}:${p.name}`))];
   }
 
-  constructor(public origin: any, public useRef: boolean) {
+  constructor(public origin: any, public useRef: boolean, public history: Set<string> = new Set()) {
     this.origin = Object.assign({}, origin);
   }
 
-  parse() {
+  // 从上次落盘的 json2http 配置中提取所有 $meta.ref 指向的位置，作为本次的历史锚点集合
+  static history(json: any): Set<string> {
+    const set = new Set<string>();
+    const walk = (v: any) => {
+      if (Array.isArray(v)) {
+        v.forEach(walk);
+      } else if (v && typeof v === 'object') {
+        const ref = v['$meta']?.ref;
+        if (typeof ref === 'string') {
+          set.add(ref);
+        }
+        Object.values(v).forEach(walk);
+      }
+    };
+    walk(json);
+    return set;
+  }
+
+  // 遍历 paths 生成 plan 集合
+  private build() {
     const t = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS', 'TRACE', 'CONNECT'];
     const paths = Object.assign({}, this.origin.paths);
-    return JSON.stringify(
-      Object.keys(paths).reduce((a, e) => {
-        const methods = Object.assign({}, paths[e]);
-        const multi = Object.keys(methods).filter(k => t.includes(k.toUpperCase())).length > 1;
-        return Object.assign(
-          a,
-          Object.keys(methods).reduce((aa, ee) => {
-            const method = ee.toUpperCase();
-            if (!t.includes(method)) {
-              return aa;
-            }
-            // todo: multi 情况下有重复风险
-            const uri = `${e}${multi ? `/${method}` : ''}`;
-            const item = Object.assign({}, methods[ee]);
-            const combined = { ...item, parameters: this.paramsMerge(methods, item) };
-            return Object.assign(aa, {
-              [uri]: {
-                title: item.summary || '',
-                method,
-                path: multi ? e : undefined,
-                params: this.params(combined, uri),
-                body: this.body(combined, uri),
-                res: this.res(combined, uri),
-              },
-            });
-          }, {} as Record<string, any>),
-        );
-      }, {} as Record<string, Record<string, any>>),
-      null,
-      2,
-    );
+    return Object.keys(paths).reduce((a, e) => {
+      const methods = Object.assign({}, paths[e]);
+      const multi = Object.keys(methods).filter(k => t.includes(k.toUpperCase())).length > 1;
+      return Object.assign(
+        a,
+        Object.keys(methods).reduce((aa, ee) => {
+          const method = ee.toUpperCase();
+          if (!t.includes(method)) {
+            return aa;
+          }
+          // todo: multi 情况下有重复风险
+          const uri = `${e}${multi ? `/${method}` : ''}`;
+          const item = Object.assign({}, methods[ee]);
+          const combined = { ...item, parameters: this.paramsMerge(methods, item) };
+          return Object.assign(aa, {
+            [uri]: {
+              title: item.summary || '',
+              method,
+              path: multi ? e : undefined,
+              params: this.params(combined, uri),
+              body: this.body(combined, uri),
+              res: this.res(combined, uri),
+            },
+          });
+        }, {} as Record<string, any>),
+      );
+    }, {} as Record<string, Record<string, any>>);
+  }
+
+  parse() {
+    if (this.useRef) {
+      // 第一趟：anchors 为空，schema2json 总是展开并收集 $ref 出现位置
+      this.build();
+      // 据历史锚点选定本次锚点，避免随顺序 / 接口增删漂移
+      this.chooseAnchors();
+    }
+    // 第二趟：anchors 已定，锚点位置内联展开，其余指向锚点
+    return JSON.stringify(this.build(), null, 2);
   }
 }
